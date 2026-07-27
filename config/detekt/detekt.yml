@@ -1,0 +1,32 @@
+# buildUponDefaultConfig = true — 기본값에서 벗어난 것만 적는다.
+# 포맷팅은 ktlint(.editorconfig) 담당. severity 미지정 = Error.
+
+config:
+  validation: true
+
+performance:
+  SpreadOperator:
+    active: false # runApplication<App>(*args)
+
+empty-blocks:
+  EmptyFunctionBlock:
+    excludes: ['**/test/**'] # 빈 contextLoads()
+
+complexity:
+  severity: Warning
+
+naming:
+  severity: Warning
+
+comments:
+  severity: Warning
+
+style:
+  severity: Warning
+  # ktlint와 중복
+  MaxLineLength:
+    active: false
+  WildcardImport:
+    active: false
+  NewLineAtEndOfFile:
+    active: false

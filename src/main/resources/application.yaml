@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: git-it
+  mongodb:
+    host: ${MONGODB_HOST:localhost}
+    port: ${MONGODB_PORT:27017}
+    database: ${MONGODB_DATABASE:gitit}
+    username: ${MONGODB_USERNAME:gitit}
+    password: ${MONGODB_PASSWORD:gitit1234}
+    authentication-database: admin
