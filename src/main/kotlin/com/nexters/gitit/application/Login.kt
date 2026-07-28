@@ -6,7 +6,9 @@ import com.nexters.gitit.domain.auth.OauthAuthenticator
 import com.nexters.gitit.domain.auth.OauthCredential
 import com.nexters.gitit.domain.member.Member
 import com.nexters.gitit.domain.member.MemberRepository
+import org.springframework.stereotype.Service
 
+@Service
 class Login(
     private val memberRepository: MemberRepository,
     private val jwtProvider: JwtProvider,
