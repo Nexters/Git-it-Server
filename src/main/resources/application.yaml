@@ -8,3 +8,6 @@ spring:
     username: ${MONGODB_USERNAME:gitit}
     password: ${MONGODB_PASSWORD:gitit1234}
     authentication-database: admin
+  data:
+    mongodb:
+      auto-index-creation: true
