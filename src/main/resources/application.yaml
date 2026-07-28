@@ -11,3 +11,10 @@ spring:
   data:
     mongodb:
       auto-index-creation: true
+
+jwt:
+  secret: ${JWT_SECRET:verylongsecretkeyfordevelopmentenvironmentonly}
+  access_token:
+    expiration_days: 30 # 1달
+  refresh_token:
+    expiration_days: 90 # 3달

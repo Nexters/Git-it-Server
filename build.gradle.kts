@@ -37,6 +37,9 @@ dependencies {
     // API Docs
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:${properties["springdocVersion"]}")
 
+    // JWT
+    implementation("com.nimbusds:nimbus-jose-jwt:${properties["nimbusVersion"]}")
+
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.springframework.boot:spring-boot-starter-data-mongodb-test")
