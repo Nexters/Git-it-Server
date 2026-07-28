@@ -18,3 +18,9 @@ jwt:
     expiration_days: 30 # 1달
   refresh_token:
     expiration_days: 90 # 3달
+
+oauth:
+  google:
+    client-id: ${OAUTH_GOOGLE_CLIENT_ID:google-client-id}
+  apple:
+    client-id: ${OAUTH_APPLE_CLIENT_ID:apple-client-id}
