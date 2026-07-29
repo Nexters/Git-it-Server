@@ -113,7 +113,12 @@ class MemberRepositoryTest(
         memberRepository.findBySocialIdentityAndDeletedAtIsNull(socialIdentity).shouldBeNull()
 
         // soft delete이므로 도큐먼트 자체는 남아 있어야 한다.
-        memberRepository.findById(saved.id).orElse(null).shouldNotBeNull().deletedAt.shouldNotBeNull()
+        memberRepository
+            .findById(saved.id)
+            .orElse(null)
+            .shouldNotBeNull()
+            .deletedAt
+            .shouldNotBeNull()
     }
 
     private fun memberOf(

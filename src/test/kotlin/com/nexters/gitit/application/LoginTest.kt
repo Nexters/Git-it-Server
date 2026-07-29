@@ -6,10 +6,10 @@ import com.nexters.gitit.domain.auth.OauthCredential
 import com.nexters.gitit.domain.auth.SocialAccount
 import com.nexters.gitit.domain.member.CareerLevel
 import com.nexters.gitit.domain.member.Member
-import com.nexters.gitit.infrastructure.mongo.SpringDataMemberRepository
 import com.nexters.gitit.domain.member.Position
 import com.nexters.gitit.domain.member.SocialIdentity
 import com.nexters.gitit.domain.member.SocialType
+import com.nexters.gitit.infrastructure.mongo.SpringDataMemberRepository
 import com.nimbusds.jwt.SignedJWT
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
