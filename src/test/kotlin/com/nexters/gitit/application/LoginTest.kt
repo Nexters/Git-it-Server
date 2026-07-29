@@ -4,7 +4,10 @@ import com.nexters.gitit.TestcontainersConfiguration
 import com.nexters.gitit.domain.auth.OauthAuthenticator
 import com.nexters.gitit.domain.auth.OauthCredential
 import com.nexters.gitit.domain.auth.SocialAccount
+import com.nexters.gitit.domain.member.CareerLevel
+import com.nexters.gitit.domain.member.Member
 import com.nexters.gitit.domain.member.MemberRepository
+import com.nexters.gitit.domain.member.Position
 import com.nexters.gitit.domain.member.SocialIdentity
 import com.nexters.gitit.domain.member.SocialType
 import com.nimbusds.jwt.SignedJWT
@@ -59,6 +62,47 @@ class LoginTest(
         memberRepository.count() shouldBe 1
         subjectOf(secondLogin.jwtToken.accessToken) shouldBe firstLogin.memberId
     }
+
+    @Test
+    fun `큐레이션 값이 비어 있으면 큐레이션이 필요하다고 응답한다`() {
+        given(oauthAuthenticator.authenticate(CREDENTIAL)).willReturn(socialAccount(email = "gitit@nexters.com"))
+
+        val result = login(Login.Command(CREDENTIAL))
+
+        result.needsCuration shouldBe true
+    }
+
+    @Test
+    fun `큐레이션 값이 일부만 채워져 있으면 큐레이션이 필요하다고 응답한다`() {
+        given(oauthAuthenticator.authenticate(CREDENTIAL)).willReturn(socialAccount(email = "gitit@nexters.com"))
+        saveMember(position = Position.BACKEND, careerLevel = null)
+
+        val result = login(Login.Command(CREDENTIAL))
+
+        result.needsCuration shouldBe true
+    }
+
+    @Test
+    fun `큐레이션 값이 모두 채워져 있으면 큐레이션이 필요 없다고 응답한다`() {
+        given(oauthAuthenticator.authenticate(CREDENTIAL)).willReturn(socialAccount(email = "gitit@nexters.com"))
+        saveMember(position = Position.BACKEND, careerLevel = CareerLevel.JUNIOR)
+
+        val result = login(Login.Command(CREDENTIAL))
+
+        result.needsCuration shouldBe false
+    }
+
+    private fun saveMember(
+        position: Position?,
+        careerLevel: CareerLevel?,
+    ) = memberRepository.save(
+        Member(
+            socialIdentity = SOCIAL_IDENTITY,
+            email = "gitit@nexters.com",
+            position = position,
+            careerLevel = careerLevel,
+        ),
+    )
 
     private fun socialAccount(email: String?) = SocialAccount(socialIdentity = SOCIAL_IDENTITY, email = email)
 
