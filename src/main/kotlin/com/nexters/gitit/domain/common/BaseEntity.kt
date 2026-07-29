@@ -6,7 +6,7 @@ import org.springframework.data.annotation.Id
 import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.domain.Persistable
 import java.time.Clock
-import java.time.LocalDateTime
+import java.time.Instant
 
 abstract class BaseEntity : Persistable<String> {
     // private은 getId()와의 JVM 시그니처 충돌 회피용, var는 조회 시 Spring Data가 _id를 되써야 하기 때문.
@@ -14,17 +14,17 @@ abstract class BaseEntity : Persistable<String> {
     private var id: String = ObjectId().toString()
 
     @CreatedDate
-    var createdAt: LocalDateTime? = null
+    var createdAt: Instant? = null
         private set
 
     @LastModifiedDate
-    var updatedAt: LocalDateTime? = null
+    var updatedAt: Instant? = null
         private set
 
-    var deletedAt: LocalDateTime? = null
+    var deletedAt: Instant? = null
 
     fun delete(clock: Clock) {
-        deletedAt = LocalDateTime.now(clock)
+        deletedAt = Instant.now(clock)
     }
 
     /**

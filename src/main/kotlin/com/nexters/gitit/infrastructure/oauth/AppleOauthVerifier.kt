@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 class AppleOauthVerifier(
     @Value("\${oauth.apple.client-id}") clientId: String,
 ) {
-    private val idTokenVerifier = IdTokenVerifier(ISSUER, JWK_SET_URL, clientId)
+    private val idTokenVerifier = IdTokenVerifier(setOf(ISSUER), JWK_SET_URL, clientId)
 
     fun verify(credential: OauthCredential.Apple): SocialAccount {
         val claims = idTokenVerifier.verify(credential.idToken)

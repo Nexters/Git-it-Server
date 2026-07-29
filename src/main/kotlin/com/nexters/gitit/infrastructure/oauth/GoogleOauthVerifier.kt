@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 class GoogleOauthVerifier(
     @Value("\${oauth.google.client-id}") clientId: String,
 ) {
-    private val idTokenVerifier = IdTokenVerifier(ISSUER, JWK_SET_URL, clientId)
+    private val idTokenVerifier = IdTokenVerifier(ISSUERS, JWK_SET_URL, clientId)
 
     fun verify(credential: OauthCredential.Google): SocialAccount {
         val claims = idTokenVerifier.verify(credential.idToken)
@@ -23,7 +23,7 @@ class GoogleOauthVerifier(
     }
 
     companion object {
-        private const val ISSUER = "https://accounts.google.com"
+        private val ISSUERS = setOf("https://accounts.google.com", "accounts.google.com")
         private const val JWK_SET_URL = "https://www.googleapis.com/oauth2/v3/certs"
         private const val EMAIL = "email"
     }

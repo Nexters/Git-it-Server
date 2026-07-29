@@ -5,7 +5,6 @@ import com.nexters.gitit.infrastructure.mongo.MongoAuditingConfiguration
 import com.nexters.gitit.infrastructure.mongo.SpringDataMemberRepository
 import com.nexters.gitit.infrastructure.time.ClockConfiguration
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.date.shouldBeAfter
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -17,12 +16,12 @@ import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest
 import org.springframework.context.annotation.Import
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.data.mongodb.core.MongoTemplate
-import org.springframework.data.mongodb.core.indexOps
+import org.springframework.data.mongodb.core.query.Criteria
+import org.springframework.data.mongodb.core.query.Query
 import java.time.Clock
 import java.time.temporal.ChronoUnit
 
 @DataMongoTest
-// @DataMongoTest 슬라이스는 일반 @Configuration을 스캔하지 않으므로 감사 설정을 직접 넣는다.
 @Import(TestcontainersConfiguration::class, MongoAuditingConfiguration::class, ClockConfiguration::class)
 class MemberRepositoryTest(
     @Autowired private val memberRepository: SpringDataMemberRepository,
@@ -61,17 +60,44 @@ class MemberRepositoryTest(
     }
 
     @Test
-    fun `socialIdentity unique 인덱스가 실제로 생성된다`() {
-        // 위 unique 테스트가 인덱스 부재가 아닌 다른 이유로 통과/실패하는 상황을 배제한다.
-        val index =
-            mongoTemplate
-                .indexOps<Member>()
-                .indexInfo
-                .find { it.name == "uk_social_identity" }
-                .shouldNotBeNull()
+    fun `탈퇴한 회원과 같은 socialIdentity로 다시 가입할 수 있다`() {
+        val socialIdentity = SocialIdentity("rejoin-social-id", SocialType.GOOGLE)
+        val first = memberRepository.save(memberOf(socialIdentity, email = "first@nexters.com"))
+        memberRepository.save(first.apply { delete(clock) })
 
-        index.isUnique shouldBe true
-        index.indexFields.map { it.key } shouldContainExactly listOf("socialIdentity.socialId", "socialIdentity.socialType")
+        val rejoined = memberRepository.save(memberOf(socialIdentity, email = "second@nexters.com"))
+
+        memberRepository.findBySocialIdentityAndDeletedAtIsNull(socialIdentity).shouldNotBeNull().id shouldBe rejoined.id
+        // 탈퇴 이력은 지워지지 않아야 한다.
+        memberRepository
+            .findById(first.id)
+            .orElse(null)
+            .shouldNotBeNull()
+            .deletedAt
+            .shouldNotBeNull()
+    }
+
+    @Test
+    fun `같은 socialIdentity로 여러 번 탈퇴한 이력이 남아도 저장할 수 있다`() {
+        // partial 인덱스가 아니라 deletedAt을 키에 넣는 방식이면, 같은 밀리초에 삭제된 도큐먼트끼리 충돌한다.
+        val socialIdentity = SocialIdentity("multi-withdrawal-social-id", SocialType.GOOGLE)
+        repeat(3) {
+            memberRepository.save(memberOf(socialIdentity).apply { delete(clock) })
+        }
+
+        memberRepository.findBySocialIdentityAndDeletedAtIsNull(socialIdentity).shouldBeNull()
+        mongoTemplate.count(Query(Criteria.where("socialIdentity.socialId").`is`(socialIdentity.socialId)), Member::class.java) shouldBe 3
+    }
+
+    @Test
+    fun `재가입 이후에도 활성 회원은 여전히 한 명만 존재할 수 있다`() {
+        val socialIdentity = SocialIdentity("rejoin-then-duplicate", SocialType.GOOGLE)
+        memberRepository.save(memberOf(socialIdentity).apply { delete(clock) })
+        memberRepository.save(memberOf(socialIdentity))
+
+        shouldThrow<DuplicateKeyException> {
+            memberRepository.save(memberOf(socialIdentity))
+        }
     }
 
     @Test

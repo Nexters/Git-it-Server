@@ -11,6 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document
     name = "uk_social_identity",
     def = "{'socialIdentity.socialId': 1, 'socialIdentity.socialType': 1}",
     unique = true,
+    partialFilter = "{'deletedAt': null}",
 )
 class Member(
     val socialIdentity: SocialIdentity,
