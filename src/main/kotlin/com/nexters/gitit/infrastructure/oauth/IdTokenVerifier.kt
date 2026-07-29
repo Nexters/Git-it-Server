@@ -1,5 +1,7 @@
 package com.nexters.gitit.infrastructure.oauth
 
+import com.nexters.gitit.domain.exception.BaseException
+import com.nexters.gitit.domain.exception.ErrorCode
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.jwk.source.JWKSourceBuilder
 import com.nimbusds.jose.proc.JWSVerificationKeySelector
@@ -8,7 +10,10 @@ import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.JWTParser
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
 import com.nimbusds.jwt.proc.DefaultJWTProcessor
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.net.URI
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * OIDC provider가 발급한 ID 토큰을 검증한다.
@@ -43,8 +48,9 @@ class IdTokenVerifier(
         runCatching {
             jwtProcessor.process(JWTParser.parse(idToken), null)
         }.getOrElse {
-            // TBD: 공통 예외 체계가 생기면 401로 매핑되는 인증 예외로 교체
-            throw IllegalStateException("ID 토큰 검증에 실패했습니다.", it)
+            // 서명·만료·issuer 중 무엇이 틀렸는지 알려주면 토큰 위조에 힌트가 되므로 401로만 응답한다.
+            logger.debug(it) { "ID token verification failed" }
+            throw BaseException(ErrorCode.UNAUTHORIZED, "ID 토큰 검증에 실패했습니다")
         }
 
     companion object {

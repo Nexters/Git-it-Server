@@ -34,6 +34,7 @@ class Login(
         return Result(
             memberId = member.id,
             jwtToken = jwt,
+            needsCuration = !member.isCurated(),
         )
     }
 
@@ -44,5 +45,6 @@ class Login(
     data class Result(
         val memberId: String,
         val jwtToken: JwtToken,
+        val needsCuration: Boolean,
     )
 }

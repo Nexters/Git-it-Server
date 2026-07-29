@@ -16,7 +16,18 @@ class Member(
     @Id val id: String = ObjectId().toString(),
     val socialIdentity: SocialIdentity,
     email: String?,
+    position: Position? = null,
+    careerLevel: CareerLevel? = null,
 ) {
     var email: String? = email
         private set
+
+    // TBD 큐레이션 플로우가 정해지지 않았기에 아래 값들은 미정
+    var position: Position? = position
+        private set
+
+    var careerLevel: CareerLevel? = careerLevel
+        private set
+
+    fun isCurated(): Boolean = position != null && careerLevel != null
 }
