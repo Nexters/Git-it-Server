@@ -1,11 +1,11 @@
 package com.nexters.gitit.domain.member
 
+import com.nexters.gitit.domain.common.BaseEntity
 import org.bson.types.ObjectId
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.index.CompoundIndex
 import org.springframework.data.mongodb.core.mapping.Document
 
-// TBD: createdAt, deletedAt, updatedAt 관리에 대한 논의
 @Document(collection = "members")
 @CompoundIndex(
     name = "uk_social_identity",
@@ -13,12 +13,11 @@ import org.springframework.data.mongodb.core.mapping.Document
     unique = true,
 )
 class Member(
-    @Id val id: String = ObjectId().toString(),
     val socialIdentity: SocialIdentity,
     email: String?,
     position: Position? = null,
     careerLevel: CareerLevel? = null,
-) {
+) : BaseEntity() {
     var email: String? = email
         private set
 

@@ -6,7 +6,7 @@ import com.nexters.gitit.domain.auth.OauthCredential
 import com.nexters.gitit.domain.auth.SocialAccount
 import com.nexters.gitit.domain.member.CareerLevel
 import com.nexters.gitit.domain.member.Member
-import com.nexters.gitit.domain.member.MemberRepository
+import com.nexters.gitit.infrastructure.mongo.SpringDataMemberRepository
 import com.nexters.gitit.domain.member.Position
 import com.nexters.gitit.domain.member.SocialIdentity
 import com.nexters.gitit.domain.member.SocialType
@@ -25,7 +25,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 @Import(TestcontainersConfiguration::class)
 class LoginTest(
     @Autowired private val login: Login,
-    @Autowired private val memberRepository: MemberRepository,
+    @Autowired private val memberRepository: SpringDataMemberRepository,
 ) {
     // provider 검증은 Google/Apple 공개키 조회가 필요해 테스트에서 진짜로 돌릴 수 없다.
     // 나머지 협력자(MongoDB, JwtProvider)는 실제 구현을 쓴다.

@@ -1,7 +1,7 @@
 package com.nexters.gitit.domain.member
 
-import org.springframework.data.mongodb.repository.MongoRepository
+interface MemberRepository {
+    fun save(member: Member): Member
 
-interface MemberRepository : MongoRepository<Member, String> {
     fun findBySocialIdentity(socialIdentity: SocialIdentity): Member?
 }
