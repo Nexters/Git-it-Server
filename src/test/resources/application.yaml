@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: git-it
+  data:
+    mongodb:
+      auto-index-creation: true
+
+jwt:
+  secret: test-secret-key-for-hs256-must-be-at-least-32-bytes
+  access_token:
+    expiration_days: 30
+  refresh_token:
+    expiration_days: 90
+
+oauth:
+  google:
+    client-id: test-google-client-id
+  apple:
+    client-id: test-apple-client-id

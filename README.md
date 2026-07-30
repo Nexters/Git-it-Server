@@ -57,9 +57,9 @@ ui → application → domain ← infrastructure
 cp .env.example .env
 ```
 
-지정하지 않으면 `src/main/resources/application.yaml`의 기본값 (로컬 compose 설정)이 그대로 사용되므로, 기본 구성으로 돌릴 때는 이 단계를 건너뛰어도 됩니다.
+`.env.example`에서 값이 비어 있는 항목은 채워야 합니다. 채우지 않으면 기동에 실패합니다.
 
-> Spring Boot는 `.env` 파일을 자동으로 읽지 않습니다. 값을 바꾸려면 셸에 `export` 하거나 IDE 실행 구성의 환경 변수에 넣어야 합니다.
+> Spring Boot는 `.env` 파일을 자동으로 읽지 않습니다. 셸에 `export` 하거나 IDE 실행 구성의 환경 변수에 넣어야 합니다.
 
 ### 2. 인프라 실행
 
