@@ -8,3 +8,19 @@ spring:
     username: ${MONGODB_USERNAME:gitit}
     password: ${MONGODB_PASSWORD:gitit1234}
     authentication-database: admin
+  data:
+    mongodb:
+      auto-index-creation: true
+
+jwt:
+  secret: ${JWT_SECRET}
+  access_token:
+    expiration_days: 30 # 1달
+  refresh_token:
+    expiration_days: 90 # 3달
+
+oauth:
+  google:
+    client-id: ${OAUTH_GOOGLE_CLIENT_ID}
+  apple:
+    client-id: ${OAUTH_APPLE_CLIENT_ID}

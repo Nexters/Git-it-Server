@@ -37,11 +37,15 @@ dependencies {
     // API Docs
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:${properties["springdocVersion"]}")
 
+    // JWT
+    implementation("com.nimbusds:nimbus-jose-jwt:${properties["nimbusVersion"]}")
+
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.springframework.boot:spring-boot-starter-data-mongodb-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testImplementation("io.kotest:kotest-assertions-core:${properties["kotestVersion"]}")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
     testImplementation("org.testcontainers:testcontainers-mongodb")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
