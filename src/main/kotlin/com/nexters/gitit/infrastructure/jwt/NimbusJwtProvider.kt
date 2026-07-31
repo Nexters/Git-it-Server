@@ -26,10 +26,6 @@ class NimbusJwtProvider(
     @Value("\${jwt.refresh_token.expiration_days}") private val refreshTokenExpirationDays: Long,
     private val clock: Clock,
 ) : JwtProvider {
-    companion object {
-        private const val TOKEN_TYPE = "type"
-    }
-
     /**
      * accessToken과 refreshToken은 만료 기간만 다른 같은 형식입니다.
      * 발급 시 type 클레임에 [claimValue]를 넣고 검증에서 대조해야 refreshToken으로 API를 호출하는 것을 막을 수 있습니다.
@@ -120,5 +116,9 @@ class NimbusJwtProvider(
         }
 
         return BaseException(ErrorCode.UNAUTHORIZED, "${tokenType.label} 검증에 실패했습니다")
+    }
+
+    companion object {
+        private const val TOKEN_TYPE = "type"
     }
 }

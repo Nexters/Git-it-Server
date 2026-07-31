@@ -23,6 +23,9 @@ comments:
 
 style:
   severity: Warning
+  # 프로퍼티 → 보조 생성자 → 메서드 → companion object. 코틀린 공식 컨벤션과 같은 순서.
+  ClassOrdering:
+    active: true
   # ktlint와 중복
   MaxLineLength:
     active: false
