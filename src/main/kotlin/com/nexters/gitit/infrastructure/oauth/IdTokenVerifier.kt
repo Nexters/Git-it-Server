@@ -9,6 +9,7 @@ import com.nimbusds.jose.proc.SecurityContext
 import com.nimbusds.jwt.JWTClaimNames
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.JWTParser
+import com.nimbusds.jwt.proc.BadJWTException
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
 import com.nimbusds.jwt.proc.DefaultJWTProcessor
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -55,15 +56,28 @@ class IdTokenVerifier(
             runCatching {
                 jwtProcessor.process(JWTParser.parse(idToken), null)
             }.getOrElse {
-                logger.debug(it) { "ID token verification failed" }
-                throw BaseException(ErrorCode.UNAUTHORIZED, "ID 토큰 검증에 실패했습니다")
+                throw unauthorized(it)
             }
 
         if (claims.issuer !in issuers) {
-            logger.debug { "ID token issuer rejected: ${claims.issuer}" }
+            // 다른 provider가 발급한 토큰을 들고 온 것이라 정상 흐름에서는 나올 수 없다.
+            logger.warn { "ID token issuer rejected: ${claims.issuer}" }
             throw BaseException(ErrorCode.UNAUTHORIZED, "ID 토큰 검증에 실패했습니다")
         }
 
         return claims
+    }
+
+    private fun unauthorized(cause: Throwable): BaseException {
+        // 만료나 audience 불일치(BadJWTException)는 클라이언트 사정으로 정상 발생하지만,
+        // 서명 검증 실패나 JWKS 조회 실패는 위조 시도이거나 우리 쪽 장애라
+        // 운영 기본 로그 레벨(INFO)에서도 보여야 한다.
+        if (cause is BadJWTException) {
+            logger.debug(cause) { "ID token claims rejected" }
+        } else {
+            logger.warn(cause) { "ID token verification failed" }
+        }
+
+        return BaseException(ErrorCode.UNAUTHORIZED, "ID 토큰 검증에 실패했습니다")
     }
 }
