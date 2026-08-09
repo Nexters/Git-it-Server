@@ -1,0 +1,31 @@
+services:
+  app:
+    image: ghcr.io/nexters/git-it-server:latest
+    container_name: git-it-app
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8080:8080"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  mongodb:
+    image: mongo:8
+    container_name: git-it-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: gitit
+      MONGO_INITDB_ROOT_PASSWORD: gitit1234
+      MONGO_INITDB_DATABASE: gitit
+    volumes:
+      - mongodb-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  mongodb-data:
