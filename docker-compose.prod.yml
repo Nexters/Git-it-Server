@@ -15,9 +15,9 @@ services:
     container_name: git-it-mongodb
     restart: unless-stopped
     environment:
-      MONGO_INITDB_ROOT_USERNAME: gitit
-      MONGO_INITDB_ROOT_PASSWORD: gitit1234
-      MONGO_INITDB_DATABASE: gitit
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE}
     volumes:
       - mongodb-data:/data/db
     healthcheck:
