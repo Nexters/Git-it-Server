@@ -1,0 +1,67 @@
+name: Backend CD
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: action checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/nexters/git-it-server:${{ github.sha }}
+            ghcr.io/nexters/git-it-server:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-22.04
+    steps:
+      - name: action checkout
+        uses: actions/checkout@v4
+
+      - name: Copy docker-compose.prod.yml to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.GABIA_HOST }}
+          username: ${{ secrets.GABIA_USERNAME }}
+          key: ${{ secrets.GABIA_SSH_KEY }}
+          source: "docker-compose.prod.yml"
+          target: "~/git-it"
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.GABIA_HOST }}
+          username: ${{ secrets.GABIA_USERNAME }}
+          key: ${{ secrets.GABIA_SSH_KEY }}
+          script: |
+            cd ~/git-it
+            cat > .env <<'ENVEOF'
+            ${{ secrets.PROD_ENV_FILE }}
+            ENVEOF
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker image prune -f
