@@ -106,3 +106,21 @@ docker compose -f docker-compose.local.yml down -v  # 저장된 데이터까지 
 - 포맷 규칙은 [`.editorconfig`](.editorconfig)를 따릅니다.
 - detekt 규칙은 [`config/detekt/detekt.yml`](config/detekt/detekt.yml)에서 관리합니다.
 - PR을 올리기 전 확인 항목은 [PR 템플릿](.github/PULL_REQUEST_TEMPLATE.md)의 체크리스트를 참고하세요.
+
+## 배포 (CD)
+
+`main`에 push(=PR 머지)되면 `.github/workflows/cd.yml`이 실행되어 Docker 이미지를
+`ghcr.io/nexters/git-it-server`에 push하고, 가비아 서버에 SSH로 접속해 재배포합니다.
+
+### 필요한 GitHub Secrets
+
+| Secret | 용도 |
+|---|---|
+| `GABIA_HOST` | 가비아 서버 고정 공인 IP |
+| `GABIA_USERNAME` | SSH 접속 유저 |
+| `GABIA_SSH_KEY` | 배포 전용 SSH 개인키 |
+| `PROD_ENV_FILE` | 운영 `.env` 파일 전체 내용 |
+
+자세한 배경과 서버 사전 준비사항은
+[`docs/superpowers/specs/2026-08-03-ci-cd-design.md`](docs/superpowers/specs/2026-08-03-ci-cd-design.md)를
+참고하세요.
