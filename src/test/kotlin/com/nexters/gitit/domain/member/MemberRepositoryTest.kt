@@ -147,6 +147,27 @@ class MemberRepositoryTest(
             .shouldNotBeNull()
     }
 
+    @Test
+    fun `기기 정보는 중첩 도큐먼트로 저장돼 하위 필드로 조회할 수 있다`() {
+        // 읽기만 확인하면 평탄화돼 저장돼도 통과한다. 푸시 대상을 deviceInfo.deviceToken으로 거를 때 드러날 차이라
+        // 값 객체가 중첩 도큐먼트로 들어갔는지를 여기서 고정한다.
+        val member = memberOf(SocialIdentity("device-owner", SocialType.GOOGLE))
+        member.updateDeviceInfo(
+            DeviceInfo(
+                deviceId = "device-1",
+                deviceType = "ios",
+                appVersion = "1.0.0",
+                osVersion = "18.2",
+                deviceToken = "device-token",
+            ),
+        )
+        memberRepository.save(member)
+
+        val query = Query(Criteria.where("deviceInfo.deviceToken").`is`("device-token"))
+
+        mongoTemplate.count(query, Member::class.java) shouldBe 1
+    }
+
     private fun memberOf(
         socialIdentity: SocialIdentity,
         email: String? = null,
