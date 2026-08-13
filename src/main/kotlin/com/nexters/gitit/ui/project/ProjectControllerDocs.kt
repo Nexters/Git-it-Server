@@ -2,6 +2,7 @@ package com.nexters.gitit.ui.project
 
 import com.nexters.gitit.ui.common.ApiResponse
 import com.nexters.gitit.ui.project.dto.ProjectListResponse
+import com.nexters.gitit.ui.project.dto.ProjectRepositoryUrlResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -52,6 +53,28 @@ interface ProjectControllerDocs {
         memberId: String,
         @Parameter(description = "삭제할 프로젝트 ID") projectId: String,
     ): ApiResponse<Unit>
+
+    @Operation(
+        summary = "프로젝트 GitHub 링크 조회",
+        description = "프로젝트 상세 화면 메뉴의 \"GitHub에서 보기\"에서 사용할 GitHub 레포지토리 링크를 조회합니다.",
+    )
+    @ApiResponses(
+        SwaggerApiResponse(responseCode = "200", description = "조회 성공"),
+        SwaggerApiResponse(
+            responseCode = "404",
+            description = "존재하지 않거나 본인 소유가 아니거나 삭제된 프로젝트",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = NOT_FOUND_EXAMPLE)])],
+        ),
+        SwaggerApiResponse(
+            responseCode = "401",
+            description = "인증 실패",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = UNAUTHORIZED_EXAMPLE)])],
+        ),
+    )
+    fun getProjectRepositoryUrl(
+        memberId: String,
+        @Parameter(description = "조회할 프로젝트 ID") projectId: String,
+    ): ApiResponse<ProjectRepositoryUrlResponse>
 
     companion object {
         private const val UNAUTHORIZED_EXAMPLE =
