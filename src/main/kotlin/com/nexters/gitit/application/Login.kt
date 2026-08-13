@@ -27,8 +27,6 @@ class Login(
                     ),
                 )
 
-        // TBD: 알림 기능 확정 시 알림 대상인 DeviceToken을 저장하는 로직 필요
-
         val jwt = jwtProvider.generateToken(member.id)
 
         return Result(
