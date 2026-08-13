@@ -14,6 +14,9 @@ services:
     image: mongo:8
     container_name: git-it-mongodb
     restart: unless-stopped
+    # MONGO_INITDB_ROOT_*는 mongodb-data 볼륨이 처음 생성될 때만 적용된다.
+    # PROD_ENV_FILE에서 비밀번호를 바꿔도 기존 볼륨의 계정은 그대로 남으므로,
+    # 비밀번호를 바꾸려면 mongosh로 직접 계정을 갱신해야 한다.
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME:?MONGODB_USERNAME is required}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:?MONGODB_PASSWORD is required}
