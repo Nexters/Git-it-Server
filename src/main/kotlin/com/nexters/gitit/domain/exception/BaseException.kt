@@ -8,5 +8,5 @@ package com.nexters.gitit.domain.exception
  */
 class BaseException(
     val errorCode: ErrorCode,
-    customMessage: String?,
+    customMessage: String? = null,
 ) : RuntimeException(customMessage ?: errorCode.message)

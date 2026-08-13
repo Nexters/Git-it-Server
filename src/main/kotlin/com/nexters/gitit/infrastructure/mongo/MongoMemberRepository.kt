@@ -11,6 +11,8 @@ class MongoMemberRepository(
 ) : MemberRepository {
     override fun save(member: Member): Member = memberRepository.save(member)
 
+    override fun findById(id: String): Member? = memberRepository.findByIdAndDeletedAtIsNull(id)
+
     override fun findBySocialIdentity(socialIdentity: SocialIdentity): Member? =
         memberRepository.findBySocialIdentityAndDeletedAtIsNull(socialIdentity)
 }
