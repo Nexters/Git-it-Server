@@ -23,6 +23,12 @@ data class ApiResponse<T>(
         fun <T> success(data: T): ApiResponse<T> = ApiResponse(success = true, data = data)
 
         /**
+         * 내려줄 본문이 없는 성공 응답.
+         * success(Unit)으로 대신하면 data가 빈 객체({})로 직렬화돼 없는 값과 구분되지 않습니다.
+         */
+        fun success(): ApiResponse<Unit> = ApiResponse(success = true)
+
+        /**
          * 단일 메시지로 실패 응답을 만듭니다.
          * message를 생략하면 errorCode.message가 기본 메시지로 사용됩니다.
          */
