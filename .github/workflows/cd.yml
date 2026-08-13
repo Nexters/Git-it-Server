@@ -57,6 +57,7 @@ jobs:
           host: ${{ secrets.GABIA_HOST }}
           username: ${{ secrets.GABIA_USERNAME }}
           key: ${{ secrets.GABIA_SSH_KEY }}
+          script_stop: true
           script: |
             cd ~/git-it
             cat > .env <<'ENVEOF'

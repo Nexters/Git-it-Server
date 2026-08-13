@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     env_file: .env
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     depends_on:
       mongodb:
         condition: service_healthy
@@ -15,9 +15,9 @@ services:
     container_name: git-it-mongodb
     restart: unless-stopped
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
-      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME:?MONGODB_USERNAME is required}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:?MONGODB_PASSWORD is required}
+      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE:?MONGODB_DATABASE is required}
     volumes:
       - mongodb-data:/data/db
     healthcheck:

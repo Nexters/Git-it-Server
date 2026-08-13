@@ -121,6 +121,11 @@ docker compose -f docker-compose.local.yml down -v  # 저장된 데이터까지 
 | `GABIA_SSH_KEY` | 배포 전용 SSH 개인키 |
 | `PROD_ENV_FILE` | 운영 `.env` 파일 전체 내용 |
 
+> `PROD_ENV_FILE`은 `.env.example`과 동일한 형식을 따르되, `MONGODB_HOST`만
+> `localhost`가 아닌 `mongodb`(docker-compose 서비스명)로 설정해야 합니다.
+> 운영 환경에서는 `app`과 `mongodb`가 같은 Docker 네트워크의 별개 컨테이너로
+> 떠 있으므로, `localhost`는 app 컨테이너 자신을 가리켜 연결에 실패합니다.
+
 자세한 배경과 서버 사전 준비사항은
 [`docs/superpowers/specs/2026-08-03-ci-cd-design.md`](docs/superpowers/specs/2026-08-03-ci-cd-design.md)를
 참고하세요.
