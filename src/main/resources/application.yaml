@@ -1,3 +1,8 @@
+server:
+  # Nginx가 HTTPS를 종료하고 X-Forwarded-* 헤더로 전달하므로, 그 헤더를 신뢰해 스킴/호스트를 올바르게 인식하게 한다.
+  # 없으면 Swagger UI가 https 페이지에서 http:// API를 호출해 mixed content로 막힌다.
+  forward-headers-strategy: framework
+
 spring:
   application:
     name: git-it
