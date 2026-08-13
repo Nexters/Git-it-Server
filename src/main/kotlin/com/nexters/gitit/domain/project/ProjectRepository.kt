@@ -8,4 +8,11 @@ interface ProjectRepository {
         memberId: String,
         pageable: Pageable,
     ): Slice<Project>
+
+    fun findByIdAndMemberIdAndDeletedAtIsNull(
+        id: String,
+        memberId: String,
+    ): Project?
+
+    fun save(project: Project): Project
 }

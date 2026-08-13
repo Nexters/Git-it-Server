@@ -14,4 +14,11 @@ class MongoProjectRepository(
         memberId: String,
         pageable: Pageable,
     ): Slice<Project> = projectRepository.findByMemberIdAndDeletedAtIsNull(memberId, pageable)
+
+    override fun findByIdAndMemberIdAndDeletedAtIsNull(
+        id: String,
+        memberId: String,
+    ): Project? = projectRepository.findByIdAndMemberIdAndDeletedAtIsNull(id, memberId)
+
+    override fun save(project: Project): Project = projectRepository.save(project)
 }

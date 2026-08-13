@@ -10,4 +10,9 @@ interface SpringDataProjectRepository : MongoRepository<Project, String> {
         memberId: String,
         pageable: Pageable,
     ): Slice<Project>
+
+    fun findByIdAndMemberIdAndDeletedAtIsNull(
+        id: String,
+        memberId: String,
+    ): Project?
 }

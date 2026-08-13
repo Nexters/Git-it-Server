@@ -31,8 +31,32 @@ interface ProjectControllerDocs {
         @Parameter(description = "페이지 크기") size: Int,
     ): ApiResponse<ProjectListResponse>
 
+    @Operation(
+        summary = "프로젝트 삭제",
+        description = "프로젝트를 소프트 삭제합니다. 본인 소유가 아니거나 이미 삭제된 경우 존재 여부를 노출하지 않기 위해 404로 응답합니다.",
+    )
+    @ApiResponses(
+        SwaggerApiResponse(responseCode = "200", description = "삭제 성공"),
+        SwaggerApiResponse(
+            responseCode = "404",
+            description = "존재하지 않거나 본인 소유가 아니거나 이미 삭제된 프로젝트",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = NOT_FOUND_EXAMPLE)])],
+        ),
+        SwaggerApiResponse(
+            responseCode = "401",
+            description = "인증 실패",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = UNAUTHORIZED_EXAMPLE)])],
+        ),
+    )
+    fun deleteProject(
+        memberId: String,
+        @Parameter(description = "삭제할 프로젝트 ID") projectId: String,
+    ): ApiResponse<Unit>
+
     companion object {
         private const val UNAUTHORIZED_EXAMPLE =
             """{"success":false,"data":null,"code":"COMMON-002","message":"인증이 필요합니다","errors":null}"""
+        private const val NOT_FOUND_EXAMPLE =
+            """{"success":false,"data":null,"code":"COMMON-004","message":"프로젝트를 찾을 수 없습니다","errors":null}"""
     }
 }
