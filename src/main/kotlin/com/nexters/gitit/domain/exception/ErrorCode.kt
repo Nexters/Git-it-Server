@@ -21,4 +21,7 @@ enum class ErrorCode(
     FORBIDDEN("COMMON-003", "권한이 없습니다", HttpStatus.FORBIDDEN),
     NOT_FOUND("COMMON-004", "요청한 리소스를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
     INTERNAL_SERVER_ERROR("COMMON-005", "서버 내부 오류가 발생했습니다", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    // MEMBER
+    MEMBER_NOT_FOUND("MEMBER-001", "회원을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
 }
