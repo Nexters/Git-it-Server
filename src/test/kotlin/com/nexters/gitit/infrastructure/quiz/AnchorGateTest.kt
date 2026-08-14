@@ -42,9 +42,10 @@ class AnchorGateTest {
             )
 
         confirmed.map { it.concept.name } shouldContainExactly listOf("라우팅", "상태 관리")
+        // 어긋난 4번을 그대로 두지 않고, 심볼이 실제로 있는 3번까지 범위를 넓혀 발췌가 그 줄을 담게 한다.
         confirmed.first().anchors shouldContainExactly
             listOf(
-                Anchor("src/Router.kt", 4, 4, AnchorKind.DEFINITION, "fun route"),
+                Anchor("src/Router.kt", 3, 4, AnchorKind.DEFINITION, "fun route"),
                 Anchor("src/Router.kt", 6, 6, AnchorKind.USAGE, "fun dispatch"),
             )
     }

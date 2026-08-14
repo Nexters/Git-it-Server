@@ -77,16 +77,20 @@ class AnchorGate(
         val symbol = candidate.symbol.trim()
         val from = (candidate.startLine - 1 - CONTEXT_LINES).coerceAtLeast(0)
         val to = (candidate.endLine + CONTEXT_LINES).coerceAtMost(lines.size)
-        if (symbol.isEmpty() || lines.subList(from, to).none { symbol in it }) {
+        val matchedLine = if (symbol.isEmpty()) null else (from until to).firstOrNull { symbol in lines[it] }?.plus(1)
+        if (matchedLine == null) {
             logger.debug { "Discarded anchor of '${concept.name}': symbol '$symbol' not near $where" }
             return null
         }
 
+        // 어긋난 줄 번호를 그대로 저장하면 발췌가 심볼이 있는 줄을 비껴가, 문제 생성이 심볼 없는 코드를 보게 된다.
+        val startLine = minOf(candidate.startLine, matchedLine)
+
         return Anchor(
             file = candidate.file,
-            startLine = candidate.startLine,
+            startLine = startLine,
             // 파일 절반을 앵커라고 우겨도 문제 생성이 읽는 양은 여기서 닫힌다.
-            endLine = minOf(candidate.endLine, candidate.startLine + MAX_SPAN_LINES - 1),
+            endLine = maxOf(minOf(candidate.endLine, startLine + MAX_SPAN_LINES - 1), matchedLine),
             kind = kindOf(candidate.kind),
             symbol = symbol,
         )
