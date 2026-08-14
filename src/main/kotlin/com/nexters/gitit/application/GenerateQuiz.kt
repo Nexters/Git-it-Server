@@ -2,6 +2,7 @@ package com.nexters.gitit.application
 
 import com.nexters.gitit.domain.exception.BaseException
 import com.nexters.gitit.domain.quizrepo.AnchoredConcept
+import com.nexters.gitit.domain.quizrepo.QuizGenerationFinished
 import com.nexters.gitit.domain.quizrepo.QuizRepo
 import com.nexters.gitit.domain.quizrepo.QuizRepoRepository
 import com.nexters.gitit.domain.quizrepo.QuizRepoStatus
@@ -12,6 +13,7 @@ import com.nexters.gitit.infrastructure.quiz.DocumentAnalyzer
 import com.nexters.gitit.infrastructure.quiz.QualityInspector
 import com.nexters.gitit.infrastructure.quiz.QuestionGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger {}
@@ -34,6 +36,7 @@ class GenerateQuiz(
     private val anchorLocator: AnchorLocator,
     private val questionGenerator: QuestionGenerator,
     private val qualityInspector: QualityInspector,
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
     /**
      * 성공이든 거절이든 저장소 상태로 남깁니다. 결과를 반환값으로 알리지 않는 유스케이스라,
@@ -43,6 +46,8 @@ class GenerateQuiz(
      * 없어지고, 그 예외를 어떻게 다룰지는 부르는 쪽의 정책입니다.
      *
      * 그 한 줄을 위해 catch 범위를 넓게 잡습니다. 좁히면 놓친 종류만큼 상태가 READY에 멈춥니다.
+     *
+     * 어느 경로로 끝나든 [QuizGenerationFinished]가 나갑니다. 사고로 끝난 것도 기다리던 사용자에게는 결과입니다.
      */
     @Suppress("TooGenericExceptionCaught")
     operator fun invoke(command: Command) {
@@ -68,6 +73,8 @@ class GenerateQuiz(
             quizRepo.fail()
             quizRepoRepository.save(quizRepo)
             throw e
+        } finally {
+            eventPublisher.publishEvent(QuizGenerationFinished(quizRepo.id))
         }
     }
 

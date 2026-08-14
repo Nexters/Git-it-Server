@@ -8,6 +8,7 @@ import com.nexters.gitit.domain.quizrepo.AnchorNote
 import com.nexters.gitit.domain.quizrepo.AnchoredConcept
 import com.nexters.gitit.domain.quizrepo.Concept
 import com.nexters.gitit.domain.quizrepo.LearningSet
+import com.nexters.gitit.domain.quizrepo.QuizGenerationFinished
 import com.nexters.gitit.domain.quizrepo.QuizRepo
 import com.nexters.gitit.domain.quizrepo.QuizRepoRepository
 import com.nexters.gitit.domain.quizrepo.QuizRepoStatus
@@ -28,6 +29,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.springframework.context.ApplicationEventPublisher
 import java.nio.file.Path
 
 class GenerateQuizTest {
@@ -37,6 +39,7 @@ class GenerateQuizTest {
     private val anchorLocator: AnchorLocator = mock()
     private val questionGenerator: QuestionGenerator = mock()
     private val qualityInspector: QualityInspector = mock()
+    private val eventPublisher: ApplicationEventPublisher = mock()
 
     private val anchor = Anchor("src/Router.kt", 10, 20, AnchorKind.DEFINITION, "class Router")
 
@@ -54,6 +57,7 @@ class GenerateQuizTest {
             anchorLocator,
             questionGenerator,
             qualityInspector,
+            eventPublisher,
         )
 
     @Test
@@ -141,6 +145,8 @@ class GenerateQuizTest {
         quizRepo.status shouldBe QuizRepoStatus.FAILED
         // 사고에는 사유 코드가 없다. reject와 섞이면 클라이언트가 설명할 수 없는 코드를 받는다.
         quizRepo.rejectedReason shouldBe null
+        // 예외가 밖으로 나가는 경로에서도 알림이 나가는지가 finally로 둔 이유의 전부다.
+        verify(eventPublisher).publishEvent(QuizGenerationFinished(quizRepo.id))
     }
 
     private fun learningSet(orientation: String) =
