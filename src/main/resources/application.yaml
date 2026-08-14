@@ -45,3 +45,7 @@ oauth:
     client-id: ${OAUTH_GOOGLE_CLIENT_ID}
   apple:
     client-id: ${OAUTH_APPLE_CLIENT_ID}
+
+github:
+  # 레포를 내려받아 푸는 작업 공간.
+  work-dir: ${GITHUB_WORK_DIR}

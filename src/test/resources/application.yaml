@@ -28,3 +28,6 @@ oauth:
     client-id: test-google-client-id
   apple:
     client-id: test-apple-client-id
+
+github:
+  work-dir: /tmp/gitit-test-work
