@@ -52,8 +52,15 @@ class ConceptGate {
             return null
         }
 
+        // 빈 근거를 먼저 거른다. 빈 문자열은 어느 문서에나 "들어 있어" 아래 대조를 그냥 통과한다.
+        val rationale = normalize(candidate.rationale)
+        if (rationale.isEmpty()) {
+            logger.debug { "Discarded concept '${candidate.name}': empty rationale" }
+            return null
+        }
+
         // 원문 복붙을 요구한 이유가 이 대조다. 요약을 받았다면 여기서 걸린다.
-        if (!normalize(sourceText).contains(normalize(candidate.rationale))) {
+        if (!normalize(sourceText).contains(rationale)) {
             logger.debug { "Discarded concept '${candidate.name}': rationale not found in ${candidate.sourceDoc}" }
             return null
         }
