@@ -67,6 +67,22 @@ ktlint {
     version = properties["ktlintVersion"] as String
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+tasks.test {
+    useJUnitPlatform {
+        excludeTags("network")
+    }
+}
+
+// 외부 상태에 결과가 달려 있어 기본 test에서 뺀다. 네트워크나 GitHub이 흔들리면 우리 잘못 없이 빨간불이 된다.
+// 캐시도 끈다 — 지난번 통과했다고 건너뛰면 정작 확인하려던 것을 확인하지 않는다.
+tasks.register<Test>("networkTest") {
+    testClassesDirs =
+        sourceSets.test
+            .get()
+            .output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform {
+        includeTags("network")
+    }
+    outputs.upToDateWhen { false }
 }
