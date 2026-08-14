@@ -33,7 +33,7 @@ class GithubApiRepositoryResolver(
 
     /** 이름에 점이 들어가는 경우(`socket.io`)와 `.git` 접미사를 모두 받으려고 이름을 최소 일치로 잡습니다. */
     private fun parseOwnerAndName(githubRepoUrl: String): Pair<String, String>? {
-        val match = REPO_URL_PATTERN.find(githubRepoUrl) ?: return null
+        val match = REPO_URL_PATTERN.matchEntire(githubRepoUrl.trim()) ?: return null
 
         return match.groupValues[1] to match.groupValues[2]
     }
@@ -44,6 +44,12 @@ class GithubApiRepositoryResolver(
     )
 
     companion object {
-        private val REPO_URL_PATTERN = Regex("""github\.com/([^/\s]+)/([^/\s]+?)(?:\.git)?/?$""")
+        /**
+         * 부분 일치로 찾으면 `notgithub.com/o/n`처럼 호스트가 다른 URL도 통과합니다. 호출 대상이 api.github.com으로
+         * 고정이라 다른 곳을 찌를 수는 없지만, 사용자가 준 적 없는 저장소가 등록됩니다. 그래서 문자열 전체를 맞춥니다.
+         *
+         * 소유자·이름을 GitHub 허용 문자로 좁힌 것도 쿼리스트링이 이름에 묻어 들어가지 않게 하려는 것입니다.
+         */
+        private val REPO_URL_PATTERN = Regex("""(?:https?://)?(?:www\.)?github\.com/([\w.-]+)/([\w.-]+?)(?:\.git)?/?""")
     }
 }
