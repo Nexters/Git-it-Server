@@ -8,4 +8,8 @@ interface QuizRepoRepository {
      * 자기가 만든 것인지 알 수 있습니다.
      */
     fun saveIfAbsent(quizRepo: QuizRepo): QuizRepo
+
+    fun findById(id: String): QuizRepo?
+
+    fun save(quizRepo: QuizRepo): QuizRepo
 }
