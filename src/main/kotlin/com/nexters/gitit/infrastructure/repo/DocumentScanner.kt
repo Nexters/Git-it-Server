@@ -154,6 +154,6 @@ class DocumentScanner {
 
         // 이력·거버넌스 문서. 무엇을 왜 그렇게 만들었는지를 말하지 않는다.
         private val EXCLUDED_FILE_PREFIXES =
-            setOf("CHANGELOG", "RELEASE_NOTES", "RELEASE-NOTES", "CONTRIBUTING", "CODE_OF_CONDUCT", "SECURITY.MD")
+            setOf("CHANGELOG", "RELEASE_NOTES", "RELEASE-NOTES", "CONTRIBUTING", "CODE_OF_CONDUCT", "SECURITY")
     }
 }
