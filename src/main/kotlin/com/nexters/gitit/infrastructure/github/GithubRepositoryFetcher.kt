@@ -47,6 +47,12 @@ class GithubRepositoryFetcher(
         val match = URL_PATTERN.find(gitUrl.trim()) ?: throw BaseException(ErrorCode.INVALID_REPO_URL, "레포 주소 형식이 아닙니다: $gitUrl")
         val (owner, name) = match.destructured
 
+        // `.`·`..`는 GitHub 이름이 될 수 없는데 URL_PATTERN의 문자 집합은 통과시킨다.
+        // 그대로 두면 API 요청 경로에 상위 디렉터리 세그먼트가 실려 엉뚱한 엔드포인트를 부른다.
+        if (owner in DOT_SEGMENTS || name in DOT_SEGMENTS) {
+            throw BaseException(ErrorCode.INVALID_REPO_URL, "레포 주소 형식이 아닙니다: $gitUrl")
+        }
+
         val root = findDownloaded(owner, name) ?: download(owner, name)
 
         // GitHub는 사용자가 친 주소가 아니라 정규 표기로 디렉터리 이름을 만들어, 대소문자가 다를 수 있다.
@@ -175,6 +181,8 @@ class GithubRepositoryFetcher(
     companion object {
         // 브라우저에서 복사한 주소에는 /tree/main 같은 꼬리가 붙어 있어 뒤 경로를 받아주고 버린다.
         private val URL_PATTERN = Regex("""^(?:https?://)?(?:www\.)?github\.com/([\w.-]+)/([\w.-]+?)(?:\.git)?(?:/.*)?$""")
+
+        private val DOT_SEGMENTS = setOf(".", "..")
 
         // zipball이 감싼 디렉터리 이름 끝에 붙는 축약 sha. 길이는 레포마다 달라 범위로 받는다.
         private val SHA_PATTERN = Regex("[0-9a-f]{7,40}")

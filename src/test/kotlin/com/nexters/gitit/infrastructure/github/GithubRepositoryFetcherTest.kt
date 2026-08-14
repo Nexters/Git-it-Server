@@ -91,6 +91,8 @@ class GithubRepositoryFetcherTest {
             "https://gitlab.com/Nexters/Git-it-Server",
             "https://github.com/Nexters",
             "",
+            // 문자 집합만 보면 통과하지만 API 요청 경로에 상위 디렉터리 세그먼트가 실린다.
+            "https://github.com/../..",
         ).forAll { shouldThrowErrorCode(ErrorCode.INVALID_REPO_URL) { fetcher().fetch(it) } }
     }
 
