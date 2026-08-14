@@ -53,9 +53,10 @@ class GenerateQuiz(
     operator fun invoke(command: Command) {
         // 등록 직후 삭제된 저장소라면 만들 대상이 없다. 되살릴 방법도 없으므로 조용히 끝낸다.
         val quizRepo = quizRepoRepository.findById(command.quizRepoId) ?: return
+        var checkout: RepoCheckout? = null
 
         try {
-            val checkout = githubRepositoryFetcher.fetch(quizRepo.githubRepoUrl)
+            checkout = githubRepositoryFetcher.fetch(quizRepo.githubRepoUrl)
 
             val anchored = anchored(quizRepo, checkout)
             val written = questionGenerator.generate(checkout.root, anchored)
@@ -74,6 +75,7 @@ class GenerateQuiz(
             quizRepoRepository.save(quizRepo)
             throw e
         } finally {
+            checkout?.root?.toFile()?.deleteRecursively()
             eventPublisher.publishEvent(QuizGenerationFinished(quizRepo.id))
         }
     }
