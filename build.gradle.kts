@@ -45,6 +45,9 @@ dependencies {
     // JWT
     implementation("com.nimbusds:nimbus-jose-jwt:${properties["nimbusVersion"]}")
 
+    // Push
+    implementation("com.google.firebase:firebase-admin:${properties["firebaseAdminVersion"]}")
+
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.springframework.boot:spring-boot-starter-data-mongodb-test")
@@ -108,4 +111,10 @@ tasks.register<Test>("networkTest") {
         includeTags("network")
     }
     outputs.upToDateWhen { false }
+
+    // 실패 원인이 외부에 있어 스택 트레이스만으로는 모자란다. 어댑터가 삼킨 실패도 로그로는 남으므로 그대로 흘려보낸다.
+    testLogging {
+        showStandardStreams = true
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
 }
