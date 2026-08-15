@@ -61,7 +61,7 @@ jobs:
           username: ${{ secrets.API_SERVER_USERNAME }}
           key: ${{ secrets.API_SERVER_KEY }}
           port: ${{ secrets.API_SERVER_PORT }}
-          source: "docker-compose.prod.yml"
+          source: "docker-compose.prod.yml,nginx/nginx.conf"
           target: "~/git-it"
 
       - name: Deploy to server
@@ -72,18 +72,52 @@ jobs:
           key: ${{ secrets.API_SERVER_KEY }}
           port: ${{ secrets.API_SERVER_PORT }}
           script_stop: true
-          envs: GHCR_USER,GHCR_TOKEN
+          envs: GHCR_USER,GHCR_TOKEN,MONGODB_HOST,MONGODB_PORT,MONGODB_DATABASE,MONGODB_USERNAME,MONGODB_PASSWORD,JWT_SECRET,OAUTH_GOOGLE_CLIENT_ID,OAUTH_APPLE_CLIENT_ID,GITHUB_WORK_DIR,GCP_CREDENTIALS_BASE64
           script: |
             cd ~/git-it
             umask 077
-            cat > .env <<'ENVEOF'
-            ${{ secrets.PROD_ENV_FILE }}
-            ENVEOF
+            # 값을 하나씩 넘겨 조립한다. 여러 줄 시크릿을 히어독에 통째로 붙이면 치환된 첫 줄에만
+            # script 블록의 들여쓰기가 남아, 그 줄의 키가 공백으로 시작해 compose가 통째로 버린다.
+            printf '%s\n' \
+              "MONGODB_HOST=$MONGODB_HOST" \
+              "MONGODB_PORT=$MONGODB_PORT" \
+              "MONGODB_DATABASE=$MONGODB_DATABASE" \
+              "MONGODB_USERNAME=$MONGODB_USERNAME" \
+              "MONGODB_PASSWORD=$MONGODB_PASSWORD" \
+              "JWT_SECRET=$JWT_SECRET" \
+              "OAUTH_GOOGLE_CLIENT_ID=$OAUTH_GOOGLE_CLIENT_ID" \
+              "OAUTH_APPLE_CLIENT_ID=$OAUTH_APPLE_CLIENT_ID" \
+              "GITHUB_WORK_DIR=$GITHUB_WORK_DIR" \
+              "GCP_CREDENTIALS_BASE64=$GCP_CREDENTIALS_BASE64" \
+              > .env
             chmod 600 .env
             echo "$GHCR_TOKEN" | sudo docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            # 인증서가 없으면 Nginx가 기동조차 못 하므로(ssl_certificate 경로가 비어 있다)
+            # compose를 올리기 전에 standalone으로 한 번 발급받는다. 이때는 80이 비어 있다.
+            # 이후 갱신은 certbot 컨테이너가 webroot로 처리해 80을 뺏지 않는다.
+            mkdir -p certbot/conf certbot/www
+            # 존재 확인도 sudo로 한다. certbot이 archive/를 0700 root로 만들어서
+            # 배포 계정이 그냥 보면 없다고 나오고, 그러면 매 배포마다 재발급을 시도해
+            # Let's Encrypt 발급 한도(주 5회)를 태운다.
+            if ! sudo test -f certbot/conf/live/git-it.kr/fullchain.pem; then
+              sudo docker run --rm -p 80:80 \
+                -v "$PWD/certbot/conf:/etc/letsencrypt" \
+                certbot/certbot certonly --standalone -d git-it.kr \
+                --agree-tos --register-unsafely-without-email --non-interactive
+            fi
             sudo docker compose -f docker-compose.prod.yml pull
             sudo docker compose -f docker-compose.prod.yml up -d --remove-orphans
             sudo docker image prune -f
         env:
           GHCR_USER: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MONGODB_HOST: ${{ secrets.MONGODB_HOST }}
+          MONGODB_PORT: ${{ secrets.MONGODB_PORT }}
+          MONGODB_DATABASE: ${{ secrets.MONGODB_DATABASE }}
+          MONGODB_USERNAME: ${{ secrets.MONGODB_USERNAME }}
+          MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          OAUTH_GOOGLE_CLIENT_ID: ${{ secrets.OAUTH_GOOGLE_CLIENT_ID }}
+          OAUTH_APPLE_CLIENT_ID: ${{ secrets.OAUTH_APPLE_CLIENT_ID }}
+          GITHUB_WORK_DIR: ${{ secrets.GITHUB_WORK_DIR }}
+          GCP_CREDENTIALS_BASE64: ${{ secrets.GCP_CREDENTIALS_BASE64 }}

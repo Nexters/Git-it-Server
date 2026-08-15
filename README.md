@@ -124,6 +124,21 @@ Dockerfile 없이 [Jib](https://github.com/GoogleContainerTools/jib) Gradle 플�
 
 베이스 이미지는 `eclipse-temurin:25-jre`이고 non-root(uid 1000)로 실행됩니다.
 
+### HTTPS (Nginx + Certbot)
+
+운영 서버는 https://git-it.kr 로 서비스합니다. `docker-compose.prod.yml`이 앱·MongoDB와 함께
+Nginx와 Certbot을 띄웁니다.
+
+- Nginx가 80·443을 받아 `app:8080`으로 넘깁니다. 80으로 들어온 요청은 ACME 검증 경로
+  (`/.well-known/acme-challenge/`)만 통과시키고 나머지는 HTTPS로 리다이렉트합니다.
+- 설정은 `nginx/nginx.conf`이며 배포마다 서버로 전송됩니다.
+- 인증서는 `~/git-it/certbot/conf`에 보관됩니다. 최초 발급은 배포 스크립트가 standalone
+  방식으로 한 번 수행하고, 이후 갱신은 Certbot 컨테이너가 12시간마다 webroot 방식으로
+  처리합니다. Nginx는 6시간마다 reload해 갱신된 인증서를 집어 옵니다.
+
+서버에서 80·443 인바운드가 열려 있어야 합니다. 80이 막히면 ACME 검증이 실패해 발급 자체가
+되지 않습니다.
+
 ### 수동 실행
 
 `Actions → Backend CD → Run workflow`로 브랜치를 골라 실행할 수 있습니다.
@@ -140,15 +155,27 @@ Dockerfile 없이 [Jib](https://github.com/GoogleContainerTools/jib) Gradle 플�
 | `API_SERVER_USERNAME` | SSH 접속 유저 |
 | `API_SERVER_KEY` | 배포 전용 SSH 개인키 |
 | `API_SERVER_PORT` | SSH 포트 |
-| `PROD_ENV_FILE` | 운영 `.env` 파일 전체 내용 |
+
+배포 스크립트가 아래 값들로 서버의 `.env`를 조립합니다. 이름과 의미는 `.env.example`과 같습니다.
+
+| Secret | 비고 |
+|---|---|
+| `MONGODB_HOST` | **`mongodb`** (docker-compose 서비스명) |
+| `MONGODB_PORT` | `27017` |
+| `MONGODB_DATABASE` | |
+| `MONGODB_USERNAME` | |
+| `MONGODB_PASSWORD` | |
+| `JWT_SECRET` | |
+| `OAUTH_GOOGLE_CLIENT_ID` | |
+| `OAUTH_APPLE_CLIENT_ID` | |
+| `GITHUB_WORK_DIR` | 앱 컨테이너 안의 경로 |
+| `GCP_CREDENTIALS_BASE64` | 서비스 계정 JSON을 base64로 인코딩한 값 |
+
+> `MONGODB_HOST`를 `localhost`로 두면 안 됩니다. 운영에서는 `app`과 `mongodb`가 같은 Docker
+> 네트워크의 별개 컨테이너이므로 `localhost`는 app 컨테이너 자신을 가리켜 연결에 실패합니다.
 
 GHCR 인증은 워크플로가 `GITHUB_TOKEN`으로 `docker login`한 결과(`~/.docker/config.json`)를
 Jib이 읽어 가므로 별도 시크릿이 필요 없습니다.
-
-> `PROD_ENV_FILE`은 `.env.example`과 동일한 형식을 따르되, `MONGODB_HOST`만
-> `localhost`가 아닌 `mongodb`(docker-compose 서비스명)로 설정해야 합니다.
-> 운영 환경에서는 `app`과 `mongodb`가 같은 Docker 네트워크의 별개 컨테이너로
-> 떠 있으므로, `localhost`는 app 컨테이너 자신을 가리켜 연결에 실패합니다.
 
 서버 사전 준비사항은
 [`docs/superpowers/specs/2026-08-03-ci-cd-design.md`](docs/superpowers/specs/2026-08-03-ci-cd-design.md)를
