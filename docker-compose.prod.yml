@@ -44,7 +44,10 @@ services:
     depends_on:
       - app
     # 갱신된 인증서는 reload해야 반영된다. 6시간마다면 만료 전에 반드시 한 번은 걸린다.
-    command: /bin/sh -c "nginx -g 'daemon off;' & while :; do sleep 6h; nginx -s reload; done"
+    #
+    # nginx가 포그라운드여야 한다. 반대로 두면(nginx & + while 루프) nginx가 죽어도 PID 1인
+    # sh가 살아남아, 포트를 아무도 듣지 않는데 컨테이너는 Running으로 남고 재시작도 안 된다.
+    command: /bin/sh -c "while :; do sleep 6h; nginx -s reload; done & nginx -g 'daemon off;'"
 
   # 인증서 파일은 named volume이 아니라 호스트 경로에 둔다. 최초 발급은 compose 밖에서
   # docker run으로 도는데, named volume이면 compose가 프로젝트명을 앞에 붙여
