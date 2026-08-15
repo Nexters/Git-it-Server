@@ -142,7 +142,8 @@ Dockerfile 없이 [Jib](https://github.com/GoogleContainerTools/jib) Gradle 플�
 | `API_SERVER_PORT` | SSH 포트 |
 | `PROD_ENV_FILE` | 운영 `.env` 파일 전체 내용 |
 
-GHCR 인증은 Jib이 `GITHUB_TOKEN`으로 직접 처리하므로 별도 시크릿이 필요 없습니다.
+GHCR 인증은 워크플로가 `GITHUB_TOKEN`으로 `docker login`한 결과(`~/.docker/config.json`)를
+Jib이 읽어 가므로 별도 시크릿이 필요 없습니다.
 
 > `PROD_ENV_FILE`은 `.env.example`과 동일한 형식을 따르되, `MONGODB_HOST`만
 > `localhost`가 아닌 `mongodb`(docker-compose 서비스명)로 설정해야 합니다.
