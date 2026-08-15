@@ -8,4 +8,6 @@ interface SpringDataProjectRepository : MongoRepository<Project, String> {
         memberId: String,
         quizRepoId: String,
     ): Project?
+
+    fun findAllByQuizRepoIdAndDeletedAtIsNull(quizRepoId: String): List<Project>
 }

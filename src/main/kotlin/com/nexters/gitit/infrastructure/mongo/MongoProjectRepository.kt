@@ -15,4 +15,7 @@ class MongoProjectRepository(
         } catch (e: DuplicateKeyException) {
             projectRepository.findByMemberIdAndQuizRepoIdAndDeletedAtIsNull(project.memberId, project.quizRepoId) ?: throw e
         }
+
+    override fun findAllByQuizRepoId(quizRepoId: String): List<Project> =
+        projectRepository.findAllByQuizRepoIdAndDeletedAtIsNull(quizRepoId)
 }

@@ -7,5 +7,7 @@ import org.springframework.data.mongodb.repository.MongoRepository
 interface SpringDataMemberRepository : MongoRepository<Member, String> {
     fun findByIdAndDeletedAtIsNull(id: String): Member?
 
+    fun findAllByIdInAndDeletedAtIsNull(ids: List<String>): List<Member>
+
     fun findBySocialIdentityAndDeletedAtIsNull(socialIdentity: SocialIdentity): Member?
 }
