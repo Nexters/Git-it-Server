@@ -124,6 +124,21 @@ Dockerfile 없이 [Jib](https://github.com/GoogleContainerTools/jib) Gradle 플�
 
 베이스 이미지는 `eclipse-temurin:25-jre`이고 non-root(uid 1000)로 실행됩니다.
 
+### HTTPS (Nginx + Certbot)
+
+운영 서버는 https://git-it.kr 로 서비스합니다. `docker-compose.prod.yml`이 앱·MongoDB와 함께
+Nginx와 Certbot을 띄웁니다.
+
+- Nginx가 80·443을 받아 `app:8080`으로 넘깁니다. 80으로 들어온 요청은 ACME 검증 경로
+  (`/.well-known/acme-challenge/`)만 통과시키고 나머지는 HTTPS로 리다이렉트합니다.
+- 설정은 `nginx/nginx.conf`이며 배포마다 서버로 전송됩니다.
+- 인증서는 `~/git-it/certbot/conf`에 보관됩니다. 최초 발급은 배포 스크립트가 standalone
+  방식으로 한 번 수행하고, 이후 갱신은 Certbot 컨테이너가 12시간마다 webroot 방식으로
+  처리합니다. Nginx는 6시간마다 reload해 갱신된 인증서를 집어 옵니다.
+
+서버에서 80·443 인바운드가 열려 있어야 합니다. 80이 막히면 ACME 검증이 실패해 발급 자체가
+되지 않습니다.
+
 ### 수동 실행
 
 `Actions → Backend CD → Run workflow`로 브랜치를 골라 실행할 수 있습니다.
