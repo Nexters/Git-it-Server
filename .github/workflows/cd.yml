@@ -33,11 +33,16 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Jib이 GHCR에 직접 인증
+      # Jib은 자격 증명을 환경변수로 받지 않는다. 여기서 만든 ~/.docker/config.json을 읽어 간다.
+      # -Djib.to.auth.password로도 되지만 토큰이 프로세스 인자에 노출된다.
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build and push image
-        env:
-          JIB_TO_USERNAME: ${{ github.actor }}
-          JIB_TO_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew jib -Djib.to.tags=${{ github.sha }},latest
 
   deploy:
