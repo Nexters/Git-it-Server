@@ -27,6 +27,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
+    // AI
+    implementation(platform("org.springframework.ai:spring-ai-bom:${properties["springAiVersion"]}"))
+    implementation("org.springframework.ai:spring-ai-starter-model-google-genai")
+
     // Kotlin
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("tools.jackson.module:jackson-module-kotlin")
@@ -46,6 +50,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("io.kotest:kotest-assertions-core:${properties["kotestVersion"]}")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:${properties["mockitoKotlinVersion"]}")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
     testImplementation("org.testcontainers:testcontainers-mongodb")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

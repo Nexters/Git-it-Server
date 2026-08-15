@@ -4,6 +4,17 @@ spring:
   data:
     mongodb:
       auto-index-creation: true
+  ai:
+    google:
+      genai:
+        # 컨텍스트를 띄우는 데만 필요한 가짜 키. 실제 콜은 @Tag("network") 테스트에서만 나간다.
+        api-key: test-google-api-key
+
+ai:
+  model:
+    concept: gemini-2.5-flash
+    anchor: gemini-2.5-flash-lite
+    question: gemini-2.5-flash
 
 jwt:
   secret: test-secret-key-for-hs256-must-be-at-least-32-bytes
@@ -17,3 +28,6 @@ oauth:
     client-id: test-google-client-id
   apple:
     client-id: test-apple-client-id
+
+github:
+  work-dir: /tmp/gitit-test-work

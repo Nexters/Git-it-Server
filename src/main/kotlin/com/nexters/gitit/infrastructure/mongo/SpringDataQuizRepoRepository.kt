@@ -5,4 +5,6 @@ import org.springframework.data.mongodb.repository.MongoRepository
 
 interface SpringDataQuizRepoRepository : MongoRepository<QuizRepo, String> {
     fun findByGithubRepoIdAndDeletedAtIsNull(githubRepoId: String): QuizRepo?
+
+    fun findByIdAndDeletedAtIsNull(id: String): QuizRepo?
 }
