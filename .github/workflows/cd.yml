@@ -72,6 +72,7 @@ jobs:
           key: ${{ secrets.API_SERVER_KEY }}
           port: ${{ secrets.API_SERVER_PORT }}
           script_stop: true
+          envs: GHCR_USER,GHCR_TOKEN
           script: |
             cd ~/git-it
             umask 077
@@ -79,8 +80,10 @@ jobs:
             ${{ secrets.PROD_ENV_FILE }}
             ENVEOF
             chmod 600 .env
-            # 배포 계정이 docker 그룹에 없어 sudo가 필요하다. 비대화형 셸에는 docker가 PATH에도
-            # 없는데, sudo가 secure_path로 찾아주므로 그 문제까지 함께 해결된다.
+            echo "$GHCR_TOKEN" | sudo docker login ghcr.io -u "$GHCR_USER" --password-stdin
             sudo docker compose -f docker-compose.prod.yml pull
             sudo docker compose -f docker-compose.prod.yml up -d --remove-orphans
             sudo docker image prune -f
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
