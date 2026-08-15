@@ -79,6 +79,8 @@ jobs:
             ${{ secrets.PROD_ENV_FILE }}
             ENVEOF
             chmod 600 .env
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
-            docker image prune -f
+            # 배포 계정이 docker 그룹에 없어 sudo가 필요하다. 비대화형 셸에는 docker가 PATH에도
+            # 없는데, sudo가 secure_path로 찾아주므로 그 문제까지 함께 해결된다.
+            sudo docker compose -f docker-compose.prod.yml pull
+            sudo docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            sudo docker image prune -f
