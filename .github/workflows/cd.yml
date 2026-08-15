@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  # main 밖에서 이미지 빌드만 미리 확인할 수 있게 열어 둔다. 배포는 따라오지 않는다.
+  workflow_dispatch:
 
 concurrency:
   group: cd-deploy
@@ -35,10 +37,13 @@ jobs:
         env:
           JIB_TO_USERNAME: ${{ github.actor }}
           JIB_TO_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-        run: ./gradlew jib -Djib.to.tags=${{ github.sha }},latest
+        # latest는 운영 서버가 pull하는 태그라 main에서만 옮긴다. 브랜치 수동 실행은 sha 태그만 남긴다.
+        run: ./gradlew jib -Djib.to.tags=${{ github.sha }}${{ github.ref == 'refs/heads/main' && ',latest' || '' }}
 
   deploy:
     needs: build-and-push
+    # 브랜치에서 수동 실행했을 때 그 빌드가 운영에 나가지 않게 막는다.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-22.04
     steps:
       - name: action checkout
