@@ -5,6 +5,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("dev.detekt") version "2.0.0-alpha.3"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
+    id("com.google.cloud.tools.jib") version "3.5.4"
 }
 
 group = "com.nexters"
@@ -70,6 +71,23 @@ detekt {
 
 ktlint {
     version = properties["ktlintVersion"] as String
+}
+
+// 컨테이너 안에서 gradle을 돌리면 러너의 Gradle 캐시가 안 보여 배포마다 의존성을 처음부터 다시 받았다.
+jib {
+    from {
+        image = "eclipse-temurin:25-jre"
+    }
+    to {
+        image = "ghcr.io/nexters/git-it-server"
+    }
+    container {
+        // 베이스 이미지의 계정 이름에 묶이지 않도록 숫자 uid로 쓴다.
+        user = "1000:1000"
+        ports = listOf("8080")
+        // Kotlin 파일 파사드라 자동 탐지에 기대지 않는다.
+        mainClass = "com.nexters.gitit.GitItApplicationKt"
+    }
 }
 
 tasks.test {
