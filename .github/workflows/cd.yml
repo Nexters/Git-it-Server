@@ -4,7 +4,8 @@ on:
   push:
     branches:
       - main
-  # main 밖에서 이미지 빌드만 미리 확인할 수 있게 열어 둔다. 배포는 따라오지 않는다.
+  # 브랜치를 골라 파이프라인 전 구간을 그대로 돌려볼 수 있게 열어 둔다.
+  # 실행한 브랜치의 코드가 그대로 운영에 뜬다 — 되돌리려면 main을 다시 배포해야 한다.
   workflow_dispatch:
 
 concurrency:
@@ -32,18 +33,15 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Jib이 GHCR에 직접 인증하므로 docker login 단계가 없다.
+      # Jib이 GHCR에 직접 인증
       - name: Build and push image
         env:
           JIB_TO_USERNAME: ${{ github.actor }}
           JIB_TO_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-        # latest는 운영 서버가 pull하는 태그라 main에서만 옮긴다. 브랜치 수동 실행은 sha 태그만 남긴다.
-        run: ./gradlew jib -Djib.to.tags=${{ github.sha }}${{ github.ref == 'refs/heads/main' && ',latest' || '' }}
+        run: ./gradlew jib -Djib.to.tags=${{ github.sha }},latest
 
   deploy:
     needs: build-and-push
-    # 브랜치에서 수동 실행했을 때 그 빌드가 운영에 나가지 않게 막는다.
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-22.04
     steps:
       - name: action checkout
