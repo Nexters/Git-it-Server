@@ -39,4 +39,6 @@ out/
 ### Kotlin ###
 .kotlin
 
+### Security ###
 .env
+/rain-key.pem

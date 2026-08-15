@@ -109,23 +109,46 @@ docker compose -f docker-compose.local.yml down -v  # 저장된 데이터까지 
 
 ## 배포 (CD)
 
-`main`에 push(=PR 머지)되면 `.github/workflows/cd.yml`이 실행되어 Docker 이미지를
-`ghcr.io/nexters/git-it-server`에 push하고, 가비아 서버에 SSH로 접속해 재배포합니다.
+`main`에 push(=PR 머지)되면 `.github/workflows/cd.yml`이 실행되어 이미지를
+`ghcr.io/nexters/git-it-server`에 push하고, 서버에 SSH로 접속해 재배포합니다.
+태그는 커밋 SHA와 `latest` 두 개가 붙고, 서버는 `latest`를 pull합니다.
+
+### 이미지 빌드
+
+Dockerfile 없이 [Jib](https://github.com/GoogleContainerTools/jib) Gradle 플러그인이 이미지를 만듭니다.
+설정은 `build.gradle.kts`의 `jib { }` 블록에 있습니다.
+
+```bash
+./gradlew jibDockerBuild --image=git-it-server:local  # 로컬 Docker 데몬에만 빌드
+```
+
+베이스 이미지는 `eclipse-temurin:25-jre`이고 non-root(uid 1000)로 실행됩니다.
+
+### 수동 실행
+
+`Actions → Backend CD → Run workflow`로 브랜치를 골라 실행할 수 있습니다.
+
+> ⚠️ 수동 실행은 `main` push와 **완전히 동일하게** 동작합니다. 고른 브랜치의 코드가
+> 그대로 운영에 배포되고 `latest` 태그도 그 이미지로 옮겨갑니다. 되돌리려면 `main`을
+> 다시 배포해야 합니다.
 
 ### 필요한 GitHub Secrets
 
 | Secret | 용도 |
 |---|---|
-| `GABIA_HOST` | 가비아 서버 고정 공인 IP |
-| `GABIA_USERNAME` | SSH 접속 유저 |
-| `GABIA_SSH_KEY` | 배포 전용 SSH 개인키 |
+| `API_SERVER_HOST` | 서버 고정 공인 IP |
+| `API_SERVER_USERNAME` | SSH 접속 유저 |
+| `API_SERVER_KEY` | 배포 전용 SSH 개인키 |
+| `API_SERVER_PORT` | SSH 포트 |
 | `PROD_ENV_FILE` | 운영 `.env` 파일 전체 내용 |
+
+GHCR 인증은 Jib이 `GITHUB_TOKEN`으로 직접 처리하므로 별도 시크릿이 필요 없습니다.
 
 > `PROD_ENV_FILE`은 `.env.example`과 동일한 형식을 따르되, `MONGODB_HOST`만
 > `localhost`가 아닌 `mongodb`(docker-compose 서비스명)로 설정해야 합니다.
 > 운영 환경에서는 `app`과 `mongodb`가 같은 Docker 네트워크의 별개 컨테이너로
 > 떠 있으므로, `localhost`는 app 컨테이너 자신을 가리켜 연결에 실패합니다.
 
-자세한 배경과 서버 사전 준비사항은
+서버 사전 준비사항은
 [`docs/superpowers/specs/2026-08-03-ci-cd-design.md`](docs/superpowers/specs/2026-08-03-ci-cd-design.md)를
-참고하세요.
+참고하세요. 단, 이 문서는 Dockerfile로 빌드하던 시점에 작성되어 이미지 빌드 부분은 현재와 다릅니다.

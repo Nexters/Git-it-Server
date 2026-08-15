@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  # 브랜치를 골라 파이프라인 전 구간을 그대로 돌려볼 수 있게 열어 둔다.
+  # 실행한 브랜치의 코드가 그대로 운영에 뜬다 — 되돌리려면 main을 다시 배포해야 한다.
+  workflow_dispatch:
 
 concurrency:
   group: cd-deploy
@@ -21,24 +24,21 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          java-version: '25'
+          distribution: 'temurin'
 
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # Jib이 GHCR에 직접 인증
       - name: Build and push image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/nexters/git-it-server:${{ github.sha }}
-            ghcr.io/nexters/git-it-server:latest
+        env:
+          JIB_TO_USERNAME: ${{ github.actor }}
+          JIB_TO_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew jib -Djib.to.tags=${{ github.sha }},latest
 
   deploy:
     needs: build-and-push
@@ -52,18 +52,20 @@ jobs:
       - name: Copy docker-compose.prod.yml to server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.GABIA_HOST }}
-          username: ${{ secrets.GABIA_USERNAME }}
-          key: ${{ secrets.GABIA_SSH_KEY }}
+          host: ${{ secrets.API_SERVER_HOST }}
+          username: ${{ secrets.API_SERVER_USERNAME }}
+          key: ${{ secrets.API_SERVER_KEY }}
+          port: ${{ secrets.API_SERVER_PORT }}
           source: "docker-compose.prod.yml"
           target: "~/git-it"
 
-      - name: Deploy over SSH
+      - name: Deploy to server
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.GABIA_HOST }}
-          username: ${{ secrets.GABIA_USERNAME }}
-          key: ${{ secrets.GABIA_SSH_KEY }}
+          host: ${{ secrets.API_SERVER_HOST }}
+          username: ${{ secrets.API_SERVER_USERNAME }}
+          key: ${{ secrets.API_SERVER_KEY }}
+          port: ${{ secrets.API_SERVER_PORT }}
           script_stop: true
           script: |
             cd ~/git-it
