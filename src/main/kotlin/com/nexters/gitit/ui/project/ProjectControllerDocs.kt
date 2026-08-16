@@ -126,6 +126,30 @@ interface ProjectControllerDocs {
     ): ApiResponse<Unit>
 
     @Operation(
+        summary = "문제 생성 재시도",
+        description =
+            "사고로 멈춘 문제 생성을 다시 겁니다. 생성은 몇 분이 걸리므로 이 응답은 접수까지만 알리고, 결과는 프로젝트 상세에서 " +
+                "상태를 다시 읽어 확인합니다. 한 번 호출이 한 번 시도라 또 실패하면 다시 부를 수 있습니다.",
+    )
+    @ApiResponses(
+        SwaggerApiResponse(responseCode = "200", description = "재시도 접수. 생성이 끝난 것은 아닙니다"),
+        SwaggerApiResponse(
+            responseCode = "404",
+            description = "존재하지 않거나 본인 소유가 아닌 프로젝트",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = PROJECT_NOT_FOUND_EXAMPLE)])],
+        ),
+        SwaggerApiResponse(
+            responseCode = "409",
+            description = "사고로 멈춘 저장소가 아닌 경우 — 이미 완료됐거나, 만드는 중이거나, 문제를 낼 수 없다고 판정된 저장소",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = NOT_RETRYABLE_EXAMPLE)])],
+        ),
+    )
+    fun retryQuizGeneration(
+        memberId: String,
+        @Parameter(description = "재시도할 프로젝트 ID") projectId: String,
+    ): ApiResponse<Unit>
+
+    @Operation(
         summary = "학습 세트 조회",
         description =
             "세트에 걸린 문제를 프로젝트 난이도에 맞춰 돌려줍니다. 이미 푼 문제도 걸러내지 않고 만들어진 순서 그대로 나가며, " +
@@ -309,6 +333,9 @@ interface ProjectControllerDocs {
         // 남의 프로젝트에도 이 응답을 씁니다. 403으로 답하면 그 id의 프로젝트가 있다는 사실을 알려주는 셈입니다.
         private const val PROJECT_NOT_FOUND_EXAMPLE =
             """{"success":false,"data":null,"code":"PROJECT-001","message":"프로젝트를 찾을 수 없습니다","errors":null}"""
+
+        private const val NOT_RETRYABLE_EXAMPLE =
+            """{"success":false,"data":null,"code":"QUIZ-007","message":"문제 생성을 재시도할 수 없습니다","errors":null}"""
 
         private const val QUESTION_NOT_FOUND_EXAMPLE =
             """{"success":false,"data":null,"code":"QUIZ-005","message":"문제를 찾을 수 없습니다","errors":null}"""

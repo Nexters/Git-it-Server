@@ -9,6 +9,8 @@ package com.nexters.gitit.domain.quizrepo
  *
  * [REJECTED]와 [FAILED]는 다릅니다. 앞은 "이 레포로는 문제를 못 만든다"는 판정이라 사유가 있고 다시 돌려도
  * 같은 결과지만, 뒤는 사고라 사유가 없고 다시 돌리면 성공할 수 있습니다.
+ *
+ * 이 enum은 실패 지점을 적는 값이기도 합니다 — [QuizRepo.failedFrom]이 [FAILED] 직전의 값을 들고 있습니다.
  */
 enum class QuizRepoStatus {
     /** 등록 직후. 아직 아무것도 만들어지지 않았습니다. */

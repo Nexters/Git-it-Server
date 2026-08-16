@@ -7,6 +7,7 @@ import com.nexters.gitit.application.GetLearningSet
 import com.nexters.gitit.application.GetProjectDetail
 import com.nexters.gitit.application.GetProjects
 import com.nexters.gitit.application.RegisterProject
+import com.nexters.gitit.application.RetryQuizGeneration
 import com.nexters.gitit.application.SubmitAnswer
 import com.nexters.gitit.ui.common.ApiResponse
 import com.nexters.gitit.ui.common.LoginMember
@@ -42,6 +43,7 @@ class ProjectController(
     private val getProjects: GetProjects,
     private val getProjectDetail: GetProjectDetail,
     private val deleteProject: DeleteProject,
+    private val retryQuizGeneration: RetryQuizGeneration,
     private val submitAnswer: SubmitAnswer,
     private val getLearningSet: GetLearningSet,
     private val bookmarkQuestion: BookmarkQuestion,
@@ -91,6 +93,16 @@ class ProjectController(
         @PathVariable projectId: String,
     ): ApiResponse<Unit> {
         deleteProject(DeleteProject.Command(memberId, projectId))
+        return ApiResponse.success()
+    }
+
+    // 재시도를 걸었을 뿐 새 리소스가 생기지 않으므로 201이 아닌 200입니다.
+    @PostMapping("/{projectId}/quiz-generation/retry")
+    override fun retryQuizGeneration(
+        @LoginMember memberId: String,
+        @PathVariable projectId: String,
+    ): ApiResponse<Unit> {
+        retryQuizGeneration(RetryQuizGeneration.Command(memberId, projectId))
         return ApiResponse.success()
     }
 
