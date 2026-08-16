@@ -35,7 +35,8 @@ class GetProjects(
             techStack = quizRepo.techStacks,
             currentSetLabel = progress.nextSetIndex?.let { "Set ${it + 1}" }.orEmpty(),
             currentSetTitle = currentSet?.title.orEmpty(),
-            nextProblemId = progress.nextQuestionId,
+            nextSetId = currentSet?.id,
+            nextQuestionId = progress.nextQuestionId,
             overallProgressPercent = progress.overallProgressPercent,
         )
     }
@@ -57,7 +58,8 @@ class GetProjects(
         val techStack: List<String>,
         val currentSetLabel: String,
         val currentSetTitle: String,
-        val nextProblemId: String?,
+        val nextSetId: String?,
+        val nextQuestionId: String?,
         val overallProgressPercent: Int,
     )
 }

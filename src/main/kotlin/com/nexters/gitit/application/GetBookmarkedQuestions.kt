@@ -54,6 +54,7 @@ class GetBookmarkedQuestions(
                 BookmarkedQuestion(
                     projectId = project.id,
                     projectName = quizRepo.name,
+                    setId = set.id,
                     setLabel = "Set ${setIndex + 1}",
                     problemNumber = position + 1,
                     questionId = question.id,
@@ -90,6 +91,7 @@ class GetBookmarkedQuestions(
     data class BookmarkedQuestion(
         val projectId: String,
         val projectName: String,
+        val setId: String,
         val setLabel: String,
         val problemNumber: Int,
         val questionId: String,

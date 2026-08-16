@@ -29,6 +29,7 @@ data class BookmarkedQuestionResponse(
     val projectId: String,
     @field:Schema(description = "레포지토리 이름")
     val projectName: String,
+    val setId: String,
     @field:Schema(description = "세트 라벨 (예: \"Set 1\")")
     val setLabel: String,
     @field:Schema(description = "세트 내 문제 번호 (1부터 시작)")
@@ -41,6 +42,7 @@ data class BookmarkedQuestionResponse(
             BookmarkedQuestionResponse(
                 projectId = item.projectId,
                 projectName = item.projectName,
+                setId = item.setId,
                 setLabel = item.setLabel,
                 problemNumber = item.problemNumber,
                 questionId = item.questionId,
