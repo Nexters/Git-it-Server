@@ -5,6 +5,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("dev.detekt") version "2.0.0-alpha.3"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
+    id("com.google.cloud.tools.jib") version "3.5.4"
 }
 
 group = "com.nexters"
@@ -27,6 +28,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
+    // AI
+    implementation(platform("org.springframework.ai:spring-ai-bom:${properties["springAiVersion"]}"))
+    implementation("org.springframework.ai:spring-ai-starter-model-google-genai")
+
     // Kotlin
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("tools.jackson.module:jackson-module-kotlin")
@@ -40,12 +45,16 @@ dependencies {
     // JWT
     implementation("com.nimbusds:nimbus-jose-jwt:${properties["nimbusVersion"]}")
 
+    // Push
+    implementation("com.google.firebase:firebase-admin:${properties["firebaseAdminVersion"]}")
+
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.springframework.boot:spring-boot-starter-data-mongodb-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("io.kotest:kotest-assertions-core:${properties["kotestVersion"]}")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:${properties["mockitoKotlinVersion"]}")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
     testImplementation("org.testcontainers:testcontainers-mongodb")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -67,6 +76,45 @@ ktlint {
     version = properties["ktlintVersion"] as String
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+// 컨테이너 안에서 gradle을 돌리면 러너의 Gradle 캐시가 안 보여 배포마다 의존성을 처음부터 다시 받았다.
+jib {
+    from {
+        image = "eclipse-temurin:25-jre"
+    }
+    to {
+        image = "ghcr.io/nexters/git-it-server"
+    }
+    container {
+        // 베이스 이미지의 계정 이름에 묶이지 않도록 숫자 uid로 쓴다.
+        user = "1000:1000"
+        ports = listOf("8080")
+        // Kotlin 파일 파사드라 자동 탐지에 기대지 않는다.
+        mainClass = "com.nexters.gitit.GitItApplicationKt"
+    }
+}
+
+tasks.test {
+    useJUnitPlatform {
+        excludeTags("network")
+    }
+}
+
+// 외부 상태에 결과가 달려 있어 기본 test에서 뺀다. 네트워크나 GitHub이 흔들리면 우리 잘못 없이 빨간불이 된다.
+// 캐시도 끈다 — 지난번 통과했다고 건너뛰면 정작 확인하려던 것을 확인하지 않는다.
+tasks.register<Test>("networkTest") {
+    testClassesDirs =
+        sourceSets.test
+            .get()
+            .output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform {
+        includeTags("network")
+    }
+    outputs.upToDateWhen { false }
+
+    // 실패 원인이 외부에 있어 스택 트레이스만으로는 모자란다. 어댑터가 삼킨 실패도 로그로는 남으므로 그대로 흘려보낸다.
+    testLogging {
+        showStandardStreams = true
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
 }

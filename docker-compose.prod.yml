@@ -30,5 +30,36 @@ services:
       retries: 5
       start_period: 10s
 
+  nginx:
+    image: nginx:1.29-alpine
+    container_name: git-it-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/www:/var/www/certbot:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+    depends_on:
+      - app
+    # 갱신된 인증서는 reload해야 반영된다. 6시간마다면 만료 전에 반드시 한 번은 걸린다.
+    #
+    # nginx가 포그라운드여야 한다. 반대로 두면(nginx & + while 루프) nginx가 죽어도 PID 1인
+    # sh가 살아남아, 포트를 아무도 듣지 않는데 컨테이너는 Running으로 남고 재시작도 안 된다.
+    command: /bin/sh -c "while :; do sleep 6h; nginx -s reload; done & nginx -g 'daemon off;'"
+
+  # 인증서 파일은 named volume이 아니라 호스트 경로에 둔다. 최초 발급은 compose 밖에서
+  # docker run으로 도는데, named volume이면 compose가 프로젝트명을 앞에 붙여
+  # (git-it_certbot-conf) 양쪽이 서로 다른 볼륨을 보게 된다.
+  certbot:
+    image: certbot/certbot:latest
+    container_name: git-it-certbot
+    restart: unless-stopped
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    entrypoint: /bin/sh -c "while :; do certbot renew --webroot -w /var/www/certbot; sleep 12h; done"
+
 volumes:
   mongodb-data:
