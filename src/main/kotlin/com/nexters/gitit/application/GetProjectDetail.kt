@@ -36,6 +36,7 @@ class GetProjectDetail(
             }
 
         return Result(
+            projectId = project.id,
             repositoryUrl = quizRepo.githubRepoUrl,
             repositoryName = repositoryNameOf(quizRepo.githubRepoUrl),
             repositoryImageUrl = quizRepo.repositoryImageUrl,
@@ -53,6 +54,7 @@ class GetProjectDetail(
     )
 
     data class Result(
+        val projectId: String,
         val repositoryUrl: String,
         val repositoryName: String,
         val repositoryImageUrl: String?,
