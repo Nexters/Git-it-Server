@@ -6,8 +6,8 @@ import com.nexters.gitit.domain.member.Position
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class MemberProfileResponse(
-    @field:Schema(description = "이름. 큐레이션 전이면 null")
-    val name: String?,
+    @field:Schema(description = "닉네임. 가입 시 서버가 생성한다", example = "겁없는 SegFault")
+    val name: String,
     val email: String?,
     @field:Schema(description = "개발 분야")
     val position: Position?,

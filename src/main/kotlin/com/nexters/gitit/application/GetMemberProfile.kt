@@ -70,7 +70,7 @@ class GetMemberProfile(
     )
 
     data class Result(
-        val name: String?,
+        val name: String,
         val email: String?,
         val position: Position?,
         val careerLevel: CareerLevel?,
