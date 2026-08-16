@@ -24,7 +24,13 @@ data class LearningSet(
     val notes: List<AnchorNote>,
     val questions: Map<Depth, List<Question>>,
     val tags: Set<QualityTag> = emptySet(),
-)
+) {
+    /** 그 레벨의 문제. 완성된 세트라면 세 레벨이 같은 수로 차 있고, 만들다 만 세트는 비어 있을 수 있습니다. */
+    fun questionsOf(depth: Depth): List<Question> = questions[depth].orEmpty()
+
+    /** 그 앵커를 풀어 쓴 요약. 짝지어 둔 [AnchorNote]가 없으면 null입니다. */
+    fun summaryOf(anchor: Anchor): String? = notes.find { it.anchor == anchor }?.summary
+}
 
 /**
  * 앵커 하나와 그 자리를 풀어 쓴 요약.

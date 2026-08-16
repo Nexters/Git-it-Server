@@ -106,4 +106,28 @@ class QuizRepo(
      * 세트는 레포당 몇 개, 문제는 레벨당 몇 개 수준이라 순회 비용은 문제가 되지 않습니다.
      */
     fun findQuestion(questionId: String): Question? = learningSets.flatMap { it.questions.values.flatten() }.find { it.id == questionId }
+
+    fun findLearningSet(setId: String): LearningSet? = learningSets.find { it.id == setId }
+
+    /**
+     * 앵커가 가리키는 코드를 GitHub에서 여는 주소.
+     *
+     * 브랜치가 아니라 [sha]로 고정합니다. 앵커가 라인 번호라, 브랜치 링크는 레포가 갱신되는 순간
+     * 문제가 인용한 곳과 다른 코드를 열어줍니다.
+     *
+     * [githubRepoUrl]은 사용자가 적어 넣은 문자열 그대로라 접미사가 제각각입니다. 등록 때 쓰는 정규식을
+     * 여기서 다시 쓰지 않는 것은, 그 검사는 "받아들일지 말지"를 정하는 것이고 여기 온 URL은 이미 통과한 값이기 때문입니다.
+     */
+    fun sourceUrlOf(anchor: Anchor): String {
+        val base =
+            githubRepoUrl
+                .trim()
+                .removeSuffix("/")
+                .removeSuffix(".git")
+                .let { if (it.startsWith("http")) it else "https://$it" }
+        val lines = if (anchor.startLine == anchor.endLine) "L${anchor.startLine}" else "L${anchor.startLine}-L${anchor.endLine}"
+
+        // complete()가 sha와 세트를 함께 세팅하므로 문제가 있는데 sha가 없을 수는 없지만, 타입이 nullable이라 막아 둔다.
+        return "$base/blob/${sha ?: error("문제는 있는데 sha가 없습니다: quizRepoId=$id")}/${anchor.file}#$lines"
+    }
 }

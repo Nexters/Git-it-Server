@@ -42,4 +42,5 @@ enum class ErrorCode(
     ANCHOR_SELECTION_FAILED("QUIZ-003", "코드 근거를 찾지 못했습니다", HttpStatus.BAD_GATEWAY),
     QUESTION_GENERATION_FAILED("QUIZ-004", "문제를 생성하지 못했습니다", HttpStatus.BAD_GATEWAY),
     QUESTION_NOT_FOUND("QUIZ-005", "문제를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
+    LEARNING_SET_NOT_FOUND("QUIZ-006", "학습 세트를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
 }
