@@ -1,6 +1,8 @@
 package com.nexters.gitit.event
 
 import com.nexters.gitit.application.GenerateQuiz
+import com.nexters.gitit.application.NotifyQuizResult
+import com.nexters.gitit.domain.quizrepo.QuizGenerationFinished
 import com.nexters.gitit.domain.quizrepo.QuizGenerationRequested
 import org.springframework.context.event.EventListener
 import org.springframework.scheduling.annotation.Async
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Component
 @Component
 class QuizEventHandler(
     private val generateQuiz: GenerateQuiz,
+    private val notifyQuizResult: NotifyQuizResult,
 ) {
     /**
      * 발행자를 붙잡아 두지 않으려고 비동기입니다 — 문제 생성은 한 번에 몇 분이 걸립니다.
@@ -26,5 +29,15 @@ class QuizEventHandler(
     @EventListener
     fun handle(event: QuizGenerationRequested) {
         generateQuiz(GenerateQuiz.Command(event.quizRepoId))
+    }
+
+    /**
+     * 이 이벤트는 [GenerateQuiz]의 finally에서, 예외를 다시 던지는 경로에서도 나옵니다.
+     * 동기로 받으면 알림 발송이 그 스택 위에서 돌아 문제 생성 스레드를 더 붙잡습니다.
+     */
+    @Async
+    @EventListener
+    fun handle(event: QuizGenerationFinished) {
+        notifyQuizResult(NotifyQuizResult.Command(event.quizRepoId))
     }
 }
