@@ -20,7 +20,6 @@ class Member(
     var email: String? = email
         private set
 
-    // TBD 큐레이션 플로우가 정해지지 않았기에 아래 값들은 미정
     var position: Position? = position
         private set
 
@@ -32,6 +31,14 @@ class Member(
         private set
 
     fun isCurated(): Boolean = position != null && careerLevel != null
+
+    fun curate(
+        position: Position,
+        careerLevel: CareerLevel,
+    ) {
+        this.position = position
+        this.careerLevel = careerLevel
+    }
 
     /**
      * 기기 정보를 통째로 교체합니다.
