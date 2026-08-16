@@ -20,11 +20,14 @@ class Member(
     var email: String? = email
         private set
 
-    // TBD 큐레이션 플로우가 정해지지 않았기에 아래 값들은 미정
     var position: Position? = position
         private set
 
     var careerLevel: CareerLevel? = careerLevel
+        private set
+
+    // OAuth가 이름을 안 내려주므로 큐레이션에서 함께 받는다.
+    var name: String? = null
         private set
 
     // 가입 시점에는 알 수 없고 앱이 별도 요청으로 올려주므로 생성자에서 받지 않는다.
@@ -32,6 +35,26 @@ class Member(
         private set
 
     fun isCurated(): Boolean = position != null && careerLevel != null
+
+    fun curate(
+        name: String,
+        position: Position,
+        careerLevel: CareerLevel,
+    ) {
+        this.name = name
+        this.position = position
+        this.careerLevel = careerLevel
+    }
+
+    /** 설정 화면에서 개발 분야만 따로 바꿀 때 씁니다. */
+    fun updatePosition(position: Position) {
+        this.position = position
+    }
+
+    /** 설정 화면에서 개발 수준만 따로 바꿀 때 씁니다. */
+    fun updateCareerLevel(careerLevel: CareerLevel) {
+        this.careerLevel = careerLevel
+    }
 
     /**
      * 기기 정보를 통째로 교체합니다.

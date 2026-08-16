@@ -13,13 +13,13 @@ class GetProjectDetail(
     private val quizRepoRepository: QuizRepoRepository,
 ) {
     operator fun invoke(command: Command): Result {
-        val project =
-            projectRepository.findByIdAndMemberIdAndDeletedAtIsNull(command.projectId, command.memberId)
-                ?: throw BaseException(ErrorCode.NOT_FOUND, "프로젝트를 찾을 수 없습니다")
-        // quizRepoId가 가리키는 QuizRepo가 없는 것도 데이터 정합성이 깨진 경우라, 같은 404로 취급한다.
+        val project = projectRepository.findById(command.projectId) ?: throw BaseException(ErrorCode.PROJECT_NOT_FOUND)
+        project.requireOwnedBy(command.memberId)
+
+        // 프로젝트가 가리키는 저장소가 없는 것은 잘못된 요청이 아니라 데이터가 깨진 것이라, 404로 덮으면 원인이 묻힌다.
         val quizRepo =
             quizRepoRepository.findById(project.quizRepoId)
-                ?: throw BaseException(ErrorCode.NOT_FOUND, "프로젝트를 찾을 수 없습니다")
+                ?: error("프로젝트가 가리키는 저장소가 없습니다: quizRepoId=${project.quizRepoId}")
 
         val progress = ProjectProgress.calculate(project, quizRepo)
         val depth = Depth.valueOf(project.quizLevel.name)
@@ -30,7 +30,7 @@ class GetProjectDetail(
                     setId = set.id,
                     label = "Set ${index + 1}",
                     title = set.title,
-                    problemCount = set.questions[depth]?.size ?: 0,
+                    problemCount = set.questionsOf(depth).size,
                     completedCount = progress.completedCountsBySet.getOrElse(index) { 0 },
                 )
             }
@@ -38,10 +38,10 @@ class GetProjectDetail(
         return Result(
             projectId = project.id,
             repositoryUrl = quizRepo.githubRepoUrl,
-            repositoryName = repositoryNameOf(quizRepo.githubRepoUrl),
-            repositoryImageUrl = quizRepo.repositoryImageUrl,
+            repositoryName = quizRepo.name,
+            repositoryImageUrl = quizRepo.ownerImageUrl,
             starCount = quizRepo.starCount,
-            techStack = quizRepo.techStack,
+            techStack = quizRepo.techStacks,
             overallProgressPercent = progress.overallProgressPercent,
             nextProblemId = progress.nextQuestionId,
             sets = sets,
@@ -57,8 +57,8 @@ class GetProjectDetail(
         val projectId: String,
         val repositoryUrl: String,
         val repositoryName: String,
-        val repositoryImageUrl: String?,
-        val starCount: Long?,
+        val repositoryImageUrl: String,
+        val starCount: Int,
         val techStack: List<String>,
         val overallProgressPercent: Int,
         val nextProblemId: String?,

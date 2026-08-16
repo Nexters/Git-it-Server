@@ -55,7 +55,7 @@ class NotifyQuizResultTest(
      */
     @Test
     fun `토큰이 있는 회원에게만 그 회원의 프로젝트 id를 실어 보낸다`() {
-        val quizRepo = quizRepoRepository.save(QuizRepo("1", "https://github.com/nexters/git-it").apply { complete("sha", emptyList()) })
+        val quizRepo = quizRepoRepository.save(quizRepoOf().apply { complete("sha", emptyList()) })
         val pushEnabled = memberRepository.save(memberOf("push-enabled", DEVICE_TOKEN))
         val pushDenied = memberRepository.save(memberOf("push-denied", null))
         val project = projectRepository.save(Project(pushEnabled.id, quizRepo.id, QuizLevel.L1))
@@ -70,6 +70,17 @@ class NotifyQuizResultTest(
         tokens.firstValue shouldBe listOf(DEVICE_TOKEN)
         message.firstValue.data shouldBe mapOf("type" to "QUIZ_READY", "projectId" to project.id)
     }
+
+    // 표시용 필드는 알림 대상 선정과 무관해 아무 값이나 채운다.
+    private fun quizRepoOf() =
+        QuizRepo(
+            githubRepoId = "1",
+            githubRepoUrl = "https://github.com/nexters/git-it",
+            name = "git-it",
+            ownerImageUrl = "https://avatars.githubusercontent.com/u/4995702?v=4",
+            starCount = 0,
+            techStacks = emptyList(),
+        )
 
     private fun memberOf(
         socialId: String,

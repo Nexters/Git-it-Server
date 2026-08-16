@@ -13,13 +13,12 @@ interface SpringDataProjectRepository : MongoRepository<Project, String> {
 
     fun findAllByQuizRepoIdAndDeletedAtIsNull(quizRepoId: String): List<Project>
 
+    fun findByIdAndDeletedAtIsNull(id: String): Project?
+
     fun findAllByMemberIdAndDeletedAtIsNull(
         memberId: String,
         pageable: Pageable,
     ): Slice<Project>
 
-    fun findByIdAndMemberIdAndDeletedAtIsNull(
-        id: String,
-        memberId: String,
-    ): Project?
+    fun findAllByMemberIdAndDeletedAtIsNull(memberId: String): List<Project>
 }

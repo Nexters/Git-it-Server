@@ -1,22 +1,24 @@
 package com.nexters.gitit.application
 
 import com.nexters.gitit.domain.project.Project
+import com.nexters.gitit.domain.project.QuizLevel
 import com.nexters.gitit.domain.quizrepo.Depth
 import com.nexters.gitit.domain.quizrepo.Question
 import com.nexters.gitit.domain.quizrepo.QuizRepo
 
 /**
- * 문제는 세트 순서 → 세트 내 문제 순서로 이어 붙인 하나의 순번으로 풀린다고 가정합니다.
- * [Project.solvedQuestionCount](지금까지 푼 문제 수)만 있으면 그 순번을 진행 위치로 쓸 수 있어
- * 회원별 정답 이력을 별도로 저장하지 않아도 진행률/다음 문제/세트별 완료 개수를 계산할 수 있습니다.
+ * 진행률/다음 문제/세트별 완료 개수를 [Project.answers]로 계산합니다.
+ *
+ * "다음 문제"는 세트 순서 → 세트 내 문제 순서로 이어 붙였을 때 답이 없는 첫 문제입니다.
+ * 이미 낸 답이 있는지만 보므로, 문제를 어떤 순서로 풀었는지는 결과에 영향을 주지 않습니다.
  */
 object ProjectProgress {
     fun calculate(
         project: Project,
         quizRepo: QuizRepo,
     ): Result {
-        val depth = Depth.valueOf(project.quizLevel.name)
-        val questionsPerSet = quizRepo.learningSets.map { it.questions[depth].orEmpty() }
+        val depth = project.quizLevel.toDepth()
+        val questionsPerSet = quizRepo.learningSets.map { it.questionsOf(depth) }
         val totalCount = questionsPerSet.sumOf { it.size }
 
         if (totalCount == 0) {
@@ -28,19 +30,21 @@ object ProjectProgress {
             )
         }
 
-        val solvedCount = project.solvedQuestionCount.coerceAtMost(totalCount)
+        val answeredIds = project.answers.mapTo(HashSet()) { it.questionId }
+        val flat = questionsPerSet.flatten()
+        val solvedCount = flat.count { it.id in answeredIds }
         val overallProgressPercent = solvedCount * 100 / totalCount
 
         // 다 풀었으면(혹은 애초에 하나도 안 풀었으면) 다음 문제는 1세트 1번으로 돌아간다.
         // 진행률 바에 쓰는 실제 완료 개수(solvedCount)와는 별개로 다룬다.
-        val nextPosition = if (project.solvedQuestionCount >= totalCount) 0 else project.solvedQuestionCount
+        val nextPosition = flat.indexOfFirst { it.id !in answeredIds }.let { if (it == -1) 0 else it }
         val (nextSetIndex, nextQuestionId) = locate(questionsPerSet, nextPosition)
 
         return Result(
             overallProgressPercent = overallProgressPercent,
             nextQuestionId = nextQuestionId,
             nextSetIndex = nextSetIndex,
-            completedCountsBySet = distribute(questionsPerSet, solvedCount),
+            completedCountsBySet = questionsPerSet.map { questions -> questions.count { it.id in answeredIds } },
         )
     }
 
@@ -56,17 +60,13 @@ object ProjectProgress {
         return null to null
     }
 
-    private fun distribute(
-        questionsPerSet: List<List<Question>>,
-        solvedCount: Int,
-    ): List<Int> {
-        var remaining = solvedCount
-        return questionsPerSet.map { questions ->
-            val completed = remaining.coerceAtMost(questions.size)
-            remaining -= completed
-            completed
+    // 이름이 같아도 enum이 둘이라 valueOf로 잇지 않는다. 한쪽에 레벨이 늘면 컴파일이 깨져야 옮겨 적는 것을 잊지 않는다.
+    private fun QuizLevel.toDepth() =
+        when (this) {
+            QuizLevel.L1 -> Depth.L1
+            QuizLevel.L2 -> Depth.L2
+            QuizLevel.L3 -> Depth.L3
         }
-    }
 
     data class Result(
         val overallProgressPercent: Int,
@@ -75,6 +75,3 @@ object ProjectProgress {
         val completedCountsBySet: List<Int>,
     )
 }
-
-/** GitHub URL만 저장돼 있어서 이름은 읽을 때마다 마지막 경로 조각으로 만듭니다. */
-fun repositoryNameOf(githubRepoUrl: String): String = githubRepoUrl.trimEnd('/').substringAfterLast('/')

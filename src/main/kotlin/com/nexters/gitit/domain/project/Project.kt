@@ -1,6 +1,8 @@
 package com.nexters.gitit.domain.project
 
 import com.nexters.gitit.domain.common.BaseEntity
+import com.nexters.gitit.domain.exception.BaseException
+import com.nexters.gitit.domain.exception.ErrorCode
 import org.springframework.data.mongodb.core.index.CompoundIndex
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
@@ -25,9 +27,25 @@ class Project(
     val quizRepoId: String,
     val quizLevel: QuizLevel,
 ) : BaseEntity() {
+    // 진도는 따로 세지 않고 이 목록에서 파생합니다. 두 벌로 두면 답변과 진도가 서로 어긋납니다.
+    var answers: List<Answer> = emptyList()
+        private set
+
     /**
-     * 문제는 순서대로 풀리므로, 지금까지 몇 번째 문제까지 풀었는지만 있으면 진행률과 "다음 문제"를
-     * 계산할 수 있습니다. 값을 올리는 로직은 아직 없습니다 - 문제 풀이 기능이 생길 때 추가될 부분입니다.
+     * 답을 남기되 같은 문제에 대한 이전 답은 지웁니다. 복습이 기록을 쌓는 일이 아니라 최신 상태를 갱신하는
+     * 일이라, 한 문제에 답이 둘 이상 남으면 "지금 이 문제를 맞히는가"에 답할 수 없습니다.
      */
-    var solvedQuestionCount: Int = 0
+    fun submit(answer: Answer) {
+        answers = answers.filterNot { it.questionId == answer.questionId } + answer
+    }
+
+    /**
+     * 주인이 아니면 [BaseException]을 던집니다. 권한 없음이 아니라 없는 것으로 답하는 이유는,
+     * 403이 곧 "그 id의 프로젝트는 존재한다"를 알려주는 셈이기 때문입니다.
+     */
+    fun requireOwnedBy(memberId: String) {
+        if (this.memberId != memberId) {
+            throw BaseException(ErrorCode.PROJECT_NOT_FOUND)
+        }
+    }
 }

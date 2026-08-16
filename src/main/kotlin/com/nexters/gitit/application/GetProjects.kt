@@ -30,9 +30,9 @@ class GetProjects(
 
         return ProjectItem(
             projectId = project.id,
-            repositoryName = repositoryNameOf(quizRepo.githubRepoUrl),
-            repositoryImageUrl = quizRepo.repositoryImageUrl,
-            techStack = quizRepo.techStack,
+            repositoryName = quizRepo.name,
+            repositoryImageUrl = quizRepo.ownerImageUrl,
+            techStack = quizRepo.techStacks,
             currentSetLabel = progress.nextSetIndex?.let { "Set ${it + 1}" }.orEmpty(),
             currentSetTitle = currentSet?.title.orEmpty(),
             nextProblemId = progress.nextQuestionId,
@@ -53,7 +53,7 @@ class GetProjects(
     data class ProjectItem(
         val projectId: String,
         val repositoryName: String,
-        val repositoryImageUrl: String?,
+        val repositoryImageUrl: String,
         val techStack: List<String>,
         val currentSetLabel: String,
         val currentSetTitle: String,

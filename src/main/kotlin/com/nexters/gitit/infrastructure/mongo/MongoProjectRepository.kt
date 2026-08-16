@@ -23,13 +23,13 @@ class MongoProjectRepository(
     override fun findAllByQuizRepoId(quizRepoId: String): List<Project> =
         projectRepository.findAllByQuizRepoIdAndDeletedAtIsNull(quizRepoId)
 
+    override fun findById(id: String): Project? = projectRepository.findByIdAndDeletedAtIsNull(id)
+
     override fun findAllByMemberIdAndDeletedAtIsNull(
         memberId: String,
         pageable: Pageable,
     ): Slice<Project> = projectRepository.findAllByMemberIdAndDeletedAtIsNull(memberId, pageable)
 
-    override fun findByIdAndMemberIdAndDeletedAtIsNull(
-        id: String,
-        memberId: String,
-    ): Project? = projectRepository.findByIdAndMemberIdAndDeletedAtIsNull(id, memberId)
+    override fun findAllByMemberIdAndDeletedAtIsNull(memberId: String): List<Project> =
+        projectRepository.findAllByMemberIdAndDeletedAtIsNull(memberId)
 }

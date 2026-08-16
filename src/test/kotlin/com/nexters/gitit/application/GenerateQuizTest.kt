@@ -47,7 +47,16 @@ class GenerateQuizTest {
 
     private val checkout = RepoCheckout(ROOT, COORDINATES)
 
-    private val quizRepo = QuizRepo(githubRepoId = "1310710749", githubRepoUrl = REPO_URL)
+    // 표시용 필드는 파이프라인이 읽지 않아 아무 값이나 채운다.
+    private val quizRepo =
+        QuizRepo(
+            githubRepoId = "1310710749",
+            githubRepoUrl = REPO_URL,
+            name = "Git-it-Server",
+            ownerImageUrl = "https://avatars.githubusercontent.com/u/4995702?v=4",
+            starCount = 3,
+            techStacks = listOf("Kotlin"),
+        )
 
     private val generateQuiz =
         GenerateQuiz(

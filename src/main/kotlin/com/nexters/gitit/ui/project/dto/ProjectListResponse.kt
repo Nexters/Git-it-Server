@@ -21,9 +21,9 @@ data class ProjectItemResponse(
     val projectId: String,
     @field:Schema(description = "레포지토리 이름")
     val repositoryName: String,
-    @field:Schema(description = "레포지토리 프로필 이미지. 등록 파이프라인이 아직 채우지 않아 null일 수 있음")
-    val repositoryImageUrl: String?,
-    @field:Schema(description = "기술 스택. 등록 파이프라인이 아직 채우지 않아 빈 배열일 수 있음")
+    @field:Schema(description = "레포지토리 소유자 프로필 이미지")
+    val repositoryImageUrl: String,
+    @field:Schema(description = "기술 스택")
     val techStack: List<String>,
     @field:Schema(description = "다음에 풀 문제가 속한 세트 라벨 (예: \"Set 1\")")
     val currentSetLabel: String,
