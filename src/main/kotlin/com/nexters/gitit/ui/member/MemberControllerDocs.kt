@@ -4,6 +4,7 @@ import com.nexters.gitit.ui.common.ApiResponse
 import com.nexters.gitit.ui.member.dto.CareerLevelRequest
 import com.nexters.gitit.ui.member.dto.CurationRequest
 import com.nexters.gitit.ui.member.dto.DeviceInfoRequest
+import com.nexters.gitit.ui.member.dto.MemberProfileResponse
 import com.nexters.gitit.ui.member.dto.NotificationSettingsRequest
 import com.nexters.gitit.ui.member.dto.PositionRequest
 import io.swagger.v3.oas.annotations.Operation
@@ -16,6 +17,25 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 
 @Tag(name = "Member", description = "회원 API")
 interface MemberControllerDocs {
+    @Operation(
+        summary = "멤버 정보 조회",
+        description =
+            "마이페이지 진입 시 필요한 내 프로필 정보와 학습 현황(이번 주/이번 달 푼 문제 수, 연속 학습 일수, " +
+                "이번 주 요일별 문제 풀이량)을 조회합니다. nickname·profileImageUrl은 아직 저장하는 값이 없어 응답에 없습니다.",
+    )
+    @ApiResponses(
+        SwaggerApiResponse(
+            responseCode = "200",
+            description = "조회 성공",
+        ),
+        SwaggerApiResponse(
+            responseCode = "404",
+            description = "회원을 찾을 수 없음",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = MEMBER_NOT_FOUND_EXAMPLE)])],
+        ),
+    )
+    fun getMemberProfile(memberId: String): ApiResponse<MemberProfileResponse>
+
     @Operation(
         summary = "기기 정보 등록",
         description =
