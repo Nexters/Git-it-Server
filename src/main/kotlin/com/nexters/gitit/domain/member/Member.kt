@@ -38,11 +38,9 @@ class Member(
     fun isCurated(): Boolean = position != null && careerLevel != null
 
     fun curate(
-        name: String,
         position: Position,
         careerLevel: CareerLevel,
     ) {
-        this.name = name
         this.position = position
         this.careerLevel = careerLevel
     }
