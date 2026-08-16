@@ -2,6 +2,8 @@ package com.nexters.gitit.ui.project
 
 import com.nexters.gitit.ui.common.ApiResponse
 import com.nexters.gitit.ui.project.dto.LearningSetResponse
+import com.nexters.gitit.ui.project.dto.ProjectDetailResponse
+import com.nexters.gitit.ui.project.dto.ProjectListResponse
 import com.nexters.gitit.ui.project.dto.RegisterProjectRequest
 import com.nexters.gitit.ui.project.dto.RegisterProjectResponse
 import com.nexters.gitit.ui.project.dto.SubmitChoiceAnswerRequest
@@ -9,6 +11,7 @@ import com.nexters.gitit.ui.project.dto.SubmitChoiceAnswerResponse
 import com.nexters.gitit.ui.project.dto.SubmitEssayAnswerRequest
 import com.nexters.gitit.ui.project.dto.SubmitEssayAnswerResponse
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.ExampleObject
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -48,6 +51,48 @@ interface ProjectControllerDocs {
         memberId: String,
         request: RegisterProjectRequest,
     ): ApiResponse<RegisterProjectResponse>
+
+    @Operation(
+        summary = "프로젝트 목록 조회",
+        description = "내가 학습 중인 프로젝트 목록을 생성 순서(오래된 순)로 조회합니다.",
+    )
+    fun getProjects(
+        memberId: String,
+        @Parameter(description = "페이지 번호 (0부터 시작)") page: Int,
+        @Parameter(description = "페이지 크기") size: Int,
+    ): ApiResponse<ProjectListResponse>
+
+    @Operation(
+        summary = "프로젝트 상세 조회",
+        description = "프로젝트 상세 정보를 조회합니다. 레포 정보(GitHub 링크 포함), 전체 진행률, 다음 문제 ID, 세트별 진행 현황을 반환합니다.",
+    )
+    @ApiResponses(
+        SwaggerApiResponse(
+            responseCode = "404",
+            description = "존재하지 않거나 본인 소유가 아니거나 삭제된 프로젝트",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = PROJECT_NOT_FOUND_EXAMPLE)])],
+        ),
+    )
+    fun getProjectDetail(
+        memberId: String,
+        @Parameter(description = "조회할 프로젝트 ID") projectId: String,
+    ): ApiResponse<ProjectDetailResponse>
+
+    @Operation(
+        summary = "프로젝트 삭제",
+        description = "프로젝트를 소프트 삭제합니다. 본인 소유가 아니거나 이미 삭제된 경우 존재 여부를 노출하지 않기 위해 404로 응답합니다.",
+    )
+    @ApiResponses(
+        SwaggerApiResponse(
+            responseCode = "404",
+            description = "존재하지 않거나 본인 소유가 아니거나 이미 삭제된 프로젝트",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = PROJECT_NOT_FOUND_EXAMPLE)])],
+        ),
+    )
+    fun deleteProject(
+        memberId: String,
+        @Parameter(description = "삭제할 프로젝트 ID") projectId: String,
+    ): ApiResponse<Unit>
 
     @Operation(
         summary = "학습 세트 조회",
