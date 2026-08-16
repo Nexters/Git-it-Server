@@ -4,6 +4,7 @@ import com.nexters.gitit.ui.common.ApiResponse
 import com.nexters.gitit.ui.member.dto.CareerLevelRequest
 import com.nexters.gitit.ui.member.dto.CurationRequest
 import com.nexters.gitit.ui.member.dto.DeviceInfoRequest
+import com.nexters.gitit.ui.member.dto.NotificationSettingsRequest
 import com.nexters.gitit.ui.member.dto.PositionRequest
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
@@ -119,6 +120,38 @@ interface MemberControllerDocs {
         request: CareerLevelRequest,
     ): ApiResponse<Unit>
 
+    @Operation(
+        summary = "세트 생성 완료 알림 설정",
+        description =
+            "학습 세트 생성이 완료됐을 때 푸시 알림을 받을지 설정합니다. 실제 발송을 받으려면 기기 정보 등록으로 " +
+                "기기 토큰이 먼저 등록돼 있어야 합니다.",
+    )
+    @ApiResponses(
+        SwaggerApiResponse(
+            responseCode = "200",
+            description = "변경 성공",
+        ),
+        SwaggerApiResponse(
+            responseCode = "400",
+            description = "필수 값이 비어 있음",
+            content = [
+                Content(
+                    mediaType = APPLICATION_JSON_VALUE,
+                    examples = [ExampleObject(value = NOTIFICATION_SETTINGS_INVALID_INPUT_EXAMPLE)],
+                ),
+            ],
+        ),
+        SwaggerApiResponse(
+            responseCode = "404",
+            description = "회원을 찾을 수 없음",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = MEMBER_NOT_FOUND_EXAMPLE)])],
+        ),
+    )
+    fun updateNotificationSettings(
+        memberId: String,
+        request: NotificationSettingsRequest,
+    ): ApiResponse<Unit>
+
     companion object {
         // 401은 OpenApiConfig의 loginMemberSecurityCustomizer가 @LoginMember 파라미터를 보고 자동으로 붙이므로 여기 적지 않습니다.
         private const val INVALID_INPUT_EXAMPLE =
@@ -134,5 +167,9 @@ interface MemberControllerDocs {
 
         private const val CAREER_LEVEL_INVALID_INPUT_EXAMPLE =
             """{"success":false,"data":null,"code":"COMMON-001","message":"잘못된 요청입니다","errors":[{"field":"careerLevel","message":"careerLevel은 필수입니다"}]}"""
+
+        private const val NOTIFICATION_SETTINGS_INVALID_INPUT_EXAMPLE =
+            "{\"success\":false,\"data\":null,\"code\":\"COMMON-001\",\"message\":\"잘못된 요청입니다\"," +
+                "\"errors\":[{\"field\":\"setCompletionReminderEnabled\",\"message\":\"setCompletionReminderEnabled는 필수입니다\"}]}"
     }
 }

@@ -30,6 +30,10 @@ class Member(
     var deviceInfo: DeviceInfo? = null
         private set
 
+    // 옵트아웃 방식이라 기본값은 켜짐이다.
+    var setCompletionReminderEnabled: Boolean = true
+        private set
+
     fun isCurated(): Boolean = position != null && careerLevel != null
 
     fun curate(
@@ -58,5 +62,10 @@ class Member(
      */
     fun updateDeviceInfo(deviceInfo: DeviceInfo) {
         this.deviceInfo = deviceInfo
+    }
+
+    /** 세트 생성 완료 푸시 알림을 받을지 설정합니다. */
+    fun updateCompletionReminderEnabled(enabled: Boolean) {
+        setCompletionReminderEnabled = enabled
     }
 }
