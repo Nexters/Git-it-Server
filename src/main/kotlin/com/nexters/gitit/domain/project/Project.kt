@@ -31,12 +31,24 @@ class Project(
     var answers: List<Answer> = emptyList()
         private set
 
+    // 북마크는 회원마다 다른 값이라 여러 회원이 공유하는 QuizRepo가 아니라 여기 둡니다.
+    var bookmarkedQuestionIds: Set<String> = emptySet()
+        private set
+
     /**
      * 답을 남기되 같은 문제에 대한 이전 답은 지웁니다. 복습이 기록을 쌓는 일이 아니라 최신 상태를 갱신하는
      * 일이라, 한 문제에 답이 둘 이상 남으면 "지금 이 문제를 맞히는가"에 답할 수 없습니다.
      */
     fun submit(answer: Answer) {
         answers = answers.filterNot { it.questionId == answer.questionId } + answer
+    }
+
+    /** 북마크 상태를 명시적으로 켜거나 끕니다. 토글이 아닌 이유는 화면 재진입 시 두 기기가 어긋난 상태로 서로 뒤집는 것을 막기 위해서입니다. */
+    fun setBookmarked(
+        questionId: String,
+        bookmarked: Boolean,
+    ) {
+        bookmarkedQuestionIds = if (bookmarked) bookmarkedQuestionIds + questionId else bookmarkedQuestionIds - questionId
     }
 
     /**
