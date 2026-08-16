@@ -4,6 +4,8 @@ import com.nexters.gitit.application.GetProjectDetail
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ProjectDetailResponse(
+    @field:Schema(description = "GitHub 레포지토리 링크")
+    val repositoryUrl: String?,
     @field:Schema(description = "레포지토리 프로필 이미지")
     val repositoryImageUrl: String?,
     @field:Schema(description = "레포지토리 이름")
@@ -21,6 +23,7 @@ data class ProjectDetailResponse(
     companion object {
         fun from(result: GetProjectDetail.Result) =
             ProjectDetailResponse(
+                repositoryUrl = result.repositoryUrl,
                 repositoryImageUrl = result.repositoryImageUrl,
                 repositoryName = result.repositoryName,
                 starCount = result.starCount,

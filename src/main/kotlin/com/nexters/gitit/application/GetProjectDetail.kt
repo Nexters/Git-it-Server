@@ -21,6 +21,7 @@ class GetProjectDetail(
         val progress = projectProgressCalculator.calculate(project.id)
 
         return Result(
+            repositoryUrl = project.repositoryUrl,
             repositoryImageUrl = project.repositoryImageUrl,
             repositoryName = project.repositoryName,
             starCount = project.starCount,
@@ -51,6 +52,7 @@ class GetProjectDetail(
     )
 
     data class Result(
+        val repositoryUrl: String?,
         val repositoryImageUrl: String?,
         val repositoryName: String,
         val starCount: Long?,

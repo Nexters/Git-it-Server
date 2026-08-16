@@ -2,13 +2,11 @@ package com.nexters.gitit.ui.project
 
 import com.nexters.gitit.application.DeleteProject
 import com.nexters.gitit.application.GetProjectDetail
-import com.nexters.gitit.application.GetProjectRepositoryUrl
 import com.nexters.gitit.application.GetProjects
 import com.nexters.gitit.ui.common.ApiResponse
 import com.nexters.gitit.ui.common.LoginMember
 import com.nexters.gitit.ui.project.dto.ProjectDetailResponse
 import com.nexters.gitit.ui.project.dto.ProjectListResponse
-import com.nexters.gitit.ui.project.dto.ProjectRepositoryUrlResponse
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
@@ -25,7 +23,6 @@ class ProjectController(
     private val getProjects: GetProjects,
     private val getProjectDetail: GetProjectDetail,
     private val deleteProject: DeleteProject,
-    private val getProjectRepositoryUrl: GetProjectRepositoryUrl,
 ) : ProjectControllerDocs {
     @GetMapping
     override fun getProjects(
@@ -54,14 +51,5 @@ class ProjectController(
     ): ApiResponse<Unit> {
         deleteProject(DeleteProject.Command(memberId, projectId))
         return ApiResponse.success(Unit)
-    }
-
-    @GetMapping("/{projectId}/repository-url")
-    override fun getProjectRepositoryUrl(
-        @LoginMember memberId: String,
-        @PathVariable projectId: String,
-    ): ApiResponse<ProjectRepositoryUrlResponse> {
-        val result = getProjectRepositoryUrl(GetProjectRepositoryUrl.Command(memberId, projectId))
-        return ApiResponse.success(ProjectRepositoryUrlResponse.from(result))
     }
 }
