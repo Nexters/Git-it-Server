@@ -19,6 +19,9 @@ import org.springframework.data.mongodb.core.mapping.Document
  * [sha]는 [learningSets]와 [anchoredConcepts]가 어느 커밋을 보고 만들어졌는지입니다. 앵커가 라인 번호라
  * 커밋이 달라지면 같은 파일이라도 다른 곳을 가리켜, 레포가 갱신됐을 때 옛 산출물을 그대로 쓰면 안 됩니다.
  * 수집 단계가 확정해 [RepoCheckout]에 실어 보낸 값을 그대로 받습니다 — 해제 디렉터리 이름에서 되짚지 않습니다.
+ *
+ * [name]·[ownerImageUrl]·[starCount]·[techStacks]는 목록에 그려주려고 들고 있는 첫 등록 시점의 스냅샷입니다.
+ * 갱신하지 않는 것은 저장소당 하나뿐인 공용 도큐먼트라 다시 읽어올 시점을 정해줄 주인이 없어서입니다.
  */
 @Document(collection = "quiz_repos")
 @CompoundIndex(
@@ -30,6 +33,10 @@ import org.springframework.data.mongodb.core.mapping.Document
 class QuizRepo(
     val githubRepoId: String,
     val githubRepoUrl: String,
+    val name: String,
+    val ownerImageUrl: String,
+    val starCount: Int,
+    val techStacks: List<String>,
 ) : BaseEntity() {
     // 생성 파이프라인이 최종 상태를 결정하므로 등록 시점에는 항상 시작 상태다.
     var status: QuizRepoStatus = QuizRepoStatus.READY

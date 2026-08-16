@@ -1,5 +1,7 @@
 package com.nexters.gitit.infrastructure.github
 
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.nexters.gitit.domain.quizrepo.GithubRepository
 import com.nexters.gitit.domain.quizrepo.GithubRepositoryResolver
 import org.springframework.stereotype.Component
 import org.springframework.web.client.HttpClientErrorException
@@ -14,21 +16,29 @@ class GithubApiRepositoryResolver(
      * 404만 null로 접고 나머지는 그대로 던집니다. 5xx·네트워크 오류까지 "없음"으로 묻으면 멀쩡한 저장소가
      * 등록을 거부당하고, 사용자는 다시 시도하면 되는 상황인 줄 모릅니다.
      */
-    override fun resolve(githubRepoUrl: String): String? {
+    override fun resolve(githubRepoUrl: String): GithubRepository? {
         val (owner, name) = parseOwnerAndName(githubRepoUrl) ?: return null
 
-        return try {
-            githubRestClient
-                .get()
-                .uri("/repos/{owner}/{name}", owner, name)
-                .retrieve()
-                .body<GithubRepositoryResponse>()
-                ?.id
-                ?.toString()
-        } catch (_: HttpClientErrorException.NotFound) {
-            // 비공개 저장소도 404다. 토큰 없이 못 읽는다는 점에서 없는 것과 결과가 같아 구분하지 않는다.
-            null
-        }
+        val response =
+            try {
+                githubRestClient
+                    .get()
+                    .uri("/repos/{owner}/{name}", owner, name)
+                    .retrieve()
+                    .body<GithubRepositoryResponse>()
+            } catch (_: HttpClientErrorException.NotFound) {
+                // 비공개 저장소도 404다. 토큰 없이 못 읽는다는 점에서 없는 것과 결과가 같아 구분하지 않는다.
+                null
+            } ?: return null
+
+        return GithubRepository(
+            id = response.id.toString(),
+            name = response.name,
+            ownerImageUrl = response.owner.avatarUrl,
+            starCount = response.stargazersCount,
+            // 언어 통계는 별도 호출인 데다 `HTML`·`Shell` 같은 곁다리가 올라와, 안 채워지면 안 채워진 대로 둔다.
+            techStacks = response.topics.take(TECH_STACK_SIZE),
+        )
     }
 
     /** 이름에 점이 들어가는 경우(`socket.io`)와 `.git` 접미사를 모두 받으려고 이름을 최소 일치로 잡습니다. */
@@ -39,11 +49,23 @@ class GithubApiRepositoryResolver(
     }
 
     // 나머지 필드는 Spring Boot 기본 설정(FAIL_ON_UNKNOWN_PROPERTIES=false)이 무시한다.
+    // 프로퍼티 이름 전략은 기본값(camelCase)이라 snake_case 필드는 @JsonProperty로 짚어줘야 붙는다.
     private data class GithubRepositoryResponse(
         val id: Long,
-    )
+        val name: String,
+        val owner: Owner,
+        @param:JsonProperty("stargazers_count") val stargazersCount: Int,
+        // topics는 응답에 아예 없는 경우가 있어 기본값을 둔다.
+        val topics: List<String> = emptyList(),
+    ) {
+        data class Owner(
+            @param:JsonProperty("avatar_url") val avatarUrl: String,
+        )
+    }
 
     companion object {
+        private const val TECH_STACK_SIZE = 3
+
         /**
          * 부분 일치로 찾으면 `notgithub.com/o/n`처럼 호스트가 다른 URL도 통과합니다. 호출 대상이 api.github.com으로
          * 고정이라 다른 곳을 찌를 수는 없지만, 사용자가 준 적 없는 저장소가 등록됩니다. 그래서 문자열 전체를 맞춥니다.
