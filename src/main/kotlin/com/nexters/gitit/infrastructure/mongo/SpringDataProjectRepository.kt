@@ -21,4 +21,6 @@ interface SpringDataProjectRepository : MongoRepository<Project, String> {
     ): Slice<Project>
 
     fun findAllByMemberIdAndDeletedAtIsNull(memberId: String): List<Project>
+
+    fun deleteAllByMemberId(memberId: String)
 }

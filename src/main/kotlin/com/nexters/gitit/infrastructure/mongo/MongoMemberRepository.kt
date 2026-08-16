@@ -17,4 +17,6 @@ class MongoMemberRepository(
 
     override fun findBySocialIdentity(socialIdentity: SocialIdentity): Member? =
         memberRepository.findBySocialIdentityAndDeletedAtIsNull(socialIdentity)
+
+    override fun deleteById(id: String) = memberRepository.deleteById(id)
 }
