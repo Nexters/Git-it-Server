@@ -14,6 +14,14 @@ class ParallelTest {
     }
 
     @Test
+    fun `치명적 오류는 나머지가 성공했어도 올린다`() {
+        val outcomes = listOf(1, 2).inParallel { runCatching { if (it == 1) "값 1" else throw OutOfMemoryError("heap") } }
+
+        // runCatching이 Throwable을 잡아, 막지 않으면 JVM이 죽어가는 중에 "일부 성공"으로 세트가 완성된다.
+        shouldThrow<OutOfMemoryError> { outcomes.successesOrThrow() }
+    }
+
+    @Test
     fun `전부 실패하면 원래 예외를 그대로 던진다`() {
         val outcomes = listOf(1, 2).inParallel { runCatching { error("$it 실패") } }
 
