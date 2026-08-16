@@ -294,7 +294,8 @@ interface ProjectControllerDocs {
         private const val PROJECT_LIST_EXAMPLE =
             """{"success":true,"data":{"items":[{"projectId":"68a1f2c3d4e5f6a7b8c9d0e1","repositoryName":"nexters",""" +
                 """"repositoryImageUrl":"https://avatars.githubusercontent.com/u/1","techStack":["Kotlin","Compose","Coroutines"],""" +
-                """"currentSetLabel":"Set 1","currentSetTitle":"Set 1 title","nextProblemId":"q3","overallProgressPercent":28}],""" +
+                """"currentSetLabel":"Set 1","currentSetTitle":"Set 1 title","nextSetId":"set1","nextQuestionId":"q3",""" +
+                """"overallProgressPercent":28}],""" +
                 """"hasNext":false},"code":null,"message":null,"errors":null}"""
 
         private const val PROJECT_DETAIL_EXAMPLE =

@@ -29,8 +29,10 @@ data class ProjectItemResponse(
     val currentSetLabel: String,
     @field:Schema(description = "다음에 풀 문제가 속한 세트 제목")
     val currentSetTitle: String,
+    @field:Schema(description = "다음에 풀어야 할 문제가 속한 세트 ID")
+    val nextSetId: String?,
     @field:Schema(description = "다음에 풀어야 할 문제 ID. 재생 버튼 클릭 시 이 문제로 이동")
-    val nextProblemId: String?,
+    val nextQuestionId: String?,
     @field:Schema(description = "프로젝트 전체 진행률(%)")
     val overallProgressPercent: Int,
 ) {
@@ -43,7 +45,8 @@ data class ProjectItemResponse(
                 techStack = item.techStack,
                 currentSetLabel = item.currentSetLabel,
                 currentSetTitle = item.currentSetTitle,
-                nextProblemId = item.nextProblemId,
+                nextSetId = item.nextSetId,
+                nextQuestionId = item.nextQuestionId,
                 overallProgressPercent = item.overallProgressPercent,
             )
     }
