@@ -59,6 +59,13 @@ interface ProjectControllerDocs {
         summary = "프로젝트 목록 조회",
         description = "내가 학습 중인 프로젝트 목록을 생성 순서(오래된 순)로 조회합니다.",
     )
+    @ApiResponses(
+        SwaggerApiResponse(
+            responseCode = "200",
+            description = "조회 성공",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = PROJECT_LIST_EXAMPLE)])],
+        ),
+    )
     fun getProjects(
         memberId: String,
         @Parameter(description = "페이지 번호 (0부터 시작)") page: Int,
@@ -82,6 +89,11 @@ interface ProjectControllerDocs {
     )
     @ApiResponses(
         SwaggerApiResponse(
+            responseCode = "200",
+            description = "조회 성공",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = PROJECT_DETAIL_EXAMPLE)])],
+        ),
+        SwaggerApiResponse(
             responseCode = "404",
             description = "존재하지 않거나 본인 소유가 아니거나 삭제된 프로젝트",
             content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = PROJECT_NOT_FOUND_EXAMPLE)])],
@@ -97,6 +109,11 @@ interface ProjectControllerDocs {
         description = "프로젝트를 소프트 삭제합니다. 본인 소유가 아니거나 이미 삭제된 경우 존재 여부를 노출하지 않기 위해 404로 응답합니다.",
     )
     @ApiResponses(
+        SwaggerApiResponse(
+            responseCode = "200",
+            description = "삭제 성공",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = SUCCESS_EXAMPLE)])],
+        ),
         SwaggerApiResponse(
             responseCode = "404",
             description = "존재하지 않거나 본인 소유가 아니거나 이미 삭제된 프로젝트",
@@ -270,6 +287,23 @@ interface ProjectControllerDocs {
 
         private const val BLANK_TEXT_EXAMPLE =
             """{"success":false,"data":null,"code":"COMMON-001","message":"잘못된 요청입니다","errors":[{"field":"text","message":"text는 필수입니다"}]}"""
+
+        private const val SUCCESS_EXAMPLE =
+            """{"success":true,"data":null,"code":null,"message":null,"errors":null}"""
+
+        private const val PROJECT_LIST_EXAMPLE =
+            """{"success":true,"data":{"items":[{"projectId":"68a1f2c3d4e5f6a7b8c9d0e1","repositoryName":"nexters",""" +
+                """"repositoryImageUrl":"https://avatars.githubusercontent.com/u/1","techStack":["Kotlin","Compose","Coroutines"],""" +
+                """"currentSetLabel":"Set 1","currentSetTitle":"Set 1 title","nextProblemId":"q3","overallProgressPercent":28}],""" +
+                """"hasNext":false},"code":null,"message":null,"errors":null}"""
+
+        private const val PROJECT_DETAIL_EXAMPLE =
+            """{"success":true,"data":{"projectId":"68a1f2c3d4e5f6a7b8c9d0e1","repositoryUrl":"https://github.com/nexters/nexters",""" +
+                """"repositoryName":"nexters","repositoryImageUrl":"https://avatars.githubusercontent.com/u/1","starCount":3600,""" +
+                """"techStack":["Kotlin","Compose","Coroutines"],"overallProgressPercent":28,"nextProblemId":"q3",""" +
+                """"sets":[{"setId":"set1","label":"Set 1","title":"Set 1 title","problemCount":3,"completedCount":2},""" +
+                """{"setId":"set2","label":"Set 2","title":"Set 2 title","problemCount":4,"completedCount":0}]},""" +
+                """"code":null,"message":null,"errors":null}"""
 
         // 남의 프로젝트에도 이 응답을 씁니다. 403으로 답하면 그 id의 프로젝트가 있다는 사실을 알려주는 셈입니다.
         private const val PROJECT_NOT_FOUND_EXAMPLE =
