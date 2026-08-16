@@ -1,5 +1,6 @@
 package com.nexters.gitit.ui.project
 
+import com.nexters.gitit.application.BookmarkQuestion
 import com.nexters.gitit.application.DeleteProject
 import com.nexters.gitit.application.GetLearningSet
 import com.nexters.gitit.application.GetProjectDetail
@@ -8,6 +9,8 @@ import com.nexters.gitit.application.RegisterProject
 import com.nexters.gitit.application.SubmitAnswer
 import com.nexters.gitit.ui.common.ApiResponse
 import com.nexters.gitit.ui.common.LoginMember
+import com.nexters.gitit.ui.project.dto.BookmarkQuestionRequest
+import com.nexters.gitit.ui.project.dto.BookmarkQuestionResponse
 import com.nexters.gitit.ui.project.dto.LearningSetResponse
 import com.nexters.gitit.ui.project.dto.ProjectDetailResponse
 import com.nexters.gitit.ui.project.dto.ProjectListResponse
@@ -39,6 +42,7 @@ class ProjectController(
     private val deleteProject: DeleteProject,
     private val submitAnswer: SubmitAnswer,
     private val getLearningSet: GetLearningSet,
+    private val bookmarkQuestion: BookmarkQuestion,
 ) : ProjectControllerDocs {
     // 같은 저장소를 다시 등록해도 프로젝트가 새로 생기지 않고 기존 것이 돌아오므로 201이 아닌 200으로 응답합니다.
     @PostMapping
@@ -103,4 +107,13 @@ class ProjectController(
         @Valid @RequestBody request: SubmitEssayAnswerRequest,
     ): ApiResponse<SubmitEssayAnswerResponse> =
         ApiResponse.success(SubmitEssayAnswerResponse.from(submitAnswer(request.toCommand(memberId, projectId, questionId))))
+
+    @PostMapping("/{projectId}/questions/{questionId}/bookmark")
+    override fun bookmarkQuestion(
+        @LoginMember memberId: String,
+        @PathVariable projectId: String,
+        @PathVariable questionId: String,
+        @Valid @RequestBody request: BookmarkQuestionRequest,
+    ): ApiResponse<BookmarkQuestionResponse> =
+        ApiResponse.success(BookmarkQuestionResponse.from(bookmarkQuestion(request.toCommand(memberId, projectId, questionId))))
 }

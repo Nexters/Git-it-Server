@@ -1,6 +1,8 @@
 package com.nexters.gitit.ui.project
 
 import com.nexters.gitit.ui.common.ApiResponse
+import com.nexters.gitit.ui.project.dto.BookmarkQuestionRequest
+import com.nexters.gitit.ui.project.dto.BookmarkQuestionResponse
 import com.nexters.gitit.ui.project.dto.LearningSetResponse
 import com.nexters.gitit.ui.project.dto.ProjectDetailResponse
 import com.nexters.gitit.ui.project.dto.ProjectListResponse
@@ -207,6 +209,38 @@ interface ProjectControllerDocs {
         request: SubmitEssayAnswerRequest,
     ): ApiResponse<SubmitEssayAnswerResponse>
 
+    @Operation(
+        summary = "문제 북마크",
+        description = "문제 풀이 화면 상단 북마크 아이콘 탭 시 북마크 상태를 설정합니다. 토글이 아니라 원하는 상태를 그대로 보냅니다.",
+    )
+    @ApiResponses(
+        SwaggerApiResponse(responseCode = "200", description = "설정 성공"),
+        SwaggerApiResponse(
+            responseCode = "400",
+            description = "bookmarked가 비어 있음",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = BOOKMARK_INVALID_INPUT_EXAMPLE)])],
+        ),
+        SwaggerApiResponse(
+            responseCode = "404",
+            description = "내 프로젝트가 아니거나, 그 프로젝트의 저장소에 없는 문제",
+            content = [
+                Content(
+                    mediaType = APPLICATION_JSON_VALUE,
+                    examples = [
+                        ExampleObject(name = "없는 프로젝트", value = PROJECT_NOT_FOUND_EXAMPLE),
+                        ExampleObject(name = "없는 문제", value = QUESTION_NOT_FOUND_EXAMPLE),
+                    ],
+                ),
+            ],
+        ),
+    )
+    fun bookmarkQuestion(
+        memberId: String,
+        projectId: String,
+        questionId: String,
+        request: BookmarkQuestionRequest,
+    ): ApiResponse<BookmarkQuestionResponse>
+
     companion object {
         // 401은 OpenApiConfig의 loginMemberSecurityCustomizer가 @LoginMember 파라미터를 보고 자동으로 붙이므로 여기 적지 않습니다.
         private const val INVALID_INPUT_EXAMPLE =
@@ -234,5 +268,8 @@ interface ProjectControllerDocs {
 
         private const val LEARNING_SET_NOT_FOUND_EXAMPLE =
             """{"success":false,"data":null,"code":"QUIZ-006","message":"학습 세트를 찾을 수 없습니다","errors":null}"""
+
+        private const val BOOKMARK_INVALID_INPUT_EXAMPLE =
+            """{"success":false,"data":null,"code":"COMMON-001","message":"잘못된 요청입니다","errors":[{"field":"bookmarked","message":"bookmarked는 필수입니다"}]}"""
     }
 }
