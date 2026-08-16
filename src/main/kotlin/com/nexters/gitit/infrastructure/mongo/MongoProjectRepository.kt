@@ -32,4 +32,6 @@ class MongoProjectRepository(
 
     override fun findAllByMemberIdAndDeletedAtIsNull(memberId: String): List<Project> =
         projectRepository.findAllByMemberIdAndDeletedAtIsNull(memberId)
+
+    override fun deleteAllByMemberId(memberId: String) = projectRepository.deleteAllByMemberId(memberId)
 }

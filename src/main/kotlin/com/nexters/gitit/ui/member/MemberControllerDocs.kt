@@ -144,6 +144,26 @@ interface MemberControllerDocs {
         request: CareerLevelRequest,
     ): ApiResponse<Unit>
 
+    @Operation(
+        summary = "회원 탈퇴",
+        description =
+            "회원 탈퇴입니다. 소프트 삭제가 아니라 회원 문서를 실제로 지우며, 그 회원의 프로젝트(학습 진도·답변·북마크)도 " +
+                "함께 하드 삭제합니다. 되돌릴 수 없습니다. 여러 회원이 같이 쓰는 문제 저장소(QuizRepo)는 지우지 않습니다.",
+    )
+    @ApiResponses(
+        SwaggerApiResponse(
+            responseCode = "200",
+            description = "탈퇴 성공",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = SUCCESS_EXAMPLE)])],
+        ),
+        SwaggerApiResponse(
+            responseCode = "404",
+            description = "회원을 찾을 수 없음",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = MEMBER_NOT_FOUND_EXAMPLE)])],
+        ),
+    )
+    fun withdrawMember(memberId: String): ApiResponse<Unit>
+
     companion object {
         // 401은 OpenApiConfig의 loginMemberSecurityCustomizer가 @LoginMember 파라미터를 보고 자동으로 붙이므로 여기 적지 않습니다.
         private const val INVALID_INPUT_EXAMPLE =

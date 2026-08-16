@@ -5,6 +5,7 @@ import com.nexters.gitit.application.GetMemberProfile
 import com.nexters.gitit.application.RegisterDeviceInfo
 import com.nexters.gitit.application.UpdateMemberCareerLevel
 import com.nexters.gitit.application.UpdateMemberPosition
+import com.nexters.gitit.application.WithdrawMember
 import com.nexters.gitit.ui.common.ApiResponse
 import com.nexters.gitit.ui.common.LoginMember
 import com.nexters.gitit.ui.member.dto.CareerLevelRequest
@@ -14,6 +15,7 @@ import com.nexters.gitit.ui.member.dto.MemberProfileResponse
 import com.nexters.gitit.ui.member.dto.PositionRequest
 import jakarta.validation.Valid
 import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -28,6 +30,7 @@ class MemberController(
     private val updateMemberPosition: UpdateMemberPosition,
     private val updateMemberCareerLevel: UpdateMemberCareerLevel,
     private val getMemberProfile: GetMemberProfile,
+    private val withdrawMember: WithdrawMember,
 ) : MemberControllerDocs {
     @GetMapping("/me")
     override fun getMemberProfile(
@@ -76,6 +79,16 @@ class MemberController(
         @Valid @RequestBody request: CareerLevelRequest,
     ): ApiResponse<Unit> {
         updateMemberCareerLevel(request.toCommand(memberId))
+
+        return ApiResponse.success()
+    }
+
+    // 하드 삭제라 되돌릴 수 없습니다. 소프트 삭제인 프로젝트 삭제와 응답 형태만 같습니다.
+    @DeleteMapping("/me")
+    override fun withdrawMember(
+        @LoginMember memberId: String,
+    ): ApiResponse<Unit> {
+        withdrawMember(WithdrawMember.Command(memberId))
 
         return ApiResponse.success()
     }
