@@ -24,4 +24,10 @@ class Project(
     @Indexed(name = "idx_quiz_repo_id")
     val quizRepoId: String,
     val quizLevel: QuizLevel,
-) : BaseEntity()
+) : BaseEntity() {
+    /**
+     * 문제는 순서대로 풀리므로, 지금까지 몇 번째 문제까지 풀었는지만 있으면 진행률과 "다음 문제"를
+     * 계산할 수 있습니다. 값을 올리는 로직은 아직 없습니다 - 문제 풀이 기능이 생길 때 추가될 부분입니다.
+     */
+    var solvedQuestionCount: Int = 0
+}

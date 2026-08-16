@@ -51,6 +51,20 @@ class QuizRepo(
         private set
 
     /**
+     * 레포 프로필 이미지·스타 수·기술 스택. 지금 등록 파이프라인은 githubRepoId/githubRepoUrl만 받아오고
+     * 이 값들을 채우지 않아 당분간 null/빈 리스트일 수 있습니다. GitHub API에서 메타데이터를 가져오는
+     * 부분이 등록 파이프라인에 추가되면 그때 채워집니다.
+     */
+    var repositoryImageUrl: String? = null
+        private set
+
+    var starCount: Long? = null
+        private set
+
+    var techStack: List<String> = emptyList()
+        private set
+
+    /**
      * 문제까지는 못 갔지만 개념·앵커는 확정된 상태로 만듭니다. 완성본이 아니라 **다시 만들 때 아껴 쓸 재료**라,
      * 여기서 멈춘 저장소는 학습자에게 내보낼 수 없습니다.
      *
