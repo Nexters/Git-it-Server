@@ -27,6 +27,7 @@ interface MemberControllerDocs {
         SwaggerApiResponse(
             responseCode = "200",
             description = "조회 성공",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = MEMBER_PROFILE_EXAMPLE)])],
         ),
         SwaggerApiResponse(
             responseCode = "404",
@@ -73,6 +74,7 @@ interface MemberControllerDocs {
         SwaggerApiResponse(
             responseCode = "200",
             description = "등록 성공",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = SUCCESS_EXAMPLE)])],
         ),
         SwaggerApiResponse(
             responseCode = "400",
@@ -98,6 +100,7 @@ interface MemberControllerDocs {
         SwaggerApiResponse(
             responseCode = "200",
             description = "변경 성공",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = SUCCESS_EXAMPLE)])],
         ),
         SwaggerApiResponse(
             responseCode = "400",
@@ -123,6 +126,7 @@ interface MemberControllerDocs {
         SwaggerApiResponse(
             responseCode = "200",
             description = "변경 성공",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = SUCCESS_EXAMPLE)])],
         ),
         SwaggerApiResponse(
             responseCode = "400",
@@ -147,6 +151,15 @@ interface MemberControllerDocs {
 
         private const val MEMBER_NOT_FOUND_EXAMPLE =
             """{"success":false,"data":null,"code":"MEMBER-001","message":"회원을 찾을 수 없습니다","errors":null}"""
+
+        private const val SUCCESS_EXAMPLE =
+            """{"success":true,"data":null,"code":null,"message":null,"errors":null}"""
+
+        private const val MEMBER_PROFILE_EXAMPLE =
+            """{"success":true,"data":{"name":"김이박","email":"tester@example.com","position":"BACKEND","careerLevel":"JUNIOR",""" +
+                """"thisWeekSolvedCount":4,"thisMonthSolvedCount":5,"streakDays":3,"weeklyChart":[{"dayLabel":"월","count":0},""" +
+                """{"dayLabel":"화","count":1},{"dayLabel":"수","count":0},{"dayLabel":"목","count":0},{"dayLabel":"금","count":1},""" +
+                """{"dayLabel":"토","count":1},{"dayLabel":"일","count":1}]},"code":null,"message":null,"errors":null}"""
 
         private const val CURATION_INVALID_INPUT_EXAMPLE =
             """{"success":false,"data":null,"code":"COMMON-001","message":"잘못된 요청입니다","errors":[{"field":"name","message":"name은 필수입니다"}]}"""
