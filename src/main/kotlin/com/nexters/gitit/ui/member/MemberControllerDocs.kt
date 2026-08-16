@@ -20,7 +20,7 @@ interface MemberControllerDocs {
         summary = "멤버 정보 조회",
         description =
             "마이페이지 진입 시 필요한 내 프로필 정보와 학습 현황(이번 주/이번 달 푼 문제 수, 연속 학습 일수, " +
-                "이번 주 요일별 문제 풀이량)을 조회합니다. name은 큐레이션 전이면 null이고, profileImageUrl은 " +
+                "이번 주 요일별 문제 풀이량)을 조회합니다. name은 가입 시 서버가 지어 준 닉네임이고, profileImageUrl은 " +
                 "저장하는 값이 없어 응답에 없습니다.",
     )
     @ApiResponses(
@@ -67,8 +67,8 @@ interface MemberControllerDocs {
     @Operation(
         summary = "회원 큐레이션 등록",
         description =
-            "로그인 응답의 needsCuration이 true일 때 온보딩에서 받은 이름·관심 분야·실력 수준을 저장합니다. " +
-                "OAuth가 이름을 안 내려주므로 이름은 이 API로만 받습니다. 다시 호출하면 이전 값을 덮어씁니다.",
+            "로그인 응답의 needsCuration이 true일 때 온보딩에서 받은 관심 분야·실력 수준을 저장합니다. " +
+                "닉네임은 가입 시 서버가 만들어 두므로 여기서 받지 않습니다. 다시 호출하면 이전 값을 덮어씁니다.",
     )
     @ApiResponses(
         SwaggerApiResponse(
@@ -176,13 +176,13 @@ interface MemberControllerDocs {
             """{"success":true,"data":null,"code":null,"message":null,"errors":null}"""
 
         private const val MEMBER_PROFILE_EXAMPLE =
-            """{"success":true,"data":{"name":"김이박","email":"tester@example.com","position":"BACKEND","careerLevel":"JUNIOR",""" +
+            """{"success":true,"data":{"name":"겁없는 SegFault","email":"tester@example.com","position":"BACKEND","careerLevel":"JUNIOR",""" +
                 """"thisWeekSolvedCount":4,"thisMonthSolvedCount":5,"streakDays":3,"weeklyChart":[{"dayLabel":"월","count":0},""" +
                 """{"dayLabel":"화","count":1},{"dayLabel":"수","count":0},{"dayLabel":"목","count":0},{"dayLabel":"금","count":1},""" +
                 """{"dayLabel":"토","count":1},{"dayLabel":"일","count":1}]},"code":null,"message":null,"errors":null}"""
 
         private const val CURATION_INVALID_INPUT_EXAMPLE =
-            """{"success":false,"data":null,"code":"COMMON-001","message":"잘못된 요청입니다","errors":[{"field":"name","message":"name은 필수입니다"}]}"""
+            """{"success":false,"data":null,"code":"COMMON-001","message":"잘못된 요청입니다","errors":[{"field":"position","message":"position은 필수입니다"}]}"""
 
         private const val POSITION_INVALID_INPUT_EXAMPLE =
             """{"success":false,"data":null,"code":"COMMON-001","message":"잘못된 요청입니다","errors":[{"field":"position","message":"position은 필수입니다"}]}"""

@@ -11,6 +11,7 @@ import com.nexters.gitit.domain.member.SocialIdentity
 import com.nexters.gitit.domain.member.SocialType
 import com.nexters.gitit.infrastructure.mongo.SpringDataMemberRepository
 import com.nimbusds.jwt.SignedJWT
+import io.kotest.matchers.comparables.shouldBeLessThanOrEqualTo
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.BeforeEach
@@ -47,6 +48,7 @@ class LoginTest(
         val saved = memberRepository.findById(result.memberId).orElse(null).shouldNotBeNull()
         saved.socialIdentity shouldBe SOCIAL_IDENTITY
         saved.email shouldBe "gitit@nexters.com"
+        saved.name.length shouldBeLessThanOrEqualTo 15
         memberRepository.count() shouldBe 1
         subjectOf(result.jwtToken.accessToken) shouldBe result.memberId
     }
@@ -99,6 +101,7 @@ class LoginTest(
         Member(
             socialIdentity = SOCIAL_IDENTITY,
             email = "gitit@nexters.com",
+            name = "겁없는 SegFault",
             position = position,
             careerLevel = careerLevel,
         ),
