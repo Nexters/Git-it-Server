@@ -8,9 +8,9 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 
 data class CurationRequest(
-    @field:Schema(description = "닉네임", example = "김이박")
-    @field:NotBlank(message = "nickname은 필수입니다")
-    val nickname: String?,
+    @field:Schema(description = "이름", example = "김이박")
+    @field:NotBlank(message = "name은 필수입니다")
+    val name: String?,
     @field:Schema(description = "관심 분야")
     @field:NotNull(message = "position은 필수입니다")
     val position: Position?,
@@ -21,7 +21,7 @@ data class CurationRequest(
     fun toCommand(memberId: String) =
         CurateMember.Command(
             memberId = memberId,
-            nickname = nickname!!,
+            name = name!!,
             position = position!!,
             careerLevel = careerLevel!!,
         )

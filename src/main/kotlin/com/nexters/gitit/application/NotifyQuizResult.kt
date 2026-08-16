@@ -35,7 +35,6 @@ class NotifyQuizResult(
         val tokens =
             memberRepository
                 .findAllByIds(projects.map { it.memberId })
-                .filter { it.setCompletionReminderEnabled }
                 .mapNotNull { member -> member.deviceInfo?.deviceToken?.let { member.id to it } }
                 .toMap()
 

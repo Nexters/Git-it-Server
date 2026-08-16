@@ -30,7 +30,7 @@ class GetMemberProfile(
         val monthStart = today.withDayOfMonth(1)
 
         return Result(
-            nickname = member.nickname,
+            name = member.name,
             email = member.email,
             position = member.position,
             careerLevel = member.careerLevel,
@@ -70,7 +70,7 @@ class GetMemberProfile(
     )
 
     data class Result(
-        val nickname: String?,
+        val name: String?,
         val email: String?,
         val position: Position?,
         val careerLevel: CareerLevel?,

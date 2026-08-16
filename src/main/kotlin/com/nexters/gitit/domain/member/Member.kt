@@ -27,25 +27,21 @@ class Member(
         private set
 
     // OAuth가 이름을 안 내려주므로 큐레이션에서 함께 받는다.
-    var nickname: String? = null
+    var name: String? = null
         private set
 
     // 가입 시점에는 알 수 없고 앱이 별도 요청으로 올려주므로 생성자에서 받지 않는다.
     var deviceInfo: DeviceInfo? = null
         private set
 
-    // 옵트아웃 방식이라 기본값은 켜짐이다.
-    var setCompletionReminderEnabled: Boolean = true
-        private set
-
     fun isCurated(): Boolean = position != null && careerLevel != null
 
     fun curate(
-        nickname: String,
+        name: String,
         position: Position,
         careerLevel: CareerLevel,
     ) {
-        this.nickname = nickname
+        this.name = name
         this.position = position
         this.careerLevel = careerLevel
     }
@@ -68,10 +64,5 @@ class Member(
      */
     fun updateDeviceInfo(deviceInfo: DeviceInfo) {
         this.deviceInfo = deviceInfo
-    }
-
-    /** 세트 생성 완료 푸시 알림을 받을지 설정합니다. */
-    fun updateCompletionReminderEnabled(enabled: Boolean) {
-        setCompletionReminderEnabled = enabled
     }
 }

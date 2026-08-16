@@ -6,8 +6,8 @@ import com.nexters.gitit.domain.member.Position
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class MemberProfileResponse(
-    @field:Schema(description = "닉네임. 큐레이션 전이면 null")
-    val nickname: String?,
+    @field:Schema(description = "이름. 큐레이션 전이면 null")
+    val name: String?,
     val email: String?,
     @field:Schema(description = "개발 분야")
     val position: Position?,
@@ -25,7 +25,7 @@ data class MemberProfileResponse(
     companion object {
         fun from(result: GetMemberProfile.Result) =
             MemberProfileResponse(
-                nickname = result.nickname,
+                name = result.name,
                 email = result.email,
                 position = result.position,
                 careerLevel = result.careerLevel,

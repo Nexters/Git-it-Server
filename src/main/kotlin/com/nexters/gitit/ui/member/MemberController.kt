@@ -5,14 +5,12 @@ import com.nexters.gitit.application.GetMemberProfile
 import com.nexters.gitit.application.RegisterDeviceInfo
 import com.nexters.gitit.application.UpdateMemberCareerLevel
 import com.nexters.gitit.application.UpdateMemberPosition
-import com.nexters.gitit.application.UpdateNotificationSettings
 import com.nexters.gitit.ui.common.ApiResponse
 import com.nexters.gitit.ui.common.LoginMember
 import com.nexters.gitit.ui.member.dto.CareerLevelRequest
 import com.nexters.gitit.ui.member.dto.CurationRequest
 import com.nexters.gitit.ui.member.dto.DeviceInfoRequest
 import com.nexters.gitit.ui.member.dto.MemberProfileResponse
-import com.nexters.gitit.ui.member.dto.NotificationSettingsRequest
 import com.nexters.gitit.ui.member.dto.PositionRequest
 import jakarta.validation.Valid
 import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
@@ -29,7 +27,6 @@ class MemberController(
     private val curateMember: CurateMember,
     private val updateMemberPosition: UpdateMemberPosition,
     private val updateMemberCareerLevel: UpdateMemberCareerLevel,
-    private val updateNotificationSettings: UpdateNotificationSettings,
     private val getMemberProfile: GetMemberProfile,
 ) : MemberControllerDocs {
     @GetMapping("/me")
@@ -79,17 +76,6 @@ class MemberController(
         @Valid @RequestBody request: CareerLevelRequest,
     ): ApiResponse<Unit> {
         updateMemberCareerLevel(request.toCommand(memberId))
-
-        return ApiResponse.success()
-    }
-
-    // 다시 호출하면 이전 설정을 덮어쓰므로 201이 아닌 200으로 응답합니다.
-    @PostMapping("/me/notification-settings")
-    override fun updateNotificationSettings(
-        @LoginMember memberId: String,
-        @Valid @RequestBody request: NotificationSettingsRequest,
-    ): ApiResponse<Unit> {
-        updateNotificationSettings(request.toCommand(memberId))
 
         return ApiResponse.success()
     }
