@@ -4,6 +4,7 @@ import com.nexters.gitit.TestcontainersConfiguration
 import com.nexters.gitit.domain.exception.BaseException
 import com.nexters.gitit.domain.exception.ErrorCode
 import com.nexters.gitit.domain.project.QuizLevel
+import com.nexters.gitit.domain.quizrepo.GithubRepository
 import com.nexters.gitit.domain.quizrepo.GithubRepositoryResolver
 import com.nexters.gitit.domain.quizrepo.QuizGenerationRequested
 import com.nexters.gitit.domain.quizrepo.QuizRepo
@@ -42,7 +43,7 @@ class RegisterProjectTest(
         quizRepoRepository.deleteAll()
         projectRepository.deleteAll()
         eventCaptor.clear()
-        given(githubRepositoryResolver.resolve(REPO_URL)).willReturn(REPO_ID)
+        given(githubRepositoryResolver.resolve(REPO_URL)).willReturn(REPO)
     }
 
     @Test
@@ -89,7 +90,7 @@ class RegisterProjectTest(
 
     @Test
     fun `문제를 낼 수 없다고 판정된 저장소면 프로젝트를 만들지 않고 거절 사유를 그대로 알린다`() {
-        quizRepoRepository.save(QuizRepo(githubRepoId = REPO_ID, githubRepoUrl = REPO_URL).apply { reject(ErrorCode.NOT_FOUND) })
+        quizRepoRepository.save(quizRepoOf().apply { reject(ErrorCode.NOT_FOUND) })
 
         val exception = shouldThrow<BaseException> { registerProject(commandOf(memberId = "member-1", quizLevel = QuizLevel.L2)) }
 
@@ -98,6 +99,16 @@ class RegisterProjectTest(
     }
 
     private fun projectOf(memberId: String) = projectRepository.findAll().singleOrNull { it.memberId == memberId }.shouldNotBeNull()
+
+    private fun quizRepoOf() =
+        QuizRepo(
+            githubRepoId = REPO.id,
+            githubRepoUrl = REPO_URL,
+            name = REPO.name,
+            ownerImageUrl = REPO.ownerImageUrl,
+            starCount = REPO.starCount,
+            techStacks = REPO.techStacks,
+        )
 
     private fun commandOf(
         memberId: String,
@@ -125,5 +136,14 @@ class RegisterProjectTest(
     companion object {
         private const val REPO_URL = "https://github.com/spring-projects/spring-petclinic"
         private const val REPO_ID = "7517918"
+
+        private val REPO =
+            GithubRepository(
+                id = REPO_ID,
+                name = "spring-petclinic",
+                ownerImageUrl = "https://avatars.githubusercontent.com/u/317776?v=4",
+                starCount = 7800,
+                techStacks = listOf("java", "spring-boot", "petclinic"),
+            )
     }
 }
