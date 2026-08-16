@@ -40,6 +40,16 @@ class Member(
         this.careerLevel = careerLevel
     }
 
+    /** 설정 화면에서 개발 분야만 따로 바꿀 때 씁니다. */
+    fun updatePosition(position: Position) {
+        this.position = position
+    }
+
+    /** 설정 화면에서 개발 수준만 따로 바꿀 때 씁니다. */
+    fun updateCareerLevel(careerLevel: CareerLevel) {
+        this.careerLevel = careerLevel
+    }
+
     /**
      * 기기 정보를 통째로 교체합니다.
      *
