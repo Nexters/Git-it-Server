@@ -98,4 +98,12 @@ class QuizRepo(
     fun fail() {
         status = QuizRepoStatus.FAILED
     }
+
+    /**
+     * 임베드된 문제를 id로 찾습니다. 어느 학습 세트에도 그 id가 없으면 null입니다.
+     *
+     * 문제가 세트 안에서 레벨로 다시 중첩돼 있어 id 하나로 집으려면 전부 훑는 수밖에 없습니다.
+     * 세트는 레포당 몇 개, 문제는 레벨당 몇 개 수준이라 순회 비용은 문제가 되지 않습니다.
+     */
+    fun findQuestion(questionId: String): Question? = learningSets.flatMap { it.questions.values.flatten() }.find { it.id == questionId }
 }
