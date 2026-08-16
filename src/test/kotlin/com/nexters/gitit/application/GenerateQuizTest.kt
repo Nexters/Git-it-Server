@@ -154,8 +154,26 @@ class GenerateQuizTest {
         quizRepo.status shouldBe QuizRepoStatus.FAILED
         // 사고에는 사유 코드가 없다. reject와 섞이면 클라이언트가 설명할 수 없는 코드를 받는다.
         quizRepo.rejectedReason shouldBe null
+        // 아직 아무것도 만들지 못한 자리에서 죽었으므로 재시도는 처음부터 다시 돈다.
+        quizRepo.failedFrom shouldBe QuizRepoStatus.READY
         // 예외가 밖으로 나가는 경로에서도 알림이 나가는지가 finally로 둔 이유의 전부다.
         verify(eventPublisher).publishEvent(QuizGenerationFinished(quizRepo.id))
+    }
+
+    @Test
+    fun `체크포인트를 남긴 뒤 사고가 나면 그 자리를 기억한다`() {
+        val anchored = listOf(AnchoredConcept(concept, listOf(anchor)))
+        quizRepo.checkpoint(COORDINATES.sha, anchored)
+
+        whenever(quizRepoRepository.findById(quizRepo.id)) doReturn quizRepo
+        whenever(githubRepositoryFetcher.fetch(REPO_URL)) doReturn checkout
+        whenever(questionGenerator.generate(ROOT, anchored)) doThrow IllegalStateException("커넥션이 끊겼습니다")
+
+        shouldThrow<IllegalStateException> { generateQuiz(GenerateQuiz.Command(quizRepo.id)) }
+
+        // 이 값이 있어야 retry가 ANCHORED로 되돌아가 앵커를 다시 만들지 않는다.
+        quizRepo.failedFrom shouldBe QuizRepoStatus.ANCHORED
+        quizRepo.anchoredConcepts shouldBe anchored
     }
 
     private fun learningSet(orientation: String) =

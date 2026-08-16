@@ -1,6 +1,7 @@
 package com.nexters.gitit.domain.quizrepo
 
 import com.nexters.gitit.domain.common.BaseEntity
+import com.nexters.gitit.domain.exception.BaseException
 import com.nexters.gitit.domain.exception.ErrorCode
 import org.springframework.data.mongodb.core.index.CompoundIndex
 import org.springframework.data.mongodb.core.mapping.Document
@@ -45,6 +46,10 @@ class QuizRepo(
 
     // 전용 enum을 만들지 않고 ErrorCode를 재사용하는 것은, 어차피 클라이언트에게 같은 코드로 알려줘야 해서 목록이 두 벌이 되기 때문이다.
     var rejectedReason: ErrorCode? = null
+        private set
+
+    // FAILED가 덮기 직전의 상태. 사고가 난 적 없으면 null이다.
+    var failedFrom: QuizRepoStatus? = null
         private set
 
     var sha: String? = null
@@ -94,10 +99,30 @@ class QuizRepo(
 
     /**
      * [reject]와 달리 여기 오는 것은 판정이 아니라 사고라 사유를 받지 않습니다.
-     * 어디서 왜 죽었는지는 도큐먼트가 아니라 로그에서 봅니다 — 세거나 걸러야 할 값이 아닙니다.
+     * 왜 죽었는지는 도큐먼트가 아니라 로그에서 봅니다 — 세거나 걸러야 할 값이 아닙니다.
+     *
+     * 어디까지 갔었는지만 [failedFrom]에 남깁니다. [retry]가 그리로 되돌아가 체크포인트를 이어 씁니다.
      */
     fun fail() {
+        failedFrom = status
         status = QuizRepoStatus.FAILED
+    }
+
+    /**
+     * 사고로 멈춘 저장소를 [failedFrom]으로 되돌립니다. [QuizRepoStatus.FAILED]가 아니면
+     * [ErrorCode.QUIZ_GENERATION_NOT_RETRYABLE]을 던집니다.
+     *
+     * READY가 아니라 실패 직전 상태로 되돌리는 것은 [anchoredConcepts]를 다시 만들지 않기 위해서입니다.
+     * 동시 호출은 이 검사로만 막혀 인스턴스가 여럿이면 둘 다 통과합니다.
+     */
+    fun retry() {
+        if (status != QuizRepoStatus.FAILED) {
+            throw BaseException(ErrorCode.QUIZ_GENERATION_NOT_RETRYABLE)
+        }
+
+        // fail()이 상태와 함께 세팅하므로 비어 있을 수 없지만, 타입이 nullable이라 막아 둔다.
+        status = failedFrom ?: QuizRepoStatus.READY
+        failedFrom = null
     }
 
     /**
