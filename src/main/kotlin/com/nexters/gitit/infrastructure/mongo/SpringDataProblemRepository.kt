@@ -14,4 +14,9 @@ interface SpringDataProblemRepository : MongoRepository<Problem, String> {
         projectId: String,
         order: Int,
     ): Problem?
+
+    fun countByProjectIdAndSetIdAndAnsweredAtIsNotNull(
+        projectId: String,
+        setId: String,
+    ): Long
 }

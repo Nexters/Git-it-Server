@@ -1,6 +1,7 @@
 package com.nexters.gitit.ui.project
 
 import com.nexters.gitit.ui.common.ApiResponse
+import com.nexters.gitit.ui.project.dto.ProjectDetailResponse
 import com.nexters.gitit.ui.project.dto.ProjectListResponse
 import com.nexters.gitit.ui.project.dto.ProjectRepositoryUrlResponse
 import io.swagger.v3.oas.annotations.Operation
@@ -31,6 +32,28 @@ interface ProjectControllerDocs {
         @Parameter(description = "페이지 번호 (0부터 시작)") page: Int,
         @Parameter(description = "페이지 크기") size: Int,
     ): ApiResponse<ProjectListResponse>
+
+    @Operation(
+        summary = "프로젝트 상세 조회",
+        description = "프로젝트 상세 정보를 조회합니다. 레포 정보, 전체 진행률, 다음 문제 ID, 세트별 진행 현황을 반환합니다.",
+    )
+    @ApiResponses(
+        SwaggerApiResponse(responseCode = "200", description = "조회 성공"),
+        SwaggerApiResponse(
+            responseCode = "404",
+            description = "존재하지 않거나 본인 소유가 아니거나 삭제된 프로젝트",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = NOT_FOUND_EXAMPLE)])],
+        ),
+        SwaggerApiResponse(
+            responseCode = "401",
+            description = "인증 실패",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = UNAUTHORIZED_EXAMPLE)])],
+        ),
+    )
+    fun getProjectDetail(
+        memberId: String,
+        @Parameter(description = "조회할 프로젝트 ID") projectId: String,
+    ): ApiResponse<ProjectDetailResponse>
 
     @Operation(
         summary = "프로젝트 삭제",

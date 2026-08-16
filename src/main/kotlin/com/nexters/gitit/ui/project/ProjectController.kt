@@ -1,10 +1,12 @@
 package com.nexters.gitit.ui.project
 
 import com.nexters.gitit.application.DeleteProject
+import com.nexters.gitit.application.GetProjectDetail
 import com.nexters.gitit.application.GetProjectRepositoryUrl
 import com.nexters.gitit.application.GetProjects
 import com.nexters.gitit.ui.common.ApiResponse
 import com.nexters.gitit.ui.common.LoginMember
+import com.nexters.gitit.ui.project.dto.ProjectDetailResponse
 import com.nexters.gitit.ui.project.dto.ProjectListResponse
 import com.nexters.gitit.ui.project.dto.ProjectRepositoryUrlResponse
 import org.springframework.data.domain.PageRequest
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/v1/projects", produces = [APPLICATION_JSON_VALUE])
 class ProjectController(
     private val getProjects: GetProjects,
+    private val getProjectDetail: GetProjectDetail,
     private val deleteProject: DeleteProject,
     private val getProjectRepositoryUrl: GetProjectRepositoryUrl,
 ) : ProjectControllerDocs {
@@ -33,6 +36,15 @@ class ProjectController(
         val pageable = PageRequest.of(page, size, Sort.by("createdAt").ascending())
         val result = getProjects(GetProjects.Command(memberId, pageable))
         return ApiResponse.success(ProjectListResponse.from(result))
+    }
+
+    @GetMapping("/{projectId}")
+    override fun getProjectDetail(
+        @LoginMember memberId: String,
+        @PathVariable projectId: String,
+    ): ApiResponse<ProjectDetailResponse> {
+        val result = getProjectDetail(GetProjectDetail.Command(memberId, projectId))
+        return ApiResponse.success(ProjectDetailResponse.from(result))
     }
 
     @DeleteMapping("/{projectId}")

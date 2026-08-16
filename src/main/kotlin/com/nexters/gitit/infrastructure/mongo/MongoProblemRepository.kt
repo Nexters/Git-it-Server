@@ -20,4 +20,9 @@ class MongoProblemRepository(
         projectId: String,
         order: Int,
     ): Problem? = problemRepository.findFirstByProjectIdAndOrder(projectId, order)
+
+    override fun countByProjectIdAndSetIdAndAnsweredAtIsNotNull(
+        projectId: String,
+        setId: String,
+    ): Long = problemRepository.countByProjectIdAndSetIdAndAnsweredAtIsNotNull(projectId, setId)
 }
