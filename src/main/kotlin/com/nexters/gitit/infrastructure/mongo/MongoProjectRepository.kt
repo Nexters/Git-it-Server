@@ -18,4 +18,8 @@ class MongoProjectRepository(
 
     override fun findAllByQuizRepoId(quizRepoId: String): List<Project> =
         projectRepository.findAllByQuizRepoIdAndDeletedAtIsNull(quizRepoId)
+
+    override fun findById(id: String): Project? = projectRepository.findByIdAndDeletedAtIsNull(id)
+
+    override fun save(project: Project): Project = projectRepository.save(project)
 }

@@ -94,7 +94,16 @@ class QuizRepoRepositoryTest(
             .single() shouldBe anchor
     }
 
-    private fun quizRepoOf(githubRepoUrl: String) = QuizRepo(githubRepoId = GITHUB_REPO_ID, githubRepoUrl = githubRepoUrl)
+    // 표시용 필드는 저장·조회 규약과 무관해 아무 값이나 채운다.
+    private fun quizRepoOf(githubRepoUrl: String) =
+        QuizRepo(
+            githubRepoId = GITHUB_REPO_ID,
+            githubRepoUrl = githubRepoUrl,
+            name = "Git-it-Server",
+            ownerImageUrl = "https://avatars.githubusercontent.com/u/4995702?v=4",
+            starCount = 3,
+            techStacks = listOf("Kotlin"),
+        )
 
     private fun concept() = Concept("라우팅", "라우팅은 `Router.kt`가 전담합니다.", "README.md", listOf("src/Router.kt"))
 

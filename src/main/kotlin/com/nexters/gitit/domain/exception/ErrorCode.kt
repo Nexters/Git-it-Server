@@ -25,6 +25,9 @@ enum class ErrorCode(
     // MEMBER
     MEMBER_NOT_FOUND("MEMBER-001", "회원을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
 
+    // PROJECT
+    PROJECT_NOT_FOUND("PROJECT-001", "프로젝트를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
+
     // REPO
     // REPO_FETCH_FAILED만 재시도 대상이다. 나머지는 다시 시도해도 같은 결과라 즉시 거절한다.
     INVALID_REPO_URL("REPO-001", "레포 주소가 올바르지 않습니다", HttpStatus.BAD_REQUEST),
@@ -38,4 +41,6 @@ enum class ErrorCode(
     CONCEPT_EXTRACTION_FAILED("QUIZ-002", "개념을 추출하지 못했습니다", HttpStatus.BAD_GATEWAY),
     ANCHOR_SELECTION_FAILED("QUIZ-003", "코드 근거를 찾지 못했습니다", HttpStatus.BAD_GATEWAY),
     QUESTION_GENERATION_FAILED("QUIZ-004", "문제를 생성하지 못했습니다", HttpStatus.BAD_GATEWAY),
+    QUESTION_NOT_FOUND("QUIZ-005", "문제를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
+    LEARNING_SET_NOT_FOUND("QUIZ-006", "학습 세트를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
 }
