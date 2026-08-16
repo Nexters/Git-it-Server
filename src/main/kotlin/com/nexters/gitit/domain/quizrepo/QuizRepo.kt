@@ -4,6 +4,7 @@ import com.nexters.gitit.domain.common.BaseEntity
 import com.nexters.gitit.domain.exception.ErrorCode
 import org.springframework.data.mongodb.core.index.CompoundIndex
 import org.springframework.data.mongodb.core.mapping.Document
+import java.net.URI
 
 /**
  * GitHub 저장소 하나에서 뽑아낸 문제를 모아두는 곳.
@@ -126,8 +127,11 @@ class QuizRepo(
                 .removeSuffix(".git")
                 .let { if (it.startsWith("http")) it else "https://$it" }
         val lines = if (anchor.startLine == anchor.endLine) "L${anchor.startLine}" else "L${anchor.startLine}-L${anchor.endLine}"
+        // 경로에 공백이나 #이 들어 있으면 붙이는 순간 주소가 끊긴다(#부터는 프래그먼트로 읽힌다).
+        // 구분자 /는 그대로 두고 나머지만 인코딩해야 해서 URLEncoder가 아니라 URI에 맡긴다.
+        val path = URI(null, null, anchor.file, null).rawPath
 
         // complete()가 sha와 세트를 함께 세팅하므로 문제가 있는데 sha가 없을 수는 없지만, 타입이 nullable이라 막아 둔다.
-        return "$base/blob/${sha ?: error("문제는 있는데 sha가 없습니다: quizRepoId=$id")}/${anchor.file}#$lines"
+        return "$base/blob/${sha ?: error("문제는 있는데 sha가 없습니다: quizRepoId=$id")}/$path#$lines"
     }
 }
