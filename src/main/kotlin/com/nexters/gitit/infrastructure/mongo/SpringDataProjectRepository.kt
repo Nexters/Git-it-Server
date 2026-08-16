@@ -10,4 +10,6 @@ interface SpringDataProjectRepository : MongoRepository<Project, String> {
     ): Project?
 
     fun findAllByQuizRepoIdAndDeletedAtIsNull(quizRepoId: String): List<Project>
+
+    fun findByIdAndDeletedAtIsNull(id: String): Project?
 }
