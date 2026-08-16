@@ -1,6 +1,7 @@
 package com.nexters.gitit.ui.project
 
 import com.nexters.gitit.ui.common.ApiResponse
+import com.nexters.gitit.ui.project.dto.LearningSetResponse
 import com.nexters.gitit.ui.project.dto.RegisterProjectRequest
 import com.nexters.gitit.ui.project.dto.RegisterProjectResponse
 import com.nexters.gitit.ui.project.dto.SubmitChoiceAnswerRequest
@@ -47,6 +48,35 @@ interface ProjectControllerDocs {
         memberId: String,
         request: RegisterProjectRequest,
     ): ApiResponse<RegisterProjectResponse>
+
+    @Operation(
+        summary = "학습 세트 조회",
+        description =
+            "세트에 걸린 문제를 프로젝트 난이도에 맞춰 돌려줍니다. 이미 푼 문제도 걸러내지 않고 만들어진 순서 그대로 나가며, " +
+                "푼 문제에는 그때 낸 답(myAnswer)이 붙습니다 — 이어 풀 지점은 myAnswer가 없는 첫 문제입니다. " +
+                "정답·해설·채점 기준은 답변 제출 응답으로만 나갑니다.",
+    )
+    @ApiResponses(
+        SwaggerApiResponse(responseCode = "200", description = "조회 성공"),
+        SwaggerApiResponse(
+            responseCode = "404",
+            description = "내 프로젝트가 아니거나, 그 프로젝트의 저장소에 없는 학습 세트. 문제 생성이 아직 안 끝난 저장소도 여기에 해당합니다",
+            content = [
+                Content(
+                    mediaType = APPLICATION_JSON_VALUE,
+                    examples = [
+                        ExampleObject(name = "없는 프로젝트", value = PROJECT_NOT_FOUND_EXAMPLE),
+                        ExampleObject(name = "없는 학습 세트", value = LEARNING_SET_NOT_FOUND_EXAMPLE),
+                    ],
+                ),
+            ],
+        ),
+    )
+    fun getLearningSet(
+        memberId: String,
+        projectId: String,
+        setId: String,
+    ): ApiResponse<LearningSetResponse>
 
     @Operation(
         summary = "4지선다 답변 제출",
@@ -156,5 +186,8 @@ interface ProjectControllerDocs {
 
         private const val QUESTION_NOT_FOUND_EXAMPLE =
             """{"success":false,"data":null,"code":"QUIZ-005","message":"문제를 찾을 수 없습니다","errors":null}"""
+
+        private const val LEARNING_SET_NOT_FOUND_EXAMPLE =
+            """{"success":false,"data":null,"code":"QUIZ-006","message":"학습 세트를 찾을 수 없습니다","errors":null}"""
     }
 }
