@@ -6,13 +6,13 @@ import com.nexters.gitit.domain.member.Position
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class MemberProfileResponse(
+    @field:Schema(description = "닉네임. 큐레이션 전이면 null")
+    val nickname: String?,
     val email: String?,
     @field:Schema(description = "개발 분야")
     val position: Position?,
     @field:Schema(description = "개발 수준")
     val careerLevel: CareerLevel?,
-    @field:Schema(description = "세트 생성 완료 알림 수신 여부")
-    val setCompletionReminderEnabled: Boolean,
     @field:Schema(description = "이번 주(월요일부터 오늘까지) 푼 문제 수")
     val thisWeekSolvedCount: Int,
     @field:Schema(description = "이번 달(1일부터 오늘까지) 푼 문제 수")
@@ -25,10 +25,10 @@ data class MemberProfileResponse(
     companion object {
         fun from(result: GetMemberProfile.Result) =
             MemberProfileResponse(
+                nickname = result.nickname,
                 email = result.email,
                 position = result.position,
                 careerLevel = result.careerLevel,
-                setCompletionReminderEnabled = result.setCompletionReminderEnabled,
                 thisWeekSolvedCount = result.thisWeekSolvedCount,
                 thisMonthSolvedCount = result.thisMonthSolvedCount,
                 streakDays = result.streakDays,

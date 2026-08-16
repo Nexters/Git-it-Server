@@ -17,12 +17,13 @@ class CurateMember(
     operator fun invoke(command: Command) {
         val member = memberRepository.findById(command.memberId) ?: throw BaseException(ErrorCode.MEMBER_NOT_FOUND)
 
-        member.curate(command.position, command.careerLevel)
+        member.curate(command.nickname, command.position, command.careerLevel)
         memberRepository.save(member)
     }
 
     data class Command(
         val memberId: String,
+        val nickname: String,
         val position: Position,
         val careerLevel: CareerLevel,
     )

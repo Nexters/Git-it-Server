@@ -30,10 +30,10 @@ class GetMemberProfile(
         val monthStart = today.withDayOfMonth(1)
 
         return Result(
+            nickname = member.nickname,
             email = member.email,
             position = member.position,
             careerLevel = member.careerLevel,
-            setCompletionReminderEnabled = member.setCompletionReminderEnabled,
             thisWeekSolvedCount = solvedDates.count { it >= weekStart },
             thisMonthSolvedCount = solvedDates.count { it >= monthStart },
             streakDays = streakDays(solvedDates.toSet(), today),
@@ -70,10 +70,10 @@ class GetMemberProfile(
     )
 
     data class Result(
+        val nickname: String?,
         val email: String?,
         val position: Position?,
         val careerLevel: CareerLevel?,
-        val setCompletionReminderEnabled: Boolean,
         val thisWeekSolvedCount: Int,
         val thisMonthSolvedCount: Int,
         val streakDays: Int,

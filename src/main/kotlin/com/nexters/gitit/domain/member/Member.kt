@@ -26,6 +26,10 @@ class Member(
     var careerLevel: CareerLevel? = careerLevel
         private set
 
+    // OAuth가 이름을 안 내려주므로 큐레이션에서 함께 받는다.
+    var nickname: String? = null
+        private set
+
     // 가입 시점에는 알 수 없고 앱이 별도 요청으로 올려주므로 생성자에서 받지 않는다.
     var deviceInfo: DeviceInfo? = null
         private set
@@ -37,9 +41,11 @@ class Member(
     fun isCurated(): Boolean = position != null && careerLevel != null
 
     fun curate(
+        nickname: String,
         position: Position,
         careerLevel: CareerLevel,
     ) {
+        this.nickname = nickname
         this.position = position
         this.careerLevel = careerLevel
     }
