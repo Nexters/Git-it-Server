@@ -88,6 +88,7 @@ class NotifyQuizResultTest(
     ) = Member(
         socialIdentity = SocialIdentity(socialId, SocialType.GOOGLE),
         email = "$socialId@nexters.com",
+        name = "겁없는 SegFault",
     ).apply {
         updateDeviceInfo(
             DeviceInfo(

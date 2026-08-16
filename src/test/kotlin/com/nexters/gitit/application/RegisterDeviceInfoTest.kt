@@ -52,6 +52,7 @@ class RegisterDeviceInfoTest(
         Member(
             socialIdentity = SocialIdentity("device-owner", SocialType.GOOGLE),
             email = "gitit@nexters.com",
+            name = "겁없는 SegFault",
         )
 
     companion object {

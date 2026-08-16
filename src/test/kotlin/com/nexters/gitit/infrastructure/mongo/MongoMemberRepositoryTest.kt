@@ -69,5 +69,6 @@ class MongoMemberRepositoryTest(
         Member(
             socialIdentity = SocialIdentity(socialId, SocialType.GOOGLE),
             email = "gitit@nexters.com",
+            name = "겁없는 SegFault",
         )
 }
