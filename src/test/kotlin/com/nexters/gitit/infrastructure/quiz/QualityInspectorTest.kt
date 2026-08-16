@@ -48,6 +48,8 @@ class QualityInspectorTest {
         inspected
             .single()
             .questions
+            .values
+            .flatten()
             .single()
             .tags shouldContainExactly setOf(QualityTag.DISTRACTOR_SUSPECT)
     }
@@ -75,6 +77,8 @@ class QualityInspectorTest {
         inspected
             .single()
             .questions
+            .values
+            .flatten()
             .single()
             .tags shouldContainExactlyInAnyOrder setOf(QualityTag.DEPTH_SUSPECT)
     }
@@ -85,16 +89,20 @@ class QualityInspectorTest {
         choices: List<String>,
         depth: Depth = Depth.L2,
     ) = LearningSet(
+        id = "set-1",
         concept = Concept("라우팅", "근거", "README.md", listOf("src/Router.kt")),
+        title = "라우팅 흐름 따라가기",
+        description = "요청이 어느 경로로 흘러가는지 확인하는 학습 세트입니다.",
         orientation = orientation,
         notes = listOf(AnchorNote(anchor, summary)),
-        questions = listOf(question(choices, depth)),
+        questions = mapOf(depth to listOf(question(choices, depth))),
     )
 
     private fun question(
         choices: List<String>,
         depth: Depth,
     ) = Question(
+        id = "question-1",
         depth = depth,
         type = QuestionType.FLOW,
         format = QuestionFormat.MULTIPLE_CHOICE,

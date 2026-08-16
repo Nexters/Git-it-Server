@@ -151,10 +151,13 @@ class GenerateQuizTest {
 
     private fun learningSet(orientation: String) =
         LearningSet(
+            id = "set-1",
             concept = concept,
+            title = "라우팅 흐름 따라가기",
+            description = "요청이 어느 경로로 흘러가는지 확인하는 학습 세트입니다.",
             orientation = orientation,
             notes = listOf(AnchorNote(anchor, "경로를 정의하는 자리")),
-            questions = emptyList(),
+            questions = emptyMap(),
         )
 
     companion object {
