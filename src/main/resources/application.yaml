@@ -20,7 +20,7 @@ spring:
 gcp:
   project-id: git-it-503911
   location: us-central1
-  credentials-base64: ${GCP_CREDENTIALS_BASE64}
+  credentials-base64: ${GCP_CREDENTIALS_BASE64:}
 
 ai:
   model:
