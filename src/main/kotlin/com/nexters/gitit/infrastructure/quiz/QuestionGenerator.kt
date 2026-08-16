@@ -13,6 +13,8 @@ import java.nio.file.Path
  *
  * 콜은 개념 × 레벨입니다 (이유는 [QuestionWriter]). 레벨끼리 서로가 낸 문제를 못 보므로
  * 중복 방지는 프롬프트의 레벨 정의에만 기댑니다.
+ *
+ * 콜이 실패해 레벨이 덜 온 개념은 버리고 나머지로 완성합니다.
  */
 @Component
 class QuestionGenerator(
@@ -27,11 +29,18 @@ class QuestionGenerator(
         val bundles = anchored.map { sourceBundler.excerpt(repoRoot, it.anchors) }
         val tasks = anchored.indices.flatMap { index -> Depth.entries.map { index to it } }
 
-        val written = tasks.inParallel { (index, depth) -> index to questionWriter.write(anchored[index].concept, bundles[index], depth) }
+        val written =
+            tasks
+                .inParallel { (index, depth) ->
+                    runCatching { index to questionWriter.write(anchored[index].concept, bundles[index], depth) }
+                }.successesOrThrow()
+                .groupBy({ it.first }, { it.second })
 
         val drafts =
-            anchored.mapIndexed { index, concept ->
-                concept to merge(written.filter { it.first == index }.map { it.second })
+            anchored.mapIndexedNotNull { index, concept ->
+                val parts = written[index].orEmpty()
+                // 레벨이 하나라도 빠졌으면 세트를 만들지 않는다. 세 레벨이 같은 분량이어야 한다는 규칙을 이미 어긴 상태다.
+                if (parts.size < Depth.entries.size) null else concept to merge(parts)
             }
 
         return questionGate.confirm(drafts)
