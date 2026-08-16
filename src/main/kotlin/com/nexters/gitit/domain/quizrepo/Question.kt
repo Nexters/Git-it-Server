@@ -3,12 +3,20 @@ package com.nexters.gitit.domain.quizrepo
 /**
  * 앵커에 묶인 문제 하나.
  *
+ * [id]는 회원별 학습 이력(정답 여부·저장한 문제)이 문제를 가리키는 키입니다. 임베드 도큐먼트라 Mongo가
+ * `_id`를 붙여주지 않아 만드는 쪽이 채웁니다. **기본값을 두면 안 됩니다** — id 없는 옛 도큐먼트를 읽을
+ * 때마다 새 id가 조용히 생겨 거기 매달린 이력이 미아가 됩니다. 읽는 즉시 터지는 편이 낫습니다.
+ *
+ * [depth]는 [LearningSet.questions]가 레벨로 중첩된 뒤에도 남습니다. 저장해 둔 문제를 목록 밖에서
+ * 단독으로 보여줄 때 레벨을 알 방법이 이 필드뿐입니다.
+ *
  * [anchors]는 번호가 아니라 확정된 위치입니다. 콜은 프롬프트에 실린 번호로 답하지만,
  * 그 번호를 실제 앵커로 바꾸는 일은 코드가 합니다 — 받는 쪽이 다시 매핑하지 않아도 됩니다.
  *
  * [choices]와 [answerIndex]는 4지선다에서만, [rubric]은 서술형에서만 채워집니다.
  */
 data class Question(
+    val id: String,
     val depth: Depth,
     val type: QuestionType,
     val format: QuestionFormat,

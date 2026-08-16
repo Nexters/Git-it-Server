@@ -41,7 +41,7 @@ class QualityInspector(
 
         return set.copy(
             tags = set.tags + suspectOf(prose, haystack, QualityTag.PROSE_SUSPECT, set.concept.name, "prose"),
-            questions = set.questions.map { inspect(it, haystack, set.concept.name) },
+            questions = set.questions.mapValues { (_, questions) -> questions.map { inspect(it, haystack, set.concept.name) } },
         )
     }
 

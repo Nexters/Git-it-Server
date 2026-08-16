@@ -6,6 +6,7 @@ import com.nexters.gitit.domain.quizrepo.Anchor
 import com.nexters.gitit.domain.quizrepo.AnchorKind
 import com.nexters.gitit.domain.quizrepo.AnchoredConcept
 import com.nexters.gitit.domain.quizrepo.Concept
+import com.nexters.gitit.domain.quizrepo.Depth
 import com.nexters.gitit.infrastructure.ai.QuestionWriter
 import com.nexters.gitit.infrastructure.repo.SourceBundler
 import io.kotest.assertions.throwables.shouldThrow
@@ -35,10 +36,12 @@ class QuestionGeneratorTest {
             QuestionWriter { concept, anchorBundle, depth ->
                 seenBundles[concept.name] = anchorBundle
                 LearningSetDraft(
+                    title = "${concept.name} 흐름 따라가기",
+                    description = "${concept.name}이 어떻게 동작하는지 확인하는 학습 세트입니다.",
                     orientation = "이 개념을 먼저 읽으세요.",
                     anchorSummaries = listOf(AnchorSummaryDraft(1, "정의된 자리")),
                     // 콜은 레벨 하나만 쓰고, 게이트의 하한(레벨당 4문제)은 그 레벨에 적용된다.
-                    questions = List(4) { choiceQuestion(depth.name) },
+                    questions = List(4) { choiceQuestion(depth.name, it) },
                 )
             }
 
@@ -51,7 +54,11 @@ class QuestionGeneratorTest {
         routingBundle shouldContain "    2|     fun route() = Unit"
         sets.map { it.concept.name } shouldContainExactly listOf("라우팅", "상태 관리")
         val routing = sets.first()
-        val cited = routing.questions.first().anchors
+        val cited =
+            routing.questions
+                .getValue(Depth.L1)
+                .first()
+                .anchors
         cited.single().file shouldBe "src/Router.kt"
         routing.notes.single().summary shouldBe "정의된 자리"
     }
@@ -80,19 +87,22 @@ class QuestionGeneratorTest {
         ),
     )
 
-    private fun choiceQuestion(depth: String) =
-        QuestionDraft(
-            depth = depth,
-            type = "FLOW",
-            format = "MULTIPLE_CHOICE",
-            text = "질문",
-            choices = listOf("A", "B", "C", "D"),
-            answerIndex = 1,
-            explanation = "해설",
-            hints = listOf("힌트 1", "힌트 2"),
-            rubric = RubricDraft(emptyList(), emptyList(), "", "", ""),
-            sourceAnchors = listOf(1),
-        )
+    private fun choiceQuestion(
+        depth: String,
+        ordinal: Int,
+    ) = QuestionDraft(
+        depth = depth,
+        type = "FLOW",
+        format = "MULTIPLE_CHOICE",
+        // 식별자가 본문에서 나오므로 본문이 같으면 같은 문제로 걷힌다.
+        text = "질문 $depth$ordinal",
+        choices = listOf("A", "B", "C", "D"),
+        answerIndex = 1,
+        explanation = "해설",
+        hints = listOf("힌트 1", "힌트 2"),
+        rubric = RubricDraft(emptyList(), emptyList(), "", "", ""),
+        sourceAnchors = listOf(1),
+    )
 
     private fun Path.file(
         relative: String,

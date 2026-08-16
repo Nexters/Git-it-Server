@@ -3,18 +3,26 @@ package com.nexters.gitit.domain.quizrepo
 /**
  * 개념 하나짜리 학습 세트. 학습자에게 실제로 보이는 단위입니다.
  *
+ * [Concept.name]이 아니라 [id]로 가리킵니다. 이름은 콜이 지어낸 문자열이고 중복이 걸러지지 않아,
+ * 같은 이름이 둘이면 학습 이력이 어느 세트의 것인지 알 수 없습니다.
+ *
+ * 산문이 셋인 것은 읽히는 자리가 셋이라서입니다. [title]·[description]은 세트에 들어가기 전 목록에서,
+ * [orientation]은 들어간 뒤 문제를 풀기 전에 읽힙니다. [orientation]은 문제로 낼 가치가 없는
+ * 사실(폴더 구조·진입점·사용 라이브러리)을 흡수하는 자리이자 학습자가 가장 많이 읽는 글이라,
+ * 뒷단계 검증이 문제보다 여기를 먼저 봅니다.
+ *
  * [questions]는 [Depth]마다 같은 수만큼 들어 있습니다. 학습자가 세트가 아니라 세트의 레벨 하나를
  * 골라 풀기 때문입니다. 개수를 생성자에서 막지 않는 이유는 만드는 도중에는 세다 만 상태가
  * 존재하기 때문입니다 — 완성된 세트만 이 규칙을 지킵니다.
- *
- * [orientation]은 문제로 낼 가치가 없는 사실(폴더 구조·진입점·사용 라이브러리)을 흡수하는 자리입니다.
- * 학습자가 가장 먼저·가장 많이 읽는 산문이기도 해서, 뒷단계 검증이 문제보다 여기를 먼저 봅니다.
  */
 data class LearningSet(
+    val id: String,
     val concept: Concept,
+    val title: String,
+    val description: String,
     val orientation: String,
     val notes: List<AnchorNote>,
-    val questions: List<Question>,
+    val questions: Map<Depth, List<Question>>,
     val tags: Set<QualityTag> = emptySet(),
 )
 

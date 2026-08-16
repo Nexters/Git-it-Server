@@ -63,9 +63,14 @@ class QuizRepoRepositoryTest(
 
         val set = found.learningSets.single()
         set.concept.rationale shouldBe "라우팅은 `Router.kt`가 전담합니다."
+        set.title shouldBe "라우팅 흐름 따라가기"
         set.tags shouldBe setOf(QualityTag.PROSE_SUSPECT)
 
-        val question = set.questions.single()
+        // 레벨이 맵의 키라, 왕복 뒤에도 문자열이 아니라 Depth로 되살아나는지가 여기서 볼 것이다.
+        set.questions.keys shouldBe setOf(Depth.L3)
+
+        val question = set.questions.getValue(Depth.L3).single()
+        question.id shouldBe "question-1"
         val rubric = question.rubric.shouldNotBeNull()
         question.anchors.single() shouldBe anchor
         rubric.criteria.single().points shouldBe 10
@@ -95,15 +100,19 @@ class QuizRepoRepositoryTest(
 
     private fun learningSet() =
         LearningSet(
+            id = "set-1",
             concept = concept(),
+            title = "라우팅 흐름 따라가기",
+            description = "요청이 어느 경로로 흘러가는지 확인하는 학습 세트입니다.",
             orientation = "요청은 `Router`가 받습니다.",
             notes = listOf(AnchorNote(anchor, "경로를 정의하는 자리")),
-            questions = listOf(question()),
+            questions = mapOf(Depth.L3 to listOf(question())),
             tags = setOf(QualityTag.PROSE_SUSPECT),
         )
 
     private fun question() =
         Question(
+            id = "question-1",
             depth = Depth.L3,
             type = QuestionType.INTENT,
             format = QuestionFormat.ESSAY,

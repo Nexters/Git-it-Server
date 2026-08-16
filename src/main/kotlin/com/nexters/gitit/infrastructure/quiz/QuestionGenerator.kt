@@ -37,9 +37,11 @@ class QuestionGenerator(
         return questionGate.confirm(drafts)
     }
 
-    /** orientation과 앵커 요약은 어느 레벨에서 받아도 같은 개념을 설명하므로 첫 콜의 것만 씁니다. */
+    /** 문제를 뺀 나머지는 어느 레벨에서 받아도 같은 개념을 설명하므로 첫 콜의 것만 씁니다. */
     private fun merge(parts: List<LearningSetDraft>) =
         LearningSetDraft(
+            title = parts.first().title,
+            description = parts.first().description,
             orientation = parts.first().orientation,
             anchorSummaries = parts.first().anchorSummaries,
             questions = parts.flatMap { it.questions },

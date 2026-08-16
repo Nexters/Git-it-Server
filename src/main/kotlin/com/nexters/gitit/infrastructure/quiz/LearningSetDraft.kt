@@ -10,6 +10,8 @@ package com.nexters.gitit.infrastructure.quiz
  * 그 정리는 게이트가 도메인 타입으로 옮기면서 합니다.
  */
 data class LearningSetDraft(
+    val title: String,
+    val description: String,
     val orientation: String,
     val anchorSummaries: List<AnchorSummaryDraft>,
     val questions: List<QuestionDraft>,
