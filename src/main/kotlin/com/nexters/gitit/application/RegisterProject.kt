@@ -5,6 +5,7 @@ import com.nexters.gitit.domain.exception.ErrorCode
 import com.nexters.gitit.domain.project.Project
 import com.nexters.gitit.domain.project.ProjectRepository
 import com.nexters.gitit.domain.project.QuizLevel
+import com.nexters.gitit.domain.quizrepo.GithubRepository
 import com.nexters.gitit.domain.quizrepo.GithubRepositoryResolver
 import com.nexters.gitit.domain.quizrepo.QuizGenerationRequested
 import com.nexters.gitit.domain.quizrepo.QuizRepo
@@ -31,11 +32,11 @@ class RegisterProject(
      * 판정된 저장소는 그때 기록해 둔 사유를 그대로 던집니다.
      */
     operator fun invoke(command: Command): Result {
-        val githubRepoId =
+        val repository =
             githubRepositoryResolver.resolve(command.githubRepoUrl)
                 ?: throw BaseException(ErrorCode.INVALID_INPUT, "유효하지 않은 GitHub 저장소입니다")
 
-        val quizRepo = registerQuizRepo(githubRepoId, command.githubRepoUrl)
+        val quizRepo = registerQuizRepo(repository, command.githubRepoUrl)
         if (quizRepo.status == QuizRepoStatus.REJECTED) {
             // reject()가 상태와 사유를 함께 세팅하므로 사유가 빌 수 없지만, 타입이 nullable이라 기본값을 둔다.
             throw BaseException(quizRepo.rejectedReason ?: ErrorCode.INVALID_INPUT)
@@ -51,10 +52,18 @@ class RegisterProject(
      * 이미 있던 저장소까지 이벤트를 내면 같은 저장소에 수 분짜리 생성 작업이 중복으로 돕니다.
      */
     private fun registerQuizRepo(
-        githubRepoId: String,
+        repository: GithubRepository,
         githubRepoUrl: String,
     ): QuizRepo {
-        val requested = QuizRepo(githubRepoId = githubRepoId, githubRepoUrl = githubRepoUrl)
+        val requested =
+            QuizRepo(
+                githubRepoId = repository.id,
+                githubRepoUrl = githubRepoUrl,
+                name = repository.name,
+                ownerImageUrl = repository.ownerImageUrl,
+                starCount = repository.starCount,
+                techStacks = repository.techStacks,
+            )
         val quizRepo = quizRepoRepository.saveIfAbsent(requested)
         if (quizRepo.id == requested.id) {
             eventPublisher.publishEvent(QuizGenerationRequested(quizRepo.id))
