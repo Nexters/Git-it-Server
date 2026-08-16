@@ -2,6 +2,7 @@ package com.nexters.gitit.ui.project
 
 import com.nexters.gitit.application.BookmarkQuestion
 import com.nexters.gitit.application.DeleteProject
+import com.nexters.gitit.application.GetBookmarkedQuestions
 import com.nexters.gitit.application.GetLearningSet
 import com.nexters.gitit.application.GetProjectDetail
 import com.nexters.gitit.application.GetProjects
@@ -11,6 +12,7 @@ import com.nexters.gitit.ui.common.ApiResponse
 import com.nexters.gitit.ui.common.LoginMember
 import com.nexters.gitit.ui.project.dto.BookmarkQuestionRequest
 import com.nexters.gitit.ui.project.dto.BookmarkQuestionResponse
+import com.nexters.gitit.ui.project.dto.BookmarkedQuestionListResponse
 import com.nexters.gitit.ui.project.dto.LearningSetResponse
 import com.nexters.gitit.ui.project.dto.ProjectDetailResponse
 import com.nexters.gitit.ui.project.dto.ProjectListResponse
@@ -43,6 +45,7 @@ class ProjectController(
     private val submitAnswer: SubmitAnswer,
     private val getLearningSet: GetLearningSet,
     private val bookmarkQuestion: BookmarkQuestion,
+    private val getBookmarkedQuestions: GetBookmarkedQuestions,
 ) : ProjectControllerDocs {
     // 같은 저장소를 다시 등록해도 프로젝트가 새로 생기지 않고 기존 것이 돌아오므로 201이 아닌 200으로 응답합니다.
     @PostMapping
@@ -61,6 +64,16 @@ class ProjectController(
         val pageable = PageRequest.of(page, size, Sort.by("createdAt").ascending())
         val result = getProjects(GetProjects.Command(memberId, pageable))
         return ApiResponse.success(ProjectListResponse.from(result))
+    }
+
+    // /{projectId}보다 리터럴 경로가 우선 매칭되므로 순서와 무관하게 여기로 갑니다.
+    @GetMapping("/bookmarks")
+    override fun getBookmarkedQuestions(
+        @LoginMember memberId: String,
+        @RequestParam(required = false) projectId: String?,
+    ): ApiResponse<BookmarkedQuestionListResponse> {
+        val result = getBookmarkedQuestions(GetBookmarkedQuestions.Command(memberId, projectId))
+        return ApiResponse.success(BookmarkedQuestionListResponse.from(result))
     }
 
     @GetMapping("/{projectId}")

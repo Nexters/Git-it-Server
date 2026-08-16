@@ -3,6 +3,7 @@ package com.nexters.gitit.ui.project
 import com.nexters.gitit.ui.common.ApiResponse
 import com.nexters.gitit.ui.project.dto.BookmarkQuestionRequest
 import com.nexters.gitit.ui.project.dto.BookmarkQuestionResponse
+import com.nexters.gitit.ui.project.dto.BookmarkedQuestionListResponse
 import com.nexters.gitit.ui.project.dto.LearningSetResponse
 import com.nexters.gitit.ui.project.dto.ProjectDetailResponse
 import com.nexters.gitit.ui.project.dto.ProjectListResponse
@@ -63,6 +64,17 @@ interface ProjectControllerDocs {
         @Parameter(description = "페이지 번호 (0부터 시작)") page: Int,
         @Parameter(description = "페이지 크기") size: Int,
     ): ApiResponse<ProjectListResponse>
+
+    @Operation(
+        summary = "북마크한 문제 목록 조회",
+        description =
+            "내가 북마크한 문제를 프로젝트별로 필터링해 조회합니다. projectId를 안 주면 전체입니다. " +
+                "availableProjects는 필터와 무관하게 북마크가 있는 프로젝트 전부라, 필터 칩 목록을 그릴 때 씁니다.",
+    )
+    fun getBookmarkedQuestions(
+        memberId: String,
+        @Parameter(description = "특정 프로젝트로 필터링. 생략하면 전체 프로젝트") projectId: String?,
+    ): ApiResponse<BookmarkedQuestionListResponse>
 
     @Operation(
         summary = "프로젝트 상세 조회",
