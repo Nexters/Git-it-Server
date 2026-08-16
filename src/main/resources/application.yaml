@@ -53,4 +53,5 @@ github:
 firebase:
   # 서비스 계정 JSON을 GCP와 같은 환경 변수로 공유하되 설정은 여기서 따로 읽는다.
   # 공용 자격증명 빈을 두면 알림과 무관한 이유로 그 빈이 바뀔 때 알림이 같이 흔들린다.
-  credentials-base64: ${GCP_CREDENTIALS_BASE64}
+  # 기본값을 빈 문자열로 둬서 "환경 변수 없음"과 "빈 값"이 같은 경로(로그 대역)로 흐르게 한다.
+  credentials-base64: ${GCP_CREDENTIALS_BASE64:}

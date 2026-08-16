@@ -3,7 +3,7 @@ package com.nexters.gitit.infrastructure.firebase
 import com.nexters.gitit.domain.notification.NotificationMessage
 import com.nexters.gitit.domain.notification.NotificationSender
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -25,13 +25,14 @@ class LoggingNotificationSender : NotificationSender {
 }
 
 /**
- * [FirebaseConfiguration]과 정확히 반대 조건입니다.
+ * [FirebaseConfiguration]과 정확히 반대 조건입니다. 두 조건이 같은 식의 양변이라 값이 무엇이든 정확히
+ * 한쪽만 켜집니다 — 프로퍼티가 없든 비어 있든 대역이 뜹니다.
  *
  * `@ConditionalOnMissingBean`을 쓰지 않는 이유는 그것이 자동 구성용이어서입니다 — 우리 구성끼리는
  * 처리 순서가 보장되지 않아, 진짜 어댑터보다 먼저 평가되면 둘 다 등록됩니다.
  */
 @Configuration
-@ConditionalOnProperty(name = ["firebase.credentials-base64"], havingValue = "false", matchIfMissing = true)
+@ConditionalOnExpression("'\${firebase.credentials-base64:}' == ''")
 class NoFirebaseConfiguration {
     @Bean
     fun loggingNotificationSender(): NotificationSender = LoggingNotificationSender()
