@@ -14,6 +14,7 @@ import com.nexters.gitit.domain.quizrepo.Rubric
 import com.nexters.gitit.domain.quizrepo.RubricCriterion
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
+import java.util.UUID
 import kotlin.random.Random
 
 private val logger = KotlinLogging.logger {}
@@ -37,7 +38,8 @@ class QuestionGate {
      * 살아남은 개념이 둘 미만이면 억지로 만들지 않고 [ErrorCode.NO_CONCEPTS]로 거절합니다.
      */
     fun confirm(drafts: List<Pair<AnchoredConcept, LearningSetDraft>>): List<LearningSet> {
-        val confirmed = drafts.mapNotNull { (anchored, draft) -> confirm(anchored, draft) }
+        // 이름이 겹친 개념은 id도 겹쳐, 남겨 두면 학습 이력이 어느 쪽 것인지 구분되지 않는다.
+        val confirmed = drafts.mapNotNull { (anchored, draft) -> confirm(anchored, draft) }.distinctBy { it.id }
 
         if (confirmed.size < MINIMUM_CONCEPTS) {
             throw BaseException(ErrorCode.NO_CONCEPTS, "문제까지 만들어진 개념이 ${confirmed.size}개입니다")
@@ -50,7 +52,13 @@ class QuestionGate {
         draft: LearningSetDraft,
     ): LearningSet? {
         val name = anchored.concept.name
-        val byDepth = draft.questions.mapNotNull { confirm(name, it, anchored.anchors) }.groupBy { it.depth }
+
+        // id가 본문에서 나와, 같은 것을 두 번 물었으면 id도 같다. 여기서 걷지 않으면 중복이 레벨 분량으로 세어진다.
+        val byDepth =
+            draft.questions
+                .mapNotNull { confirm(name, it, anchored.anchors) }
+                .distinctBy { it.id }
+                .groupBy { it.depth }
 
         // 가장 얇은 레벨에 맞춘다. 레벨을 골랐는데 분량이 다르면 그 자체가 난이도로 읽힌다.
         val size = Depth.entries.minOf { byDepth[it]?.size ?: 0 }
@@ -65,9 +73,17 @@ class QuestionGate {
             }
 
         // 콜이 순서를 뒤섞어 답해도 저장되는 세트는 늘 L1부터다.
-        val questions = Depth.entries.flatMap { byDepth.getValue(it).take(size) }
+        val questions = Depth.entries.associateWith { byDepth.getValue(it).take(size) }
 
-        return LearningSet(anchored.concept, draft.orientation, notes, questions)
+        return LearningSet(
+            id = idOf(name),
+            concept = anchored.concept,
+            title = draft.title,
+            description = draft.description,
+            orientation = draft.orientation,
+            notes = notes,
+            questions = questions,
+        )
     }
 
     private fun confirm(
@@ -91,6 +107,7 @@ class QuestionGate {
         val shuffled = if (format == QuestionFormat.MULTIPLE_CHOICE) shuffle(draft) else null
 
         return Question(
+            id = idOf(name, draft.text),
             depth = enumOf(draft.depth, Depth.entries, Depth.L2),
             type = enumOf(draft.type, QuestionType.entries, QuestionType.CONCEPT),
             format = format,
@@ -156,6 +173,18 @@ class QuestionGate {
         val labelled = QuestionFormat.entries.firstOrNull { it.name.equals(draft.format.trim(), ignoreCase = true) }
         return labelled ?: if (draft.choices.isEmpty()) QuestionFormat.ESSAY else QuestionFormat.MULTIPLE_CHOICE
     }
+
+    /**
+     * 식별자를 내용에서 유도합니다. 랜덤 id는 같은 레포를 두 번 돌렸을 때 결과가 달라져 파이프라인의
+     * 재현성 규칙을 깨고, 다시 만들 때마다 학습자의 정답 이력을 통째로 미아로 만듭니다.
+     *
+     * **[parts]의 구성은 늘리지도 줄이지도 마세요.** 한 조각만 더해도 이미 저장된 id가 전부 갈려,
+     * 그때까지 쌓인 학습 이력이 가리킬 곳을 잃습니다. 내용이 바뀌어 id가 바뀌는 것은 의도이지만,
+     * 내용이 그대로인데 규칙이 바뀌어 갈리는 것은 사고입니다.
+     *
+     * 같은 내용이면 같은 id가 나오므로 중복은 부르는 쪽이 걸러야 합니다.
+     */
+    private fun idOf(vararg parts: String) = UUID.nameUUIDFromBytes(parts.joinToString("|").toByteArray()).toString()
 
     companion object {
         private const val MINIMUM_CONCEPTS = 2
