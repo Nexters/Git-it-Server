@@ -27,9 +27,15 @@ fun <T, R> List<T>.inParallel(block: (T) -> R): List<R> =
  *
  * 전부 실패한 것만 예외로 올리는 이유는 그게 개념의 문제가 아니라 사고(쿼터 소진·네트워크 단절)여서입니다.
  * 삼키면 뒷단계가 빈 결과를 "재료가 없다"고 읽어, 되돌릴 수 없는 거절로 굳습니다.
+ *
+ * 같은 이유로 [Error]와 인터럽트는 하나만 나와도 올립니다. 개념 하나의 실패로 세면 JVM이 죽어가는 중에도
+ * 나머지로 완성된 세트가 나갑니다 — `runCatching`이 [Exception]이 아니라 [Throwable]을 잡기 때문입니다.
  */
 fun <T : Any> List<Result<T>>.successesOrThrow(): List<T> {
     val failures = mapNotNull { it.exceptionOrNull() }
+
+    failures.firstOrNull { it is Error || it is InterruptedException }?.let { throw it }
+
     if (isNotEmpty() && failures.size == size) {
         throw failures.first()
     }
