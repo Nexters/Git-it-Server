@@ -1,5 +1,8 @@
 package com.nexters.gitit.domain.quizrepo
 
+import com.nexters.gitit.domain.exception.BaseException
+import com.nexters.gitit.domain.exception.ErrorCode
+
 /**
  * 앵커에 묶인 문제 하나.
  *
@@ -28,7 +31,26 @@ data class Question(
     val rubric: Rubric?,
     val anchors: List<Anchor>,
     val tags: Set<QualityTag> = emptySet(),
-)
+) {
+    /**
+     * 고른 선택지가 정답인지 판정합니다. 4지선다가 아니거나 [selectedIndex]가 선택지 범위 밖이면
+     * [BaseException]을 던집니다 — 범위 밖 번호를 그냥 받으면 오답으로 굳어 재제출 전까지 남습니다.
+     */
+    fun grade(selectedIndex: Int): Boolean {
+        requireFormat(QuestionFormat.MULTIPLE_CHOICE)
+        if (selectedIndex !in choices.indices) {
+            throw BaseException(ErrorCode.INVALID_INPUT, "선택지 범위를 벗어난 답변입니다")
+        }
+        return selectedIndex == answerIndex
+    }
+
+    /** 답의 형식은 푸는 쪽이 아니라 문제가 정합니다. [expected]가 이 문제의 형식이 아니면 [BaseException]을 던집니다. */
+    fun requireFormat(expected: QuestionFormat) {
+        if (format != expected) {
+            throw BaseException(ErrorCode.INVALID_INPUT, "문제 형식과 맞지 않는 답변입니다")
+        }
+    }
+}
 
 /**
  * 문제가 요구하는 이해의 깊이. 직급(주니어·시니어)에 매핑하지 않습니다 —
