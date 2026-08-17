@@ -18,7 +18,7 @@ data class ProjectDetailResponse(
     @field:Schema(description = "프로젝트 전체 진행률(%)")
     val overallProgressPercent: Int,
     @field:Schema(description = "다음에 풀어야 할 문제 ID. 재생 버튼 클릭 시 이 문제로 이동")
-    val nextProblemId: String?,
+    val nextQuestionId: String?,
     val sets: List<SetResponse>,
 ) {
     companion object {
@@ -31,7 +31,7 @@ data class ProjectDetailResponse(
                 starCount = result.starCount,
                 techStack = result.techStack,
                 overallProgressPercent = result.overallProgressPercent,
-                nextProblemId = result.nextProblemId,
+                nextQuestionId = result.nextQuestionId,
                 sets = result.sets.map { SetResponse.from(it) },
             )
     }

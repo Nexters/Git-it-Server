@@ -43,7 +43,7 @@ class GetProjectDetail(
             starCount = quizRepo.starCount,
             techStack = quizRepo.techStacks,
             overallProgressPercent = progress.overallProgressPercent,
-            nextProblemId = progress.nextQuestionId,
+            nextQuestionId = progress.nextQuestionId,
             sets = sets,
         )
     }
@@ -61,7 +61,7 @@ class GetProjectDetail(
         val starCount: Int,
         val techStack: List<String>,
         val overallProgressPercent: Int,
-        val nextProblemId: String?,
+        val nextQuestionId: String?,
         val sets: List<SetItem>,
     )
 
