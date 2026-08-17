@@ -6,6 +6,8 @@ import com.nexters.gitit.domain.exception.ErrorCode
 import org.springframework.data.mongodb.core.index.CompoundIndex
 import org.springframework.data.mongodb.core.mapping.Document
 import java.net.URI
+import java.time.Clock
+import java.time.Instant
 
 /**
  * GitHub 저장소 하나에서 뽑아낸 문제를 모아두는 곳.
@@ -32,6 +34,12 @@ import java.net.URI
     unique = true,
     partialFilter = "{'deletedAt': null}",
 )
+// 스케줄러가 몇 초마다 이 순서로 대기줄을 훑는다. 정렬까지 인덱스가 받아 줘야 매번 컬렉션을 훑고 메모리에서 정렬하지 않는다.
+@CompoundIndex(
+    name = "idx_pending",
+    def = "{'status': 1, 'registeredAt': 1}",
+    partialFilter = "{'deletedAt': null}",
+)
 class QuizRepo(
     val githubRepoId: String,
     val githubRepoUrl: String,
@@ -39,16 +47,31 @@ class QuizRepo(
     val ownerImageUrl: String,
     val starCount: Int,
     val techStacks: List<String>,
+    registeredAt: Instant,
 ) : BaseEntity() {
     // 생성 파이프라인이 최종 상태를 결정하므로 등록 시점에는 항상 시작 상태다.
     var status: QuizRepoStatus = QuizRepoStatus.READY
+        private set
+
+    /**
+     * 생성 대기줄에 선 시각. 등록과 [retry]가 각각 갱신합니다.
+     *
+     * `createdAt`으로 줄을 세우지 않는 것은 재시도가 줄에 다시 서는 행위이기 때문입니다 — 몇 주 전에
+     * 등록된 저장소가 재시도할 때마다 맨 앞으로 끼어들면 방금 등록한 사람이 계속 밀립니다.
+     */
+    var registeredAt: Instant = registeredAt
         private set
 
     // 전용 enum을 만들지 않고 ErrorCode를 재사용하는 것은, 어차피 클라이언트에게 같은 코드로 알려줘야 해서 목록이 두 벌이 되기 때문이다.
     var rejectedReason: ErrorCode? = null
         private set
 
-    // FAILED가 덮기 직전의 상태. 사고가 난 적 없으면 null이다.
+    /**
+     * 사고 직전에 어디까지 갔었는지. 사고가 난 적 없으면 null입니다.
+     *
+     * [retry]가 상태를 READY로 되돌린 뒤에도 남아, **대기 중이지만 앵커는 이미 있다**는 표식이 됩니다.
+     * 대기줄이 READY 하나로 정의되는 이상 상태만으로는 갓 등록된 것과 구분할 방법이 없습니다.
+     */
     var failedFrom: QuizRepoStatus? = null
         private set
 
@@ -87,6 +110,8 @@ class QuizRepo(
         this.sha = sha
         learningSets = sets
         status = QuizRepoStatus.COMPLETED
+        // 여기까지 왔으면 이어 쓸 재료가 아니라 결과다. 남겨 두면 완료된 저장소에 사고 흔적이 붙어 있게 된다.
+        failedFrom = null
     }
 
     /**
@@ -95,13 +120,14 @@ class QuizRepo(
     fun reject(reason: ErrorCode) {
         status = QuizRepoStatus.REJECTED
         rejectedReason = reason
+        failedFrom = null
     }
 
     /**
      * [reject]와 달리 여기 오는 것은 판정이 아니라 사고라 사유를 받지 않습니다.
      * 왜 죽었는지는 도큐먼트가 아니라 로그에서 봅니다 — 세거나 걸러야 할 값이 아닙니다.
      *
-     * 어디까지 갔었는지만 [failedFrom]에 남깁니다. [retry]가 그리로 되돌아가 체크포인트를 이어 씁니다.
+     * 어디까지 갔었는지만 [failedFrom]에 남깁니다. 재시도가 그 값을 보고 체크포인트를 이어 씁니다.
      */
     fun fail() {
         failedFrom = status
@@ -109,20 +135,19 @@ class QuizRepo(
     }
 
     /**
-     * 사고로 멈춘 저장소를 [failedFrom]으로 되돌립니다. [QuizRepoStatus.FAILED]가 아니면
+     * 사고로 멈춘 저장소를 대기줄 맨 뒤에 다시 세웁니다. [QuizRepoStatus.FAILED]가 아니면
      * [ErrorCode.QUIZ_GENERATION_NOT_RETRYABLE]을 던집니다.
      *
-     * READY가 아니라 실패 직전 상태로 되돌리는 것은 [anchoredConcepts]를 다시 만들지 않기 위해서입니다.
-     * 동시 호출은 이 검사로만 막혀 인스턴스가 여럿이면 둘 다 통과합니다.
+     * [failedFrom]과 달리 상태는 언제나 READY로 돌아갑니다 — 대기줄이 READY 하나로 정의되어,
+     * ANCHORED로 되돌리면 아무도 집어 가지 않습니다. 앵커를 다시 만들지 않는 근거는 [failedFrom]이 맡습니다.
      */
-    fun retry() {
+    fun retry(clock: Clock) {
         if (status != QuizRepoStatus.FAILED) {
             throw BaseException(ErrorCode.QUIZ_GENERATION_NOT_RETRYABLE)
         }
 
-        // fail()이 상태와 함께 세팅하므로 비어 있을 수 없지만, 타입이 nullable이라 막아 둔다.
-        status = failedFrom ?: QuizRepoStatus.READY
-        failedFrom = null
+        status = QuizRepoStatus.READY
+        registeredAt = Instant.now(clock)
     }
 
     /**
