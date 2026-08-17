@@ -6,13 +6,11 @@ import com.nexters.gitit.domain.exception.ErrorCode
 import com.nexters.gitit.domain.project.QuizLevel
 import com.nexters.gitit.domain.quizrepo.GithubRepository
 import com.nexters.gitit.domain.quizrepo.GithubRepositoryResolver
-import com.nexters.gitit.domain.quizrepo.QuizGenerationRequested
 import com.nexters.gitit.domain.quizrepo.QuizRepo
 import com.nexters.gitit.domain.quizrepo.QuizRepoStatus
 import com.nexters.gitit.infrastructure.mongo.SpringDataProjectRepository
 import com.nexters.gitit.infrastructure.mongo.SpringDataQuizRepoRepository
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -22,16 +20,15 @@ import org.mockito.BDDMockito.given
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
-import org.springframework.context.event.EventListener
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import java.time.Instant
 
 @SpringBootTest
-@Import(TestcontainersConfiguration::class, RegisterProjectTest.QuizGenerationRequestedCaptor::class)
+@Import(TestcontainersConfiguration::class)
 class RegisterProjectTest(
     @Autowired private val registerProject: RegisterProject,
     @Autowired private val quizRepoRepository: SpringDataQuizRepoRepository,
     @Autowired private val projectRepository: SpringDataProjectRepository,
-    @Autowired private val eventCaptor: QuizGenerationRequestedCaptor,
 ) {
     // 실제 구현은 GitHub API를 호출하므로 테스트에서 진짜로 돌릴 수 없다. MongoDB는 실제 구현을 쓴다.
     @MockitoBean
@@ -42,12 +39,11 @@ class RegisterProjectTest(
         // 컨테이너는 테스트 클래스 간 공유되므로 도큐먼트만 비운다. 인덱스는 유지된다.
         quizRepoRepository.deleteAll()
         projectRepository.deleteAll()
-        eventCaptor.clear()
         given(githubRepositoryResolver.resolve(REPO_URL)).willReturn(REPO)
     }
 
     @Test
-    fun `처음 등록하면 문제 저장소를 만들고 그 난이도로 프로젝트를 만들며 문제 생성을 요청한다`() {
+    fun `처음 등록하면 문제 저장소를 만들어 대기줄에 세우고 그 난이도로 프로젝트를 만든다`() {
         val result = registerProject(commandOf(memberId = "member-1", quizLevel = QuizLevel.L2))
 
         result.status shouldBe QuizRepoStatus.READY
@@ -60,21 +56,21 @@ class RegisterProjectTest(
         project.quizRepoId shouldBe quizRepo.id
         project.quizLevel shouldBe QuizLevel.L2
 
-        eventCaptor.received shouldBe listOf(QuizGenerationRequested(quizRepo.id))
+        // 저장이 곧 대기줄 등록이다. 스케줄러가 이 상태를 보고 집어 간다.
+        quizRepoRepository
+            .findAllByStatusAndDeletedAtIsNullOrderByRegisteredAtAsc(QuizRepoStatus.READY)
+            .map { it.id } shouldBe listOf(quizRepo.id)
     }
 
     @Test
     fun `다른 회원이 같은 저장소를 등록하면 문제 저장소는 그대로 두고 프로젝트만 추가한다`() {
         val first = registerProject(commandOf(memberId = "member-1", quizLevel = QuizLevel.L2))
-        eventCaptor.clear()
 
         val second = registerProject(commandOf(memberId = "member-2", quizLevel = QuizLevel.L3))
 
         second.projectId shouldNotBe first.projectId
         quizRepoRepository.count() shouldBe 1
         projectRepository.count() shouldBe 2
-        // 이미 생성이 걸려 있으므로 중복 요청하지 않는다.
-        eventCaptor.received.shouldBeEmpty()
     }
 
     @Test
@@ -108,6 +104,7 @@ class RegisterProjectTest(
             ownerImageUrl = REPO.ownerImageUrl,
             starCount = REPO.starCount,
             techStacks = REPO.techStacks,
+            registeredAt = Instant.EPOCH,
         )
 
     private fun commandOf(
@@ -118,20 +115,6 @@ class RegisterProjectTest(
         githubRepoUrl = REPO_URL,
         quizLevel = quizLevel,
     )
-
-    /**
-     * 이벤트가 실제로 나갔는지만 봅니다. 퍼블리셔를 목으로 바꾸면 컨텍스트 전체의 이벤트가 죽어 다른 검증까지 흔들립니다.
-     */
-    class QuizGenerationRequestedCaptor {
-        val received = mutableListOf<QuizGenerationRequested>()
-
-        @EventListener
-        fun capture(event: QuizGenerationRequested) {
-            received += event
-        }
-
-        fun clear() = received.clear()
-    }
 
     companion object {
         private const val REPO_URL = "https://github.com/spring-projects/spring-petclinic"

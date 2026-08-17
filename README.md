@@ -168,8 +168,11 @@ Nginx와 Certbot을 띄웁니다.
 | `JWT_SECRET` | |
 | `OAUTH_GOOGLE_CLIENT_ID` | |
 | `OAUTH_APPLE_CLIENT_ID` | |
-| `GITHUB_WORK_DIR` | 앱 컨테이너 안의 경로 |
+| `WORK_DIR` | 앱 컨테이너 안의 경로. uid 1000으로 도니 `/tmp/gitit-work`처럼 쓸 수 있는 곳이어야 합니다 |
 | `GCP_CREDENTIALS_BASE64` | 서비스 계정 JSON을 base64로 인코딩한 값 |
+
+> 시크릿 이름에 `GITHUB_` 접두사를 쓸 수 없습니다. Actions가 그 접두사로 시작하는 시크릿을 거부하는데,
+> 워크플로에서는 오류가 아니라 빈 문자열로 치환돼 조용히 잘못된 값이 배포됩니다.
 
 > `MONGODB_HOST`를 `localhost`로 두면 안 됩니다. 운영에서는 `app`과 `mongodb`가 같은 Docker
 > 네트워크의 별개 컨테이너이므로 `localhost`는 app 컨테이너 자신을 가리켜 연결에 실패합니다.

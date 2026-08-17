@@ -10,6 +10,7 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.string.shouldStartWith
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -26,12 +27,15 @@ import java.io.InputStream
 import java.net.http.HttpClient
 import java.net.http.HttpResponse
 import java.nio.file.Path
+import java.nio.file.attribute.PosixFilePermissions
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
+import kotlin.io.path.isWritable
 import kotlin.io.path.name
 import kotlin.io.path.readText
+import kotlin.io.path.setPosixFilePermissions
 
 class GithubRepositoryFetcherTest {
     @TempDir
@@ -110,6 +114,17 @@ class GithubRepositoryFetcherTest {
         shouldThrowErrorCode(ErrorCode.INVALID_REPO_ARCHIVE) { fetcher().fetch(REPO_URL) }
 
         workDir.resolve("evil.txt").exists().shouldBeFalse()
+    }
+
+    @Test
+    fun `쓸 수 없는 작업 공간이면 만들어지지도 않는다`() {
+        val readOnly = workDir.resolve("read-only").createDirectories()
+        readOnly.setPosixFilePermissions(PosixFilePermissions.fromString("r-xr-xr-x"))
+        // root는 권한을 무시하고 쓰므로 검사 자체가 성립하지 않는다.
+        assumeTrue(!readOnly.isWritable(), "root로 도는 환경에서는 확인할 수 없다")
+
+        // 잘못된 경로를 받고도 살아 있으면, 생성 요청이 들어올 때까지 문제가 숨는다.
+        shouldThrow<IllegalArgumentException> { GithubRepositoryFetcher(readOnly.toString(), githubClient) }
     }
 
     @Test

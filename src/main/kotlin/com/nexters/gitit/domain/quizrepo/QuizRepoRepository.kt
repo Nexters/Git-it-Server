@@ -14,5 +14,13 @@ interface QuizRepoRepository {
     /** [ids] 중 살아 있는 것만 돌려줍니다. 없는 id는 결과에서 빠지므로 크기가 [ids]보다 작을 수 있습니다. */
     fun findAllByIds(ids: Collection<String>): List<QuizRepo>
 
+    /**
+     * 문제 생성을 기다리는 저장소를 오래 기다린 순서로 돌려줍니다. 대기 중인 것이 없으면 빈 리스트입니다.
+     *
+     * 대기 중은 [QuizRepoStatus.READY] 하나입니다. 앵커까지 만들고 실패했던 저장소도 [QuizRepo.retry]가
+     * READY로 되돌리므로 같은 줄에 섭니다.
+     */
+    fun findAllPending(): List<QuizRepo>
+
     fun save(quizRepo: QuizRepo): QuizRepo
 }
