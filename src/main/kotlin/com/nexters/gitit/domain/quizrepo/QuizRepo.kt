@@ -87,6 +87,14 @@ class QuizRepo(
         private set
 
     /**
+     * 개념 추출 1콜을 썼다고만 적습니다. [checkpoint]·[complete]와 달리 함께 저장할 산출물이 없습니다 —
+     * 개념은 앵커까지 가야 [anchoredConcepts]로 남고, 여기서 멈추면 남는 것은 지출 기록뿐입니다.
+     */
+    fun analyzed() {
+        status = QuizRepoStatus.ANALYZED
+    }
+
+    /**
      * 문제까지는 못 갔지만 개념·앵커는 확정된 상태로 만듭니다. 완성본이 아니라 **다시 만들 때 아껴 쓸 재료**라,
      * 여기서 멈춘 저장소는 학습자에게 내보낼 수 없습니다.
      *

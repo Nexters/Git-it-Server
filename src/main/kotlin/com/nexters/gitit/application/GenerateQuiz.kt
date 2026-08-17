@@ -110,6 +110,9 @@ class GenerateQuiz(
         }
 
         val concepts = documentAnalyzer.analyze(checkout.root)
+        // 앵커까지 가지 못하고 죽어도 이 1콜은 이미 나갔다. 여기서 적지 않으면 그 지출이 어디에도 안 남는다.
+        quizRepoRepository.save(quizRepo.apply { analyzed() })
+
         val anchored = anchorLocator.locate(checkout.root, concepts)
         quizRepoRepository.save(quizRepo.apply { checkpoint(checkout.repo.sha, anchored) })
 
