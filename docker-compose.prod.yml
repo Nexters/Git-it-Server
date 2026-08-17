@@ -21,6 +21,8 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME:?MONGODB_USERNAME is required}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:?MONGODB_PASSWORD is required}
       MONGO_INITDB_DATABASE: ${MONGODB_DATABASE:?MONGODB_DATABASE is required}
+    ports:
+      - "127.0.0.1:27017:27017"
     volumes:
       - mongodb-data:/data/db
     healthcheck:
