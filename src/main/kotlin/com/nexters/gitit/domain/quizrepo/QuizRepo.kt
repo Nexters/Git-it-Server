@@ -67,10 +67,10 @@ class QuizRepo(
         private set
 
     /**
-     * 사고 직전에 어디까지 갔었는지. 사고가 난 적 없으면 null입니다.
+     * 사고 직전에 어디까지 끝나 있었는지. 사고가 난 적 없으면 null입니다.
      *
-     * [retry]가 상태를 READY로 되돌린 뒤에도 남아, **대기 중이지만 앵커는 이미 있다**는 표식이 됩니다.
-     * 대기줄이 READY 하나로 정의되는 이상 상태만으로는 갓 등록된 것과 구분할 방법이 없습니다.
+     * [retry]가 상태를 READY로 되돌린 뒤에도 남습니다. 마지막으로 끝난 단계가 적히므로 **그다음 콜 구간이
+     * 돌던 중이었다**는 뜻이 됩니다 — [QuizRepoStatus.ANCHORED]면 문제 생성 중이었던 것입니다.
      */
     var failedFrom: QuizRepoStatus? = null
         private set
@@ -135,7 +135,7 @@ class QuizRepo(
      * [reject]와 달리 여기 오는 것은 판정이 아니라 사고라 사유를 받지 않습니다.
      * 왜 죽었는지는 도큐먼트가 아니라 로그에서 봅니다 — 세거나 걸러야 할 값이 아닙니다.
      *
-     * 어디까지 갔었는지만 [failedFrom]에 남깁니다. 재시도가 그 값을 보고 체크포인트를 이어 씁니다.
+     * 어디까지 갔었는지만 [failedFrom]에 남깁니다.
      */
     fun fail() {
         failedFrom = status
@@ -146,8 +146,8 @@ class QuizRepo(
      * 사고로 멈춘 저장소를 대기줄 맨 뒤에 다시 세웁니다. [QuizRepoStatus.FAILED]가 아니면
      * [ErrorCode.QUIZ_GENERATION_NOT_RETRYABLE]을 던집니다.
      *
-     * [failedFrom]과 달리 상태는 언제나 READY로 돌아갑니다 — 대기줄이 READY 하나로 정의되어,
-     * ANCHORED로 되돌리면 아무도 집어 가지 않습니다. 앵커를 다시 만들지 않는 근거는 [failedFrom]이 맡습니다.
+     * 실패 직전 상태가 무엇이었든 언제나 READY로 돌아갑니다 — 대기줄이 READY 하나로 정의되어,
+     * 다른 값으로 되돌리면 아무도 집어 가지 않습니다. 앵커를 다시 만들지 않는 근거는 [anchoredConcepts]가 맡습니다.
      */
     fun retry(clock: Clock) {
         if (status != QuizRepoStatus.FAILED) {

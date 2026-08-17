@@ -104,8 +104,8 @@ class GenerateQuiz(
         quizRepo: QuizRepo,
         checkout: RepoCheckout,
     ): List<AnchoredConcept> {
-        // 재시도가 상태를 READY로 되돌리므로 status로는 앵커 보유를 알 수 없다. failedFrom이 그 표식이다.
-        if (quizRepo.failedFrom == QuizRepoStatus.ANCHORED && quizRepo.sha == checkout.repo.sha) {
+        // 앵커를 가졌는지는 상태가 아니라 산출물이 안다. 상태는 콜 범위를 따라 갈라지므로, 거기 기대면 값이 늘 때마다 조용히 깨진다.
+        if (quizRepo.anchoredConcepts.isNotEmpty() && quizRepo.sha == checkout.repo.sha) {
             return quizRepo.anchoredConcepts
         }
 
