@@ -267,7 +267,11 @@ interface ProjectControllerDocs {
         description = "문제 풀이 화면 상단 북마크 아이콘 탭 시 북마크 상태를 설정합니다. 토글이 아니라 원하는 상태를 그대로 보냅니다.",
     )
     @ApiResponses(
-        SwaggerApiResponse(responseCode = "200", description = "설정 성공"),
+        SwaggerApiResponse(
+            responseCode = "200",
+            description = "설정 성공",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = BOOKMARK_QUESTION_EXAMPLE)])],
+        ),
         SwaggerApiResponse(
             responseCode = "400",
             description = "bookmarked가 비어 있음",
@@ -345,5 +349,8 @@ interface ProjectControllerDocs {
 
         private const val BOOKMARK_INVALID_INPUT_EXAMPLE =
             """{"success":false,"data":null,"code":"COMMON-001","message":"잘못된 요청입니다","errors":[{"field":"bookmarked","message":"bookmarked는 필수입니다"}]}"""
+
+        private const val BOOKMARK_QUESTION_EXAMPLE =
+            """{"success":true,"data":{"bookmarked":true},"code":null,"message":null,"errors":null}"""
     }
 }

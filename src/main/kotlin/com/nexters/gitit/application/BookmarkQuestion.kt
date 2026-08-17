@@ -24,7 +24,7 @@ class BookmarkQuestion(
         project.setBookmarked(command.questionId, command.bookmarked)
         projectRepository.save(project)
 
-        return Result(isBookmarked = command.bookmarked)
+        return Result(bookmarked = command.bookmarked)
     }
 
     data class Command(
@@ -35,6 +35,6 @@ class BookmarkQuestion(
     )
 
     data class Result(
-        val isBookmarked: Boolean,
+        val bookmarked: Boolean,
     )
 }
