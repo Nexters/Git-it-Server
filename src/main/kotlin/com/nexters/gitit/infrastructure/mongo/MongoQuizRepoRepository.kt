@@ -18,6 +18,8 @@ class MongoQuizRepoRepository(
 
     override fun findById(id: String): QuizRepo? = quizRepoRepository.findByIdAndDeletedAtIsNull(id)
 
+    override fun findAllByIds(ids: Collection<String>): List<QuizRepo> = quizRepoRepository.findAllByIdInAndDeletedAtIsNull(ids)
+
     override fun save(quizRepo: QuizRepo): QuizRepo = quizRepoRepository.save(quizRepo)
 
     private fun findByGithubRepoId(githubRepoId: String): QuizRepo? = quizRepoRepository.findByGithubRepoIdAndDeletedAtIsNull(githubRepoId)
