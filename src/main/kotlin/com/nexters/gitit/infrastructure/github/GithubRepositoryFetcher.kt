@@ -44,9 +44,8 @@ class GithubRepositoryFetcher(
 ) {
     private val workDir: Path = Path.of(workDir).toAbsolutePath().normalize()
 
-    // 쓸 수 없는 경로는 기동을 멎게 한다. 생성 시도마다 저장소를 FAILED로 만들며 번지는 것보다 배포 직후
-    // 한 번 드러나는 편이 싸다 — 값이 비면 여기가 프로세스 작업 디렉터리가 되어 예외 없이 기동을 통과한다.
-    // 디렉터리가 이미 있으면 createDirectories가 조용히 지나가므로 쓰기 권한은 따로 본다.
+    // 설정이 비면 Path.of("")가 프로세스 작업 디렉터리를 가리켜, 잘못된 값이 조용히 기동을 통과한다.
+    // 디렉터리가 이미 있으면 createDirectories가 그냥 지나가므로 쓰기 권한은 따로 본다.
     init {
         this.workDir.createDirectories()
         require(this.workDir.isWritable()) { "작업 공간에 쓸 수 없습니다: ${this.workDir}" }
@@ -70,6 +69,8 @@ class GithubRepositoryFetcher(
     }
 
     /**
+     * 이미 받아둔 해제본의 경로를, 없으면 null을 반환합니다.
+     *
      * 받기 전에는 sha를 모르므로 정확한 이름 대신 `{owner}-{name}-*` 로 찾습니다.
      * 갱신이 들어와 sha가 여럿 쌓이면 가장 최근 것을 씁니다.
      */
@@ -82,7 +83,6 @@ class GithubRepositoryFetcher(
         val prefix = "$owner-$name-"
         return workDir
             .listDirectoryEntries("$prefix*")
-            // 접두사 뒤가 sha인지까지 확인한다.
             .filter { SHA_PATTERN.matches(it.name.removePrefix(prefix)) }
             .maxByOrNull { it.getLastModifiedTime() }
     }
