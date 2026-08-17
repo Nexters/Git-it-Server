@@ -20,6 +20,7 @@ import java.util.zip.ZipInputStream
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 import kotlin.io.path.getLastModifiedTime
+import kotlin.io.path.isWritable
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.moveTo
 import kotlin.io.path.name
@@ -42,6 +43,14 @@ class GithubRepositoryFetcher(
     private val apiBaseUrl: String = API_BASE_URL,
 ) {
     private val workDir: Path = Path.of(workDir).toAbsolutePath().normalize()
+
+    // 쓸 수 없는 경로는 기동을 멎게 한다. 생성 시도마다 저장소를 FAILED로 만들며 번지는 것보다 배포 직후
+    // 한 번 드러나는 편이 싸다 — 값이 비면 여기가 프로세스 작업 디렉터리가 되어 예외 없이 기동을 통과한다.
+    // 디렉터리가 이미 있으면 createDirectories가 조용히 지나가므로 쓰기 권한은 따로 본다.
+    init {
+        this.workDir.createDirectories()
+        require(this.workDir.isWritable()) { "작업 공간에 쓸 수 없습니다: ${this.workDir}" }
+    }
 
     fun fetch(gitUrl: String): RepoCheckout {
         val match = URL_PATTERN.find(gitUrl.trim()) ?: throw BaseException(ErrorCode.INVALID_REPO_URL, "레포 주소 형식이 아닙니다: $gitUrl")
