@@ -12,16 +12,14 @@ class GetProjects(
     private val projectRepository: ProjectRepository,
     private val quizRepoRepository: QuizRepoRepository,
 ) {
-    // ponytail: 프로젝트당 QuizRepo를 하나씩 더 조회하는 N+1 구조. 목록 규모가 유저 개인 프로젝트
-    // 수준이라 지금은 문제없지만, 커지면 quizRepoId로 한 번에 묶어 조회하는 걸 고려. 페이지를 나누지
-    // 않고 전부 내려주는 것도 같은 전제에 기대고 있다.
+    // ponytail: 페이지를 나누지 않고 전부 내려주는 것은 목록 규모가 유저 개인 프로젝트 수준이라는
+    // 전제에 기대고 있다. 한 회원이 수백 개를 학습하게 되면 조회도 응답도 같이 커진다.
     operator fun invoke(command: Command): Result {
-        val projects = projectRepository.findAllByMemberId(command.memberId)
+        val projects = projectRepository.findAllByMemberId(command.memberId).sortedBy { it.createdAt }
+        val quizReposById = quizRepoRepository.findAllByIds(projects.map { it.quizRepoId }).associateBy { it.id }
+
         return Result(
-            items =
-                projects
-                    .sortedBy { it.createdAt }
-                    .mapNotNull { project -> learnableQuizRepoOf(project)?.let { toItem(project, it) } },
+            items = projects.mapNotNull { project -> learnableQuizRepoOf(project, quizReposById)?.let { toItem(project, it) } },
         )
     }
 
@@ -32,8 +30,10 @@ class GetProjects(
      * quizRepoId가 가리키는 것이 아예 없으면 데이터 정합성이 깨진 것인데, 예외도 로그도 없이
      * 그 항목만 사라집니다.
      */
-    private fun learnableQuizRepoOf(project: Project): QuizRepo? =
-        quizRepoRepository.findById(project.quizRepoId)?.takeIf { it.status == QuizRepoStatus.COMPLETED }
+    private fun learnableQuizRepoOf(
+        project: Project,
+        quizReposById: Map<String, QuizRepo>,
+    ): QuizRepo? = quizReposById[project.quizRepoId]?.takeIf { it.status == QuizRepoStatus.COMPLETED }
 
     private fun toItem(
         project: Project,

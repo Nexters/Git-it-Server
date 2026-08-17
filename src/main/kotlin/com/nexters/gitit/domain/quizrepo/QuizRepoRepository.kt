@@ -11,5 +11,8 @@ interface QuizRepoRepository {
 
     fun findById(id: String): QuizRepo?
 
+    /** [ids] 중 살아 있는 것만 돌려줍니다. 없는 id는 결과에서 빠지므로 크기가 [ids]보다 작을 수 있습니다. */
+    fun findAllByIds(ids: Collection<String>): List<QuizRepo>
+
     fun save(quizRepo: QuizRepo): QuizRepo
 }
