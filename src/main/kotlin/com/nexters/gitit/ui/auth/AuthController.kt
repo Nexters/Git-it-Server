@@ -30,10 +30,7 @@ class AuthController(
         @Valid @RequestBody request: AppleLoginRequest,
     ): ApiResponse<LoginResponse> = ApiResponse.success(LoginResponse.from(login(request.toCommand())))
 
-    /**
-     * 검증은 [LoginMember]를 푸는 과정에서 이미 끝나므로 본문이 비어 있습니다.
-     * 여기서 회원을 조회하면 토큰 확인 한 번에 DB를 타게 되어 이 엔드포인트를 따로 둔 이유가 사라집니다.
-     */
+    // 검증은 [LoginMember]를 푸는 과정에서 끝나므로 본문이 비어 있습니다. 여기에 회원 조회를 더하면 DB를 타지 않는다는 이 엔드포인트의 전제가 깨집니다.
     @GetMapping("/token")
     override fun verifyAccessToken(
         @LoginMember memberId: String,
