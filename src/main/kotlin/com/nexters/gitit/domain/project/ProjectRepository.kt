@@ -1,8 +1,5 @@
 package com.nexters.gitit.domain.project
 
-import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Slice
-
 interface ProjectRepository {
     /**
      * 그 회원이 이미 학습 중인 저장소면 기존 프로젝트를, 아니면 새로 저장한 것을 돌려줍니다.
@@ -19,12 +16,9 @@ interface ProjectRepository {
     /** 살아 있는 프로젝트 하나. 없거나 이미 삭제됐으면 null입니다. */
     fun findById(id: String): Project?
 
-    /** 그 회원의 살아 있는 프로젝트 목록, 페이지 단위. */
-    fun findAllByMemberIdAndDeletedAtIsNull(
-        memberId: String,
-        pageable: Pageable,
-    ): Slice<Project>
+    /** 그 회원의 살아 있는 프로젝트 전부. */
+    fun findAllByMemberId(memberId: String): List<Project>
 
-    /** 그 회원의 살아 있는 프로젝트 전부. 학습 현황 집계처럼 페이지 없이 전부 훑어야 할 때 씁니다. */
-    fun findAllByMemberIdAndDeletedAtIsNull(memberId: String): List<Project>
+    /** 소프트 삭제와 무관하게 그 회원의 프로젝트를 전부 실제로 지웁니다. 회원 탈퇴 전용입니다. */
+    fun deleteAllByMemberId(memberId: String)
 }

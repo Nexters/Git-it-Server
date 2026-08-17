@@ -20,7 +20,7 @@ class GetBookmarkedQuestions(
     private val quizRepoRepository: QuizRepoRepository,
 ) {
     operator fun invoke(command: Command): Result {
-        val myProjects = projectRepository.findAllByMemberIdAndDeletedAtIsNull(command.memberId)
+        val myProjects = projectRepository.findAllByMemberId(command.memberId)
         val bookmarkedProjects = myProjects.filter { it.bookmarkedQuestionIds.isNotEmpty() }
 
         val quizReposById = bookmarkedProjects.mapNotNull { quizRepoRepository.findById(it.quizRepoId) }.associateBy { it.id }

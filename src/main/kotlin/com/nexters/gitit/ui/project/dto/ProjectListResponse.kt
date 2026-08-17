@@ -12,7 +12,8 @@ data class ProjectListResponse(
         fun from(result: GetProjects.Result) =
             ProjectListResponse(
                 items = result.items.map { ProjectItemResponse.from(it) },
-                hasNext = result.hasNext,
+                // Result에 페이지 개념이 없습니다. 필드는 이미 나간 API라 남겨 둡니다.
+                hasNext = false,
             )
     }
 }

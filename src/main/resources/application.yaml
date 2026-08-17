@@ -48,7 +48,7 @@ oauth:
 
 github:
   # 레포를 내려받아 푸는 작업 공간.
-  work-dir: ${GITHUB_WORK_DIR}
+  work-dir: ${WORK_DIR}
 
 firebase:
   # 서비스 계정 JSON을 GCP와 같은 환경 변수로 공유하되 설정은 여기서 따로 읽는다.

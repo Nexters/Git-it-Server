@@ -6,6 +6,7 @@ import com.nexters.gitit.domain.auth.OauthAuthenticator
 import com.nexters.gitit.domain.auth.OauthCredential
 import com.nexters.gitit.domain.member.Member
 import com.nexters.gitit.domain.member.MemberRepository
+import com.nexters.gitit.domain.member.NicknameGenerator
 import org.springframework.stereotype.Service
 
 @Service
@@ -13,6 +14,7 @@ class Login(
     private val memberRepository: MemberRepository,
     private val jwtProvider: JwtProvider,
     private val oauthAuthenticator: OauthAuthenticator,
+    private val nicknameGenerator: NicknameGenerator,
 ) {
     operator fun invoke(command: Command): Result {
         val socialAccount = oauthAuthenticator.authenticate(command.credential)
@@ -24,6 +26,7 @@ class Login(
                     Member(
                         socialIdentity = socialAccount.socialIdentity,
                         email = socialAccount.email,
+                        name = nicknameGenerator.generate(),
                     ),
                 )
 

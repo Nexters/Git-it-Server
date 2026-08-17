@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import java.time.Instant
 
 /**
  * 저장소 → 프로젝트 → 회원으로 가는 조회가 실제 Mongo에서 도는지가 이 테스트의 목적입니다.
@@ -80,6 +81,7 @@ class NotifyQuizResultTest(
             ownerImageUrl = "https://avatars.githubusercontent.com/u/4995702?v=4",
             starCount = 0,
             techStacks = emptyList(),
+            registeredAt = Instant.EPOCH,
         )
 
     private fun memberOf(
@@ -88,6 +90,7 @@ class NotifyQuizResultTest(
     ) = Member(
         socialIdentity = SocialIdentity(socialId, SocialType.GOOGLE),
         email = "$socialId@nexters.com",
+        name = "겁없는 SegFault",
     ).apply {
         updateDeviceInfo(
             DeviceInfo(

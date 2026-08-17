@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest
 import org.springframework.context.annotation.Import
 import org.springframework.dao.DuplicateKeyException
+import java.time.Clock
+import java.time.Instant
 
 /**
  * 등록 유스케이스가 동시 요청을 이 유니크 인덱스에 맡기고 있으므로, 인덱스가 실제로 걸리는지를 여기서 못 박습니다.
@@ -85,13 +87,30 @@ class QuizRepoRepositoryTest(
         val saved = quizRepoRepository.save(quizRepo)
         val found = quizRepoRepository.findById(saved.id).orElse(null).shouldNotBeNull()
 
-        // 재실행이 이어붙일지 판정하는 조건이 (상태, sha) 짝이라 둘을 함께 못 박는다.
+        // 재실행이 이어붙일지 판정하는 근거가 (앵커, sha) 짝이라 둘을 함께 못 박는다.
         found.status shouldBe QuizRepoStatus.ANCHORED
         found.sha shouldBe SHA
         found.anchoredConcepts
             .single()
             .anchors
             .single() shouldBe anchor
+    }
+
+    /**
+     * 스케줄러가 무엇을 언제 집을지가 전부 이 쿼리 하나에 담겨 있습니다. 조건이나 정렬이 조용히 어긋나면
+     * 어떤 저장소는 영영 안 돌고 어떤 저장소는 두 번 돕니다.
+     */
+    @Test
+    fun `대기줄은 READY만, 오래 기다린 순서로 나온다`() {
+        val later = quizRepoRepository.save(pendingOf("2", Instant.parse("2026-08-17T00:01:00Z")))
+        val earlier = quizRepoRepository.save(pendingOf("1", Instant.parse("2026-08-17T00:00:00Z")))
+        quizRepoRepository.save(pendingOf("3", Instant.EPOCH).apply { fail() })
+        quizRepoRepository.save(pendingOf("4", Instant.EPOCH).apply { checkpoint(SHA, emptyList()) })
+        quizRepoRepository.save(pendingOf("5", Instant.EPOCH).apply { delete(Clock.systemUTC()) })
+
+        val pending = quizRepoRepository.findAllByStatusAndDeletedAtIsNullOrderByRegisteredAtAsc(QuizRepoStatus.READY)
+
+        pending.map { it.id } shouldBe listOf(earlier.id, later.id)
     }
 
     // 표시용 필드는 저장·조회 규약과 무관해 아무 값이나 채운다.
@@ -103,7 +122,21 @@ class QuizRepoRepositoryTest(
             ownerImageUrl = "https://avatars.githubusercontent.com/u/4995702?v=4",
             starCount = 3,
             techStacks = listOf("Kotlin"),
+            registeredAt = Instant.EPOCH,
         )
+
+    private fun pendingOf(
+        githubRepoId: String,
+        registeredAt: Instant,
+    ) = QuizRepo(
+        githubRepoId = githubRepoId,
+        githubRepoUrl = "https://github.com/Nexters/repo-$githubRepoId",
+        name = "repo-$githubRepoId",
+        ownerImageUrl = "https://avatars.githubusercontent.com/u/4995702?v=4",
+        starCount = 0,
+        techStacks = emptyList(),
+        registeredAt = registeredAt,
+    )
 
     private fun concept() = Concept("라우팅", "라우팅은 `Router.kt`가 전담합니다.", "README.md", listOf("src/Router.kt"))
 

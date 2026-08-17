@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.mapping.Document
 class Member(
     val socialIdentity: SocialIdentity,
     email: String?,
+    name: String,
     position: Position? = null,
     careerLevel: CareerLevel? = null,
 ) : BaseEntity() {
@@ -26,8 +27,8 @@ class Member(
     var careerLevel: CareerLevel? = careerLevel
         private set
 
-    // OAuth가 이름을 안 내려주므로 큐레이션에서 함께 받는다.
-    var name: String? = null
+    // OAuth가 이름을 안 내려주므로 가입 시점에 서버가 지어 준다(NicknameGenerator).
+    var name: String = name
         private set
 
     // 가입 시점에는 알 수 없고 앱이 별도 요청으로 올려주므로 생성자에서 받지 않는다.
@@ -37,11 +38,9 @@ class Member(
     fun isCurated(): Boolean = position != null && careerLevel != null
 
     fun curate(
-        name: String,
         position: Position,
         careerLevel: CareerLevel,
     ) {
-        this.name = name
         this.position = position
         this.careerLevel = careerLevel
     }

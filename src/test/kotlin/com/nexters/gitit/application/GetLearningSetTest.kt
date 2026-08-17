@@ -88,6 +88,7 @@ class GetLearningSetTest(
             ownerImageUrl = "https://avatars.githubusercontent.com/u/4995702?v=4",
             starCount = 3,
             techStacks = listOf("Kotlin"),
+            registeredAt = Instant.EPOCH,
         ).apply { complete("abc1234", listOf(learningSetOf())) }
 
     private fun learningSetOf(): LearningSet {

@@ -1,5 +1,6 @@
 package com.nexters.gitit.application
 
+import com.nexters.gitit.domain.common.LockManager
 import com.nexters.gitit.domain.exception.BaseException
 import com.nexters.gitit.domain.quizrepo.AnchoredConcept
 import com.nexters.gitit.domain.quizrepo.QuizGenerationFinished
@@ -15,6 +16,7 @@ import com.nexters.gitit.infrastructure.quiz.QuestionGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
+import java.time.Duration
 
 private val logger = KotlinLogging.logger {}
 
@@ -36,8 +38,21 @@ class GenerateQuiz(
     private val anchorLocator: AnchorLocator,
     private val questionGenerator: QuestionGenerator,
     private val qualityInspector: QualityInspector,
+    private val lockManager: LockManager,
     private val eventPublisher: ApplicationEventPublisher,
 ) {
+    /**
+     * 대상을 실행 직전에 다시 읽습니다. 부르는 쪽이 대기 목록을 한 번 읽고 순회하는 동안 시간이 흐르므로,
+     * 옛 스냅숏을 그대로 믿으면 그 사이 삭제되거나 이미 끝난 저장소를 다시 돌립니다.
+     */
+    operator fun invoke(command: Command) {
+        val quizRepo = quizRepoRepository.findById(command.quizRepoId) ?: return
+
+        // 키가 저장소 id라 락은 저장소마다 따로 걸린다 — 다른 저장소의 생성은 서로 막지 않는다.
+        lockManager.hold("$LOCK_PREFIX${quizRepo.githubRepoId}", LEASE) { generate(quizRepo) }
+            ?: logger.info { "Quiz generation already running, skipped: quizRepoId=${quizRepo.id}" }
+    }
+
     /**
      * 성공이든 거절이든 저장소 상태로 남깁니다. 결과를 반환값으로 알리지 않는 유스케이스라,
      * 도큐먼트에 적지 않으면 요청한 사용자는 영영 READY만 보게 됩니다.
@@ -50,9 +65,7 @@ class GenerateQuiz(
      * 어느 경로로 끝나든 [QuizGenerationFinished]가 나갑니다. 사고로 끝난 것도 기다리던 사용자에게는 결과입니다.
      */
     @Suppress("TooGenericExceptionCaught")
-    operator fun invoke(command: Command) {
-        // 등록 직후 삭제된 저장소라면 만들 대상이 없다. 되살릴 방법도 없으므로 조용히 끝낸다.
-        val quizRepo = quizRepoRepository.findById(command.quizRepoId) ?: return
+    private fun generate(quizRepo: QuizRepo) {
         var checkout: RepoCheckout? = null
 
         try {
@@ -91,11 +104,15 @@ class GenerateQuiz(
         quizRepo: QuizRepo,
         checkout: RepoCheckout,
     ): List<AnchoredConcept> {
-        if (quizRepo.status == QuizRepoStatus.ANCHORED && quizRepo.sha == checkout.repo.sha) {
+        // 앵커를 가졌는지는 상태가 아니라 산출물이 안다. 상태는 콜 범위를 따라 갈라지므로, 거기 기대면 값이 늘 때마다 조용히 깨진다.
+        if (quizRepo.anchoredConcepts.isNotEmpty() && quizRepo.sha == checkout.repo.sha) {
             return quizRepo.anchoredConcepts
         }
 
         val concepts = documentAnalyzer.analyze(checkout.root)
+        // 앵커까지 가지 못하고 죽어도 이 1콜은 이미 나갔다. 여기서 적지 않으면 그 지출이 어디에도 안 남는다.
+        quizRepoRepository.save(quizRepo.apply { analyzed() })
+
         val anchored = anchorLocator.locate(checkout.root, concepts)
         quizRepoRepository.save(quizRepo.apply { checkpoint(checkout.repo.sha, anchored) })
 
@@ -106,4 +123,11 @@ class GenerateQuiz(
     data class Command(
         val quizRepoId: String,
     )
+
+    companion object {
+        private const val LOCK_PREFIX = "quiz-generation:"
+
+        // 실측 10분(Redis·Gson 기준)의 세 배. 큰 레포에 여유를 주되, 정말 멎었을 때 영영 붙잡고 있지 않는 값이다.
+        private val LEASE = Duration.ofMinutes(30)
+    }
 }

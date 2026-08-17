@@ -171,5 +171,5 @@ class MemberRepositoryTest(
     private fun memberOf(
         socialIdentity: SocialIdentity,
         email: String? = null,
-    ) = Member(socialIdentity = socialIdentity, email = email)
+    ) = Member(socialIdentity = socialIdentity, email = email, name = "겁없는 SegFault")
 }

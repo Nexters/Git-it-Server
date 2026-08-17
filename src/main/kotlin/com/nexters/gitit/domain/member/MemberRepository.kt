@@ -9,4 +9,7 @@ interface MemberRepository {
     fun findAllByIds(ids: List<String>): List<Member>
 
     fun findBySocialIdentity(socialIdentity: SocialIdentity): Member?
+
+    /** 소프트 삭제가 아니라 문서를 실제로 지웁니다. 회원 탈퇴 전용입니다. */
+    fun deleteById(id: String)
 }

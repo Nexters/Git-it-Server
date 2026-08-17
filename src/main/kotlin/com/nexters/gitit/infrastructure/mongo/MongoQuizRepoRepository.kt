@@ -2,6 +2,7 @@ package com.nexters.gitit.infrastructure.mongo
 
 import com.nexters.gitit.domain.quizrepo.QuizRepo
 import com.nexters.gitit.domain.quizrepo.QuizRepoRepository
+import com.nexters.gitit.domain.quizrepo.QuizRepoStatus
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Repository
 
@@ -17,6 +18,11 @@ class MongoQuizRepoRepository(
         }
 
     override fun findById(id: String): QuizRepo? = quizRepoRepository.findByIdAndDeletedAtIsNull(id)
+
+    override fun findAllByIds(ids: Collection<String>): List<QuizRepo> = quizRepoRepository.findAllByIdInAndDeletedAtIsNull(ids)
+
+    override fun findAllPending(): List<QuizRepo> =
+        quizRepoRepository.findAllByStatusAndDeletedAtIsNullOrderByRegisteredAtAsc(QuizRepoStatus.READY)
 
     override fun save(quizRepo: QuizRepo): QuizRepo = quizRepoRepository.save(quizRepo)
 

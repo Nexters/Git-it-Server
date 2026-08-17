@@ -24,8 +24,6 @@ import com.nexters.gitit.ui.project.dto.SubmitChoiceAnswerResponse
 import com.nexters.gitit.ui.project.dto.SubmitEssayAnswerRequest
 import com.nexters.gitit.ui.project.dto.SubmitEssayAnswerResponse
 import jakarta.validation.Valid
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
 import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -57,16 +55,14 @@ class ProjectController(
     ): ApiResponse<RegisterProjectResponse> =
         ApiResponse.success(RegisterProjectResponse.from(registerProject(request.toCommand(memberId))))
 
+    // 프로젝트 수가 페이지를 나눌 규모가 아니라 전부 내려줍니다. page/size는 이미 나간 API라 받아만 두고
+    // 쓰지 않으며, hasNext가 항상 false라 클라이언트는 첫 페이지에서 멈춥니다.
     @GetMapping
     override fun getProjects(
         @LoginMember memberId: String,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "10") size: Int,
-    ): ApiResponse<ProjectListResponse> {
-        val pageable = PageRequest.of(page, size, Sort.by("createdAt").ascending())
-        val result = getProjects(GetProjects.Command(memberId, pageable))
-        return ApiResponse.success(ProjectListResponse.from(result))
-    }
+    ): ApiResponse<ProjectListResponse> = ApiResponse.success(ProjectListResponse.from(getProjects(GetProjects.Command(memberId))))
 
     // /{projectId}보다 리터럴 경로가 우선 매칭되므로 순서와 무관하게 여기로 갑니다.
     @GetMapping("/bookmarks")

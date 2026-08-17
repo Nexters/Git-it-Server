@@ -21,7 +21,7 @@ class GetMemberProfile(
         val member = memberRepository.findById(command.memberId) ?: throw BaseException(ErrorCode.MEMBER_NOT_FOUND)
         val solvedDates =
             projectRepository
-                .findAllByMemberIdAndDeletedAtIsNull(command.memberId)
+                .findAllByMemberId(command.memberId)
                 .flatMap { it.answers }
                 .map { it.answeredAt.atZone(clock.zone).toLocalDate() }
 
@@ -70,7 +70,7 @@ class GetMemberProfile(
     )
 
     data class Result(
-        val name: String?,
+        val name: String,
         val email: String?,
         val position: Position?,
         val careerLevel: CareerLevel?,

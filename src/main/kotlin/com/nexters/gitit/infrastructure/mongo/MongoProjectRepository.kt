@@ -3,8 +3,6 @@ package com.nexters.gitit.infrastructure.mongo
 import com.nexters.gitit.domain.project.Project
 import com.nexters.gitit.domain.project.ProjectRepository
 import org.springframework.dao.DuplicateKeyException
-import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Slice
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -25,11 +23,7 @@ class MongoProjectRepository(
 
     override fun findById(id: String): Project? = projectRepository.findByIdAndDeletedAtIsNull(id)
 
-    override fun findAllByMemberIdAndDeletedAtIsNull(
-        memberId: String,
-        pageable: Pageable,
-    ): Slice<Project> = projectRepository.findAllByMemberIdAndDeletedAtIsNull(memberId, pageable)
+    override fun findAllByMemberId(memberId: String): List<Project> = projectRepository.findAllByMemberIdAndDeletedAtIsNull(memberId)
 
-    override fun findAllByMemberIdAndDeletedAtIsNull(memberId: String): List<Project> =
-        projectRepository.findAllByMemberIdAndDeletedAtIsNull(memberId)
+    override fun deleteAllByMemberId(memberId: String) = projectRepository.deleteAllByMemberId(memberId)
 }
