@@ -15,6 +15,7 @@ import com.nexters.gitit.domain.quizrepo.QuizRepoStatus
 import com.nexters.gitit.domain.quizrepo.RepoCheckout
 import com.nexters.gitit.domain.quizrepo.RepoCoordinates
 import com.nexters.gitit.infrastructure.github.GithubRepositoryFetcher
+import com.nexters.gitit.infrastructure.lock.InMemoryLockManager
 import com.nexters.gitit.infrastructure.quiz.AnchorLocator
 import com.nexters.gitit.infrastructure.quiz.DocumentAnalyzer
 import com.nexters.gitit.infrastructure.quiz.QualityInspector
@@ -31,6 +32,9 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.context.ApplicationEventPublisher
 import java.nio.file.Path
+import java.time.Clock
+import java.time.Duration
+import java.time.Instant
 
 class GenerateQuizTest {
     private val quizRepoRepository: QuizRepoRepository = mock()
@@ -40,6 +44,9 @@ class GenerateQuizTest {
     private val questionGenerator: QuestionGenerator = mock()
     private val qualityInspector: QualityInspector = mock()
     private val eventPublisher: ApplicationEventPublisher = mock()
+
+    // 목이 아니라 실제 구현을 쓴다. 락이 실제로 겹침을 막는지가 검증 대상이라 항상 통과하는 스텁으로는 볼 것이 없다.
+    private val lockManager = InMemoryLockManager(Clock.systemUTC())
 
     private val anchor = Anchor("src/Router.kt", 10, 20, AnchorKind.DEFINITION, "class Router")
 
@@ -56,6 +63,7 @@ class GenerateQuizTest {
             ownerImageUrl = "https://avatars.githubusercontent.com/u/4995702?v=4",
             starCount = 3,
             techStacks = listOf("Kotlin"),
+            registeredAt = Instant.EPOCH,
         )
 
     private val generateQuiz =
@@ -66,6 +74,7 @@ class GenerateQuizTest {
             anchorLocator,
             questionGenerator,
             qualityInspector,
+            lockManager,
             eventPublisher,
         )
 
@@ -114,7 +123,12 @@ class GenerateQuizTest {
         val anchored = listOf(AnchoredConcept(concept, listOf(anchor)))
         val written = listOf(learningSet("검사 전"))
         val inspected = listOf(learningSet("검사 후"))
-        quizRepo.checkpoint(COORDINATES.sha, anchored)
+        // 재개 표식은 상태가 아니라 failedFrom이라, 사고와 재시도까지 거친 도큐먼트여야 한다.
+        quizRepo.apply {
+            checkpoint(COORDINATES.sha, anchored)
+            fail()
+            retry(Clock.systemUTC())
+        }
 
         whenever(quizRepoRepository.findById(quizRepo.id)) doReturn quizRepo
         whenever(githubRepositoryFetcher.fetch(REPO_URL)) doReturn checkout
@@ -162,18 +176,33 @@ class GenerateQuizTest {
 
     @Test
     fun `체크포인트를 남긴 뒤 사고가 나면 그 자리를 기억한다`() {
+        val concepts = listOf(concept)
         val anchored = listOf(AnchoredConcept(concept, listOf(anchor)))
-        quizRepo.checkpoint(COORDINATES.sha, anchored)
 
         whenever(quizRepoRepository.findById(quizRepo.id)) doReturn quizRepo
         whenever(githubRepositoryFetcher.fetch(REPO_URL)) doReturn checkout
+        whenever(documentAnalyzer.analyze(ROOT)) doReturn concepts
+        whenever(anchorLocator.locate(ROOT, concepts)) doReturn anchored
         whenever(questionGenerator.generate(ROOT, anchored)) doThrow IllegalStateException("커넥션이 끊겼습니다")
 
         shouldThrow<IllegalStateException> { generateQuiz(GenerateQuiz.Command(quizRepo.id)) }
 
-        // 이 값이 있어야 retry가 ANCHORED로 되돌아가 앵커를 다시 만들지 않는다.
+        // 이 값이 있어야 재시도가 앵커를 다시 만들지 않는다.
         quizRepo.failedFrom shouldBe QuizRepoStatus.ANCHORED
         quizRepo.anchoredConcepts shouldBe anchored
+    }
+
+    @Test
+    fun `이미 돌고 있는 저장소는 건드리지 않는다`() {
+        whenever(quizRepoRepository.findById(quizRepo.id)) doReturn quizRepo
+
+        // 바깥 hold가 잡고 있는 동안 같은 저장소로 다시 들어간다 — 스케줄러와 다른 경로가 겹치는 상황이다.
+        lockManager.hold("quiz-generation:${quizRepo.githubRepoId}", Duration.ofMinutes(1)) {
+            generateQuiz(GenerateQuiz.Command(quizRepo.id))
+        }
+
+        verify(githubRepositoryFetcher, never()).fetch(any())
+        quizRepo.status shouldBe QuizRepoStatus.READY
     }
 
     private fun learningSet(orientation: String) =

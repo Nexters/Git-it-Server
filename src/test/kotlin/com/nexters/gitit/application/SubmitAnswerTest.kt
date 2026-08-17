@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
+import java.time.Instant
 
 /**
  * 검증은 반환된 결과가 아니라 저장소에서 다시 읽은 프로젝트로 합니다. 답변이 객관식·서술형 두 타입으로
@@ -122,6 +123,7 @@ class SubmitAnswerTest(
             ownerImageUrl = "https://avatars.githubusercontent.com/u/4995702?v=4",
             starCount = 3,
             techStacks = listOf("Kotlin"),
+            registeredAt = Instant.EPOCH,
         ).apply { complete("abc1234", listOf(learningSetOf())) }
 
     private fun learningSetOf(): LearningSet {

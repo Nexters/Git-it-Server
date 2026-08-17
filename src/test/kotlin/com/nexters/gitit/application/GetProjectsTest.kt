@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
+import java.time.Instant
 
 @SpringBootTest
 @Import(TestcontainersConfiguration::class)
@@ -76,6 +77,7 @@ class GetProjectsTest(
             ownerImageUrl = "https://avatars.githubusercontent.com/u/4995702?v=4",
             starCount = 3,
             techStacks = listOf("Kotlin"),
+            registeredAt = Instant.EPOCH,
         )
 
     private fun learningSetOf(): LearningSet {

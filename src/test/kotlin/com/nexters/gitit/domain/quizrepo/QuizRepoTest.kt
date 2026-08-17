@@ -5,6 +5,9 @@ import com.nexters.gitit.domain.exception.ErrorCode
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneOffset
 
 class QuizRepoTest {
     @Test
@@ -17,7 +20,7 @@ class QuizRepoTest {
     }
 
     @Test
-    fun `재시도는 사고 직전 상태로 되돌려, 만들어 둔 앵커를 그대로 이어 쓰게 한다`() {
+    fun `재시도는 대기줄 맨 뒤에 다시 세우되, 만들어 둔 앵커의 표식은 남긴다`() {
         val anchored = listOf(AnchoredConcept(Concept("라우팅", "라우팅은 Router가 전담합니다.", "README.md", emptyList()), emptyList()))
         val quizRepo =
             quizRepoOf().apply {
@@ -25,18 +28,21 @@ class QuizRepoTest {
                 fail()
             }
 
-        quizRepo.retry()
+        quizRepo.retry(Clock.fixed(RETRIED_AT, ZoneOffset.UTC))
 
-        quizRepo.status shouldBe QuizRepoStatus.ANCHORED
-        quizRepo.failedFrom shouldBe null
+        // 대기줄이 READY 하나라 여기로 돌아와야 집힌다.
+        quizRepo.status shouldBe QuizRepoStatus.READY
+        // 앵커를 다시 만들지 않는 근거는 상태가 아니라 이 값이다.
+        quizRepo.failedFrom shouldBe QuizRepoStatus.ANCHORED
         quizRepo.anchoredConcepts shouldBe anchored
+        quizRepo.registeredAt shouldBe RETRIED_AT
     }
 
     @Test
     fun `사고로 멈춘 것이 아니면 재시도를 거절한다`() {
         val quizRepo = quizRepoOf().apply { reject(ErrorCode.NO_CONCEPTS) }
 
-        val exception = shouldThrow<BaseException> { quizRepo.retry() }
+        val exception = shouldThrow<BaseException> { quizRepo.retry(Clock.systemUTC()) }
 
         exception.errorCode shouldBe ErrorCode.QUIZ_GENERATION_NOT_RETRYABLE
         quizRepo.status shouldBe QuizRepoStatus.REJECTED
@@ -50,5 +56,10 @@ class QuizRepoTest {
             ownerImageUrl = "https://avatars.githubusercontent.com/u/4995702?v=4",
             starCount = 3,
             techStacks = listOf("Kotlin"),
+            registeredAt = Instant.EPOCH,
         )
+
+    companion object {
+        private val RETRIED_AT = Instant.parse("2026-08-17T00:00:00Z")
+    }
 }

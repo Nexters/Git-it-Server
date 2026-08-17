@@ -1,6 +1,9 @@
 spring:
   application:
     name: git-it
+  # 문제 생성 스케줄러를 끈다. 켜 두면 테스트가 만든 READY 저장소를 폴링이 집어 GitHub·Gemini를 실제로 부른다.
+  profiles:
+    active: test
   data:
     mongodb:
       auto-index-creation: true
