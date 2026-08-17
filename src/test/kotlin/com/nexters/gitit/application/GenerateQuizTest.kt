@@ -123,7 +123,7 @@ class GenerateQuizTest {
         val anchored = listOf(AnchoredConcept(concept, listOf(anchor)))
         val written = listOf(learningSet("검사 전"))
         val inspected = listOf(learningSet("검사 후"))
-        // 재개 표식은 상태가 아니라 failedFrom이라, 사고와 재시도까지 거친 도큐먼트여야 한다.
+        // 실제로 재개가 걸리는 경로는 사고와 재시도를 거친 도큐먼트다. 상태는 READY로 돌아가 있고, 재개 근거는 남아 있는 앵커뿐이다.
         quizRepo.apply {
             checkpoint(COORDINATES.sha, anchored)
             fail()
@@ -187,9 +187,35 @@ class GenerateQuizTest {
 
         shouldThrow<IllegalStateException> { generateQuiz(GenerateQuiz.Command(quizRepo.id)) }
 
-        // 이 값이 있어야 재시도가 앵커를 다시 만들지 않는다.
+        // 마지막으로 끝난 단계가 앵커라는 것이 곧 "문제 생성 중이었다"는 뜻이다.
         quizRepo.failedFrom shouldBe QuizRepoStatus.ANCHORED
+        // 재시도가 앵커를 다시 만들지 않는 근거는 이 값이다.
         quizRepo.anchoredConcepts shouldBe anchored
+    }
+
+    @Test
+    fun `콜을 쓸 때마다 그만큼 상태가 나아간다`() {
+        val concepts = listOf(concept)
+        val anchored = listOf(AnchoredConcept(concept, listOf(anchor)))
+        val written = listOf(learningSet("검사 전"))
+
+        whenever(quizRepoRepository.findById(quizRepo.id)) doReturn quizRepo
+        whenever(githubRepositoryFetcher.fetch(REPO_URL)) doReturn checkout
+        whenever(documentAnalyzer.analyze(ROOT)) doReturn concepts
+        // 다음 콜에 들어선 시점의 상태가 곧 "여기까지 돈이 나갔다"이므로, 스텁 안에서 본다. 끝난 뒤에 보면 마지막 값만 남아 있다.
+        whenever(anchorLocator.locate(ROOT, concepts)).then {
+            quizRepo.status shouldBe QuizRepoStatus.ANALYZED
+            anchored
+        }
+        whenever(questionGenerator.generate(ROOT, anchored)).then {
+            quizRepo.status shouldBe QuizRepoStatus.ANCHORED
+            written
+        }
+        whenever(qualityInspector.inspect(ROOT, written)) doReturn written
+
+        generateQuiz(GenerateQuiz.Command(quizRepo.id))
+
+        quizRepo.status shouldBe QuizRepoStatus.COMPLETED
     }
 
     @Test

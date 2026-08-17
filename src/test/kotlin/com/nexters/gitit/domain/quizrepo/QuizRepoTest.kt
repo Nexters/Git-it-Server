@@ -32,8 +32,9 @@ class QuizRepoTest {
 
         // 대기줄이 READY 하나라 여기로 돌아와야 집힌다.
         quizRepo.status shouldBe QuizRepoStatus.READY
-        // 앵커를 다시 만들지 않는 근거는 상태가 아니라 이 값이다.
+        // 어느 콜 범위에서 돈이 멈췄는지는 상태가 READY로 돌아온 뒤에도 남는다.
         quizRepo.failedFrom shouldBe QuizRepoStatus.ANCHORED
+        // 앵커를 다시 만들지 않는 근거는 이 값이다.
         quizRepo.anchoredConcepts shouldBe anchored
         quizRepo.registeredAt shouldBe RETRIED_AT
     }
