@@ -5,6 +5,7 @@ import com.nexters.gitit.domain.quizrepo.Anchor
 import com.nexters.gitit.domain.quizrepo.AnchorKind
 import com.nexters.gitit.domain.quizrepo.AnchoredConcept
 import com.nexters.gitit.domain.quizrepo.Concept
+import com.nexters.gitit.domain.quizrepo.QuizGenerationFinished
 import com.nexters.gitit.domain.quizrepo.QuizRepo
 import com.nexters.gitit.domain.quizrepo.QuizRepoStatus
 import com.nexters.gitit.domain.quizrepo.RepoCheckout
@@ -175,6 +176,8 @@ class GenerateQuizConcurrencyTest(
         found.status shouldBe QuizRepoStatus.STARTED
         // 점유도 풀지 않았다. 이 실행은 자기 것이 아닌 점유를 건드릴 자격이 없다.
         found.timeoutAt shouldBe TIMEOUT_AT_OF_FIRST_RUN
+        // 알리지도 않았다. 이 저장소는 회수되어 다시 도는데, 여기서 알리면 곧 성공할 생성을 실패로 알린다.
+        verify(eventPublisher, never()).publishEvent(any<QuizGenerationFinished>())
     }
 
     // 표시용 필드는 선점 규약과 무관해 아무 값이나 채운다.
