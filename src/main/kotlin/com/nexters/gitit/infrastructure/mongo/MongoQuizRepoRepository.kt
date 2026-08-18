@@ -21,7 +21,7 @@ class MongoQuizRepoRepository(
 
     override fun findAllByIds(ids: Collection<String>): List<QuizRepo> = quizRepoRepository.findAllByIdInAndDeletedAtIsNull(ids)
 
-    override fun findAllPending(): List<QuizRepo> =
+    override fun findAllReady(): List<QuizRepo> =
         quizRepoRepository.findAllByStatusAndDeletedAtIsNullOrderByRegisteredAtAsc(QuizRepoStatus.READY)
 
     override fun save(quizRepo: QuizRepo): QuizRepo = quizRepoRepository.save(quizRepo)

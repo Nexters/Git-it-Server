@@ -36,6 +36,7 @@ import java.time.Instant
     partialFilter = "{'deletedAt': null}",
 )
 // 스케줄러가 몇 초마다 이 순서로 대기줄을 훑는다. 정렬까지 인덱스가 받아 줘야 매번 컬렉션을 훑고 메모리에서 정렬하지 않는다.
+// 이름만 옛 용어(pending)로 남아 있다. 키가 같고 이름만 다른 인덱스는 만들 수 없어, 바꾸려면 운영 DB에서 먼저 떨어뜨려야 기동된다.
 @CompoundIndex(
     name = "idx_pending",
     def = "{'status': 1, 'registeredAt': 1}",
