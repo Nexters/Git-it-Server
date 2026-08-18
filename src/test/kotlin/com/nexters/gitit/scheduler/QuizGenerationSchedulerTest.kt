@@ -2,6 +2,7 @@ package com.nexters.gitit.scheduler
 
 import com.nexters.gitit.TestcontainersConfiguration
 import com.nexters.gitit.application.GenerateQuiz
+import com.nexters.gitit.application.ReclaimQuizGeneration
 import com.nexters.gitit.domain.quizrepo.QuizRepo
 import com.nexters.gitit.infrastructure.mongo.SpringDataQuizRepoRepository
 import org.junit.jupiter.api.Test
@@ -30,8 +31,12 @@ class QuizGenerationSchedulerTest(
     @MockitoBean
     private lateinit var generateQuiz: GenerateQuiz
 
+    // 진짜 회수는 QuizGenerationReclaimerTest가 본다. 여기서 볼 것은 폴링이 부르는가까지다.
+    @MockitoBean
+    private lateinit var reclaimQuizGeneration: ReclaimQuizGeneration
+
     @Test
-    fun `대기줄에 세워 두면 폴링이 집어 간다`() {
+    fun `대기줄에 세워 두면 폴링이 집어 가고, 회수도 함께 돈다`() {
         val quizRepo =
             quizRepoRepository.save(
                 QuizRepo(
@@ -47,5 +52,7 @@ class QuizGenerationSchedulerTest(
 
         // fixedDelay는 초기 지연이 없어 첫 회차가 곧바로 돈다. 여유는 컨텍스트 기동이 겹칠 때를 위한 것이다.
         verify(generateQuiz, timeout(15_000)).invoke(GenerateQuiz.Command(quizRepo.id))
+        // 회수를 따로 떼지 않는 것은 목이 테스트마다 초기화되기 때문이다. 다음 회수는 1분 뒤라 기다릴 수 없다.
+        verify(reclaimQuizGeneration, timeout(15_000)).invoke()
     }
 }

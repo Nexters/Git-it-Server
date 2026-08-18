@@ -47,11 +47,12 @@ class MongoQuizGenerationStarterTest(
     }
 
     @Test
-    fun `시효가 지난 점유도 아직은 대기줄로 돌아오지 않는다`() {
+    fun `시효가 지난 점유라도 선점이 직접 빼앗지는 않는다`() {
         val quizRepo = quizRepoRepository.save(quizRepoOf())
         starter.start(quizRepo.id, Instant.EPOCH) shouldBe true
 
-        // 회수가 들어오면 이 값이 true로 뒤집힌다. 그때까지 죽은 점유는 사람이 재시도로 푼다.
+        // 시효가 다한 점유를 푸는 것은 회수(QuizGenerationReclaimer)의 일이다. 여기서 함께 빼앗으면
+        // 조건이 READY 하나가 아니게 되어, 살아 있는 점유를 시계 오차만큼 앞질러 빼앗을 수 있다.
         starter.start(quizRepo.id, TIMEOUT_AT) shouldBe false
     }
 

@@ -70,7 +70,7 @@ class GenerateQuizConcurrencyTest(
 
     private var now = Instant.parse("2026-08-18T00:00:00Z")
 
-    // 30분을 실제로 기다릴 수는 없으므로 시효 경과를 시계로 만든다.
+    // 시효를 실제로 기다릴 수는 없으므로 경과를 시계로 만든다.
     private val clock =
         object : Clock() {
             override fun instant(): Instant = now
@@ -192,8 +192,8 @@ class GenerateQuizConcurrencyTest(
     companion object {
         private const val REPO_URL = "https://github.com/Nexters/Git-it-Server"
         private val COORDINATES = RepoCoordinates("Nexters", "Git-it-Server", "abc1234")
-        private val TIMEOUT = Duration.ofMinutes(30)
-        private val TIMEOUT_AT_OF_FIRST_RUN = Instant.parse("2026-08-18T00:30:00Z")
+        private val TIMEOUT = Duration.ofHours(1)
+        private val TIMEOUT_AT_OF_FIRST_RUN = Instant.parse("2026-08-18T01:00:00Z")
 
         // 해제 디렉터리를 실제로 만들지 않는다. 파이프라인이 전부 목이라 이 경로를 읽는 코드가 없다.
         private val ROOT: Path = Path.of("/work/Nexters-Git-it-Server-abc1234")

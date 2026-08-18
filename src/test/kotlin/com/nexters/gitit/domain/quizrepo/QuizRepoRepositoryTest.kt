@@ -101,15 +101,15 @@ class QuizRepoRepositoryTest(
      */
     @Test
     fun `대기줄은 READY만, 오래 기다린 순서로 나온다`() {
-        val later = quizRepoRepository.save(pendingOf("2", Instant.parse("2026-08-17T00:01:00Z")))
-        val earlier = quizRepoRepository.save(pendingOf("1", Instant.parse("2026-08-17T00:00:00Z")))
-        quizRepoRepository.save(pendingOf("3", Instant.EPOCH).failed())
-        quizRepoRepository.save(pendingOf("4", Instant.EPOCH).started())
-        quizRepoRepository.save(pendingOf("5", Instant.EPOCH).apply { delete(Clock.systemUTC()) })
+        val later = quizRepoRepository.save(readyOf("2", Instant.parse("2026-08-17T00:01:00Z")))
+        val earlier = quizRepoRepository.save(readyOf("1", Instant.parse("2026-08-17T00:00:00Z")))
+        quizRepoRepository.save(readyOf("3", Instant.EPOCH).failed())
+        quizRepoRepository.save(readyOf("4", Instant.EPOCH).started())
+        quizRepoRepository.save(readyOf("5", Instant.EPOCH).apply { delete(Clock.systemUTC()) })
 
-        val pending = quizRepoRepository.findAllByStatusAndDeletedAtIsNullOrderByRegisteredAtAsc(QuizRepoStatus.READY)
+        val ready = quizRepoRepository.findAllByStatusAndDeletedAtIsNullOrderByRegisteredAtAsc(QuizRepoStatus.READY)
 
-        pending.map { it.id } shouldBe listOf(earlier.id, later.id)
+        ready.map { it.id } shouldBe listOf(earlier.id, later.id)
     }
 
     // 표시용 필드는 저장·조회 규약과 무관해 아무 값이나 채운다.
@@ -124,7 +124,7 @@ class QuizRepoRepositoryTest(
             registeredAt = Instant.EPOCH,
         )
 
-    private fun pendingOf(
+    private fun readyOf(
         githubRepoId: String,
         registeredAt: Instant,
     ) = QuizRepo(
