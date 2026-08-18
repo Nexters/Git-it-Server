@@ -71,10 +71,9 @@ class GenerateQuiz(
      *
      * 그 한 줄을 위해 catch 범위를 넓게 잡습니다. 좁히면 놓친 종류만큼 상태가 점유에 멈춥니다.
      *
-     * 어느 경로로 끝나든 [QuizGenerationFinished]가 나갑니다. 사고로 끝난 것도 기다리던 사용자에게는 결과입니다.
-     *
-     * 시효가 지나 결과가 버려진 회차에서도 이벤트는 나갑니다. 그 경로는 좀비뿐이라, 좀비 회수를
-     * 넣을 때 함께 봅니다.
+     * 결말을 적은 회차만 [QuizGenerationFinished]를 냅니다. 사고로 끝난 것도 기다리던 사용자에게는
+     * 결과지만, 시효를 잃어 버려진 결과는 아닙니다 — 그 저장소는 회수되어 다시 돌 예정이라,
+     * 여기서 알리면 곧 성공할 생성을 실패로 알립니다.
      */
     @Suppress("TooGenericExceptionCaught")
     private fun generate(
@@ -82,6 +81,7 @@ class GenerateQuiz(
         startedAt: Instant,
     ) {
         var checkout: RepoCheckout? = null
+        var recorded = false
 
         try {
             checkout = githubRepositoryFetcher.fetch(quizRepo.githubRepoUrl)
@@ -90,22 +90,26 @@ class GenerateQuiz(
             val written = questionGenerator.generate(checkout.root, anchored)
             val inspected = qualityInspector.inspect(checkout.root, written)
 
-            finish(quizRepo, startedAt) { complete(it, checkout.repo.sha, inspected) }
+            recorded = finish(quizRepo, startedAt) { complete(it, checkout.repo.sha, inspected) }
 
             logger.info { "Generated ${inspected.size} learning sets for ${quizRepo.githubRepoUrl}" }
         } catch (e: BaseException) {
             logger.warn { "Quiz generation stopped for ${quizRepo.githubRepoUrl}: ${e.errorCode.code} ${e.message}" }
-            finish(quizRepo, startedAt) { reject(it, e.errorCode) }
+            recorded = finish(quizRepo, startedAt) { reject(it, e.errorCode) }
         } catch (e: Exception) {
-            finish(quizRepo, startedAt) { fail(it) }
+            recorded = finish(quizRepo, startedAt) { fail(it) }
             throw e
         } finally {
             checkout?.root?.toFile()?.deleteRecursively()
-            eventPublisher.publishEvent(QuizGenerationFinished(quizRepo.id))
+            if (recorded) {
+                eventPublisher.publishEvent(QuizGenerationFinished(quizRepo.id))
+            }
         }
     }
 
     /**
+     * 결말을 적었으면 true, 시효를 잃어 버렸으면 false입니다.
+     *
      * 시효가 지났다는 거절은 여기서 삼킵니다. 결말을 적으려다 실패한 것이라 위로 올려 봐야 할 일이 없고,
      * 사고 경로에서 다시 던지면 원래 예외를 이것이 덮어씁니다.
      *
@@ -115,18 +119,20 @@ class GenerateQuiz(
         quizRepo: QuizRepo,
         startedAt: Instant,
         outcome: QuizRepo.(Instant) -> Unit,
-    ) {
+    ): Boolean {
         val now = Instant.now(clock)
 
-        try {
+        return try {
             quizRepo.outcome(now)
             quizRepoRepository.save(quizRepo)
+            true
         } catch (e: BaseException) {
             val elapsed = Duration.between(startedAt, now)
             logger.warn {
                 "Quiz generation result discarded after ${elapsed.toSeconds()}s " +
                     "(timeout ${TIMEOUT.toSeconds()}s): quizRepoId=${quizRepo.id} ${e.errorCode.code}"
             }
+            false
         }
     }
 
@@ -137,7 +143,7 @@ class GenerateQuiz(
      * 돌릴 때 그 절반이 통째로 아껴집니다. 쓸 수 있는지는 [QuizRepo.cachedAnchors]가 판정합니다.
      *
      * 이 중간 저장은 시효를 보지 않습니다. 좀비가 여기서 새 점유자의 산출물을 덮으면 한 회차를
-     * 버리지만, 남는 시효가 이미 만료값이라 다음 회차가 다시 집어 갑니다.
+     * 버리지만, 남는 시효가 이미 만료값이라 회수 폴링이 곧 대기줄로 되돌립니다.
      */
     private fun anchored(
         quizRepo: QuizRepo,
@@ -159,7 +165,7 @@ class GenerateQuiz(
     )
 
     companion object {
-        // 실측 10분(Redis·Gson 기준)의 세 배. 큰 레포에 여유를 주되, 정말 멎었을 때 영영 붙잡고 있지 않는 값이다.
-        private val TIMEOUT = Duration.ofMinutes(30)
+        // 실측 10분(Redis·Gson 기준)의 여섯 배. 큰 레포에 넉넉히 주되, 정말 멎었을 때 영영 붙잡고 있지 않는 값이다.
+        private val TIMEOUT = Duration.ofHours(1)
     }
 }
