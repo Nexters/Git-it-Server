@@ -2,12 +2,10 @@ package com.nexters.gitit.ui.project.dto
 
 import com.nexters.gitit.application.SubmitAnswer
 import io.swagger.v3.oas.annotations.media.Schema
-import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 
 data class SubmitEssayAnswerRequest(
-    @field:Schema(description = "서술형 답안. 채점은 채점 기준을 보고 학습자가 스스로 합니다", example = "경로가 Router 한 곳에 모여 있어 요청 흐름을 따라가기 쉽습니다")
-    @field:NotBlank(message = "text는 필수입니다")
+    @field:Schema(description = "서술형 답안. 채점은 채점 기준을 보고 학습자가 스스로 합니다. 비워서 낼 수 있습니다", example = "경로가 Router 한 곳에 모여 있어 요청 흐름을 따라가기 쉽습니다")
     @field:Size(max = MAX_TEXT_LENGTH, message = "text는 ${MAX_TEXT_LENGTH}자를 넘을 수 없습니다")
     val text: String,
 ) {

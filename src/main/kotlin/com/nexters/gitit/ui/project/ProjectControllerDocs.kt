@@ -255,12 +255,11 @@ interface ProjectControllerDocs {
         SwaggerApiResponse(responseCode = "200", description = "제출 성공"),
         SwaggerApiResponse(
             responseCode = "400",
-            description = "text가 비었거나 너무 길거나, 4지선다 문제에 서술형으로 답한 경우",
+            description = "text가 너무 길거나, 4지선다 문제에 서술형으로 답한 경우",
             content = [
                 Content(
                     mediaType = APPLICATION_JSON_VALUE,
                     examples = [
-                        ExampleObject(name = "필수 값 누락", value = BLANK_TEXT_EXAMPLE),
                         ExampleObject(name = "형식이 다른 문제", value = FORMAT_MISMATCH_EXAMPLE),
                     ],
                 ),
@@ -337,9 +336,6 @@ interface ProjectControllerDocs {
 
         private const val FORMAT_MISMATCH_EXAMPLE =
             """{"success":false,"data":null,"code":"COMMON-001","message":"문제 형식과 맞지 않는 답변입니다","errors":null}"""
-
-        private const val BLANK_TEXT_EXAMPLE =
-            """{"success":false,"data":null,"code":"COMMON-001","message":"잘못된 요청입니다","errors":[{"field":"text","message":"text는 필수입니다"}]}"""
 
         private const val SUCCESS_EXAMPLE =
             """{"success":true,"data":null,"code":null,"message":null,"errors":null}"""

@@ -40,7 +40,8 @@ class SubmitAnswer(
         val (project, question) = load(command)
         question.requireFormat(QuestionFormat.ESSAY)
 
-        project.submit(Answer.Essay(question.id, Instant.now(clock), command.text))
+        // 공백만 낸 답도 받되 ""로 굳혀 둡니다. 안 그러면 "빈 답"이 여러 형태로 저장돼 읽는 쪽마다 다시 판별해야 합니다.
+        project.submit(Answer.Essay(question.id, Instant.now(clock), command.text.trim()))
         projectRepository.save(project)
 
         return Result.Essay(
