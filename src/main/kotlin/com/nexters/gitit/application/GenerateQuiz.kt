@@ -1,6 +1,5 @@
 package com.nexters.gitit.application
 
-import com.nexters.gitit.application.GenerateQuiz.Companion.TIMEOUT
 import com.nexters.gitit.domain.exception.BaseException
 import com.nexters.gitit.domain.quizrepo.AnchoredConcept
 import com.nexters.gitit.domain.quizrepo.QuizGenerationFinished
