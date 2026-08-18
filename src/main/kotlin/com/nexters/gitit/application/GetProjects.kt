@@ -12,7 +12,7 @@ class GetProjects(
     private val projectRepository: ProjectRepository,
     private val quizRepoRepository: QuizRepoRepository,
 ) {
-    // ponytail: 페이지를 나누지 않고 전부 내려주는 것은 목록 규모가 유저 개인 프로젝트 수준이라는
+    // 페이지를 나누지 않고 전부 내려주는 것은 목록 규모가 유저 개인 프로젝트 수준이라는
     // 전제에 기대고 있다. 한 회원이 수백 개를 학습하게 되면 조회도 응답도 같이 커진다.
     operator fun invoke(command: Command): Result {
         val projects = projectRepository.findAllByMemberId(command.memberId).sortedBy { it.createdAt }
