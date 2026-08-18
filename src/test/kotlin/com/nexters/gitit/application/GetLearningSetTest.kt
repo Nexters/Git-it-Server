@@ -14,6 +14,7 @@ import com.nexters.gitit.domain.quizrepo.Question
 import com.nexters.gitit.domain.quizrepo.QuestionFormat
 import com.nexters.gitit.domain.quizrepo.QuestionType
 import com.nexters.gitit.domain.quizrepo.QuizRepo
+import com.nexters.gitit.domain.quizrepo.completed
 import com.nexters.gitit.infrastructure.mongo.SpringDataProjectRepository
 import com.nexters.gitit.infrastructure.mongo.SpringDataQuizRepoRepository
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -89,7 +90,7 @@ class GetLearningSetTest(
             starCount = 3,
             techStacks = listOf("Kotlin"),
             registeredAt = Instant.EPOCH,
-        ).apply { complete("abc1234", listOf(learningSetOf())) }
+        ).completed("abc1234", listOf(learningSetOf()))
 
     private fun learningSetOf(): LearningSet {
         val anchor = Anchor("src/Router.kt", 10, 20, AnchorKind.DEFINITION, "class Router")

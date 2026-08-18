@@ -8,6 +8,7 @@ import com.nexters.gitit.domain.quizrepo.GithubRepository
 import com.nexters.gitit.domain.quizrepo.GithubRepositoryResolver
 import com.nexters.gitit.domain.quizrepo.QuizRepo
 import com.nexters.gitit.domain.quizrepo.QuizRepoStatus
+import com.nexters.gitit.domain.quizrepo.rejected
 import com.nexters.gitit.infrastructure.mongo.SpringDataProjectRepository
 import com.nexters.gitit.infrastructure.mongo.SpringDataQuizRepoRepository
 import io.kotest.assertions.throwables.shouldThrow
@@ -86,7 +87,7 @@ class RegisterProjectTest(
 
     @Test
     fun `문제를 낼 수 없다고 판정된 저장소면 프로젝트를 만들지 않고 거절 사유를 그대로 알린다`() {
-        quizRepoRepository.save(quizRepoOf().apply { reject(ErrorCode.NOT_FOUND) })
+        quizRepoRepository.save(quizRepoOf().rejected(ErrorCode.NOT_FOUND))
 
         val exception = shouldThrow<BaseException> { registerProject(commandOf(memberId = "member-1", quizLevel = QuizLevel.L2)) }
 

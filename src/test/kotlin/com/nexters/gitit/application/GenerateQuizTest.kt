@@ -9,13 +9,13 @@ import com.nexters.gitit.domain.quizrepo.AnchoredConcept
 import com.nexters.gitit.domain.quizrepo.Concept
 import com.nexters.gitit.domain.quizrepo.LearningSet
 import com.nexters.gitit.domain.quizrepo.QuizGenerationFinished
+import com.nexters.gitit.domain.quizrepo.QuizGenerationStarter
 import com.nexters.gitit.domain.quizrepo.QuizRepo
 import com.nexters.gitit.domain.quizrepo.QuizRepoRepository
 import com.nexters.gitit.domain.quizrepo.QuizRepoStatus
 import com.nexters.gitit.domain.quizrepo.RepoCheckout
 import com.nexters.gitit.domain.quizrepo.RepoCoordinates
 import com.nexters.gitit.infrastructure.github.GithubRepositoryFetcher
-import com.nexters.gitit.infrastructure.lock.InMemoryLockManager
 import com.nexters.gitit.infrastructure.quiz.AnchorLocator
 import com.nexters.gitit.infrastructure.quiz.DocumentAnalyzer
 import com.nexters.gitit.infrastructure.quiz.QualityInspector
@@ -45,8 +45,10 @@ class GenerateQuizTest {
     private val qualityInspector: QualityInspector = mock()
     private val eventPublisher: ApplicationEventPublisher = mock()
 
-    // 목이 아니라 실제 구현을 쓴다. 락이 실제로 겹침을 막는지가 검증 대상이라 항상 통과하는 스텁으로는 볼 것이 없다.
-    private val lockManager = InMemoryLockManager(Clock.systemUTC())
+    // 점유에 성공한 경우가 기본값이다. 실패시키는 것은 겹침을 다루는 한 케이스뿐이라 거기서 다시 스텁한다.
+    private val quizGenerationStarter: QuizGenerationStarter = mock { on { start(any(), any()) } doReturn true }
+
+    private val clock: Clock = Clock.systemUTC()
 
     private val anchor = Anchor("src/Router.kt", 10, 20, AnchorKind.DEFINITION, "class Router")
 
@@ -69,12 +71,13 @@ class GenerateQuizTest {
     private val generateQuiz =
         GenerateQuiz(
             quizRepoRepository,
+            quizGenerationStarter,
             githubRepositoryFetcher,
             documentAnalyzer,
             anchorLocator,
             questionGenerator,
             qualityInspector,
-            lockManager,
+            clock,
             eventPublisher,
         )
 
@@ -125,9 +128,10 @@ class GenerateQuizTest {
         val inspected = listOf(learningSet("검사 후"))
         // 실제로 재개가 걸리는 경로는 사고와 재시도를 거친 도큐먼트다. 상태는 READY로 돌아가 있고, 재개 근거는 남아 있는 앵커뿐이다.
         quizRepo.apply {
+            start(quizGenerationStarter, Instant.EPOCH, Duration.ofMinutes(30))
             checkpoint(COORDINATES.sha, anchored)
-            fail()
-            retry(Clock.systemUTC())
+            fail(Instant.EPOCH)
+            retry(clock)
         }
 
         whenever(quizRepoRepository.findById(quizRepo.id)) doReturn quizRepo
@@ -168,14 +172,12 @@ class GenerateQuizTest {
         quizRepo.status shouldBe QuizRepoStatus.FAILED
         // 사고에는 사유 코드가 없다. reject와 섞이면 클라이언트가 설명할 수 없는 코드를 받는다.
         quizRepo.rejectedReason shouldBe null
-        // 아직 아무것도 만들지 못한 자리에서 죽었으므로 재시도는 처음부터 다시 돈다.
-        quizRepo.failedFrom shouldBe QuizRepoStatus.READY
         // 예외가 밖으로 나가는 경로에서도 알림이 나가는지가 finally로 둔 이유의 전부다.
         verify(eventPublisher).publishEvent(QuizGenerationFinished(quizRepo.id))
     }
 
     @Test
-    fun `체크포인트를 남긴 뒤 사고가 나면 그 자리를 기억한다`() {
+    fun `체크포인트를 남긴 뒤 사고가 나도 앵커는 남는다`() {
         val concepts = listOf(concept)
         val anchored = listOf(AnchoredConcept(concept, listOf(anchor)))
 
@@ -187,14 +189,14 @@ class GenerateQuizTest {
 
         shouldThrow<IllegalStateException> { generateQuiz(GenerateQuiz.Command(quizRepo.id)) }
 
-        // 마지막으로 끝난 단계가 앵커라는 것이 곧 "문제 생성 중이었다"는 뜻이다.
-        quizRepo.failedFrom shouldBe QuizRepoStatus.ANCHORED
-        // 재시도가 앵커를 다시 만들지 않는 근거는 이 값이다.
+        quizRepo.status shouldBe QuizRepoStatus.FAILED
+        // 재시도가 앵커를 다시 만들지 않는 근거는 이 값이다. 결말을 적을 때 지워지면 절반의 콜을 다시 쓴다.
         quizRepo.anchoredConcepts shouldBe anchored
+        quizRepo.sha shouldBe COORDINATES.sha
     }
 
     @Test
-    fun `콜을 쓸 때마다 그만큼 상태가 나아간다`() {
+    fun `도는 동안에는 점유 상태에 머물다가 끝에서 한 번 바뀐다`() {
         val concepts = listOf(concept)
         val anchored = listOf(AnchoredConcept(concept, listOf(anchor)))
         val written = listOf(learningSet("검사 전"))
@@ -202,13 +204,10 @@ class GenerateQuizTest {
         whenever(quizRepoRepository.findById(quizRepo.id)) doReturn quizRepo
         whenever(githubRepositoryFetcher.fetch(REPO_URL)) doReturn checkout
         whenever(documentAnalyzer.analyze(ROOT)) doReturn concepts
-        // 다음 콜에 들어선 시점의 상태가 곧 "여기까지 돈이 나갔다"이므로, 스텁 안에서 본다. 끝난 뒤에 보면 마지막 값만 남아 있다.
-        whenever(anchorLocator.locate(ROOT, concepts)).then {
-            quizRepo.status shouldBe QuizRepoStatus.ANALYZED
-            anchored
-        }
+        whenever(anchorLocator.locate(ROOT, concepts)) doReturn anchored
+        // 체크포인트 저장이 상태를 건드리면 대기줄에서 빠지거나 점유가 풀린다. 끝난 뒤에 보면 마지막 값만 남아 확인할 수 없다.
         whenever(questionGenerator.generate(ROOT, anchored)).then {
-            quizRepo.status shouldBe QuizRepoStatus.ANCHORED
+            quizRepo.status shouldBe QuizRepoStatus.STARTED
             written
         }
         whenever(qualityInspector.inspect(ROOT, written)) doReturn written
@@ -221,11 +220,10 @@ class GenerateQuizTest {
     @Test
     fun `이미 돌고 있는 저장소는 건드리지 않는다`() {
         whenever(quizRepoRepository.findById(quizRepo.id)) doReturn quizRepo
+        // 남이 이미 쥐고 있으면 조건부 갱신이 걸러 낸다 — 스케줄러와 다른 경로가 겹치는 상황이다.
+        whenever(quizGenerationStarter.start(any(), any())) doReturn false
 
-        // 바깥 hold가 잡고 있는 동안 같은 저장소로 다시 들어간다 — 스케줄러와 다른 경로가 겹치는 상황이다.
-        lockManager.hold("quiz-generation:${quizRepo.githubRepoId}", Duration.ofMinutes(1)) {
-            generateQuiz(GenerateQuiz.Command(quizRepo.id))
-        }
+        generateQuiz(GenerateQuiz.Command(quizRepo.id))
 
         verify(githubRepositoryFetcher, never()).fetch(any())
         quizRepo.status shouldBe QuizRepoStatus.READY
