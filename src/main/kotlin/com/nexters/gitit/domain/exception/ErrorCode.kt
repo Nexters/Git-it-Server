@@ -46,4 +46,7 @@ enum class ErrorCode(
 
     // 사고로 멈춘(FAILED) 저장소만 다시 돌릴 수 있다. 나머지 상태에서의 재시도 요청은 잘못된 요청이 아니라 상태 충돌이다.
     QUIZ_GENERATION_NOT_RETRYABLE("QUIZ-007", "문제 생성을 재시도할 수 없습니다", HttpStatus.CONFLICT),
+
+    // 클라이언트까지 나가지 않는다. 시효를 잃은 실행이 자기 결과를 버리고 물러나는 데만 쓴다.
+    QUIZ_GENERATION_TIMED_OUT("QUIZ-008", "문제 생성 점유 시효가 지났습니다", HttpStatus.CONFLICT),
 }

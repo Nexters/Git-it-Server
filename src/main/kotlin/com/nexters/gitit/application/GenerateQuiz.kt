@@ -1,12 +1,12 @@
 package com.nexters.gitit.application
 
-import com.nexters.gitit.domain.common.LockManager
+import com.nexters.gitit.application.GenerateQuiz.Companion.TIMEOUT
 import com.nexters.gitit.domain.exception.BaseException
 import com.nexters.gitit.domain.quizrepo.AnchoredConcept
 import com.nexters.gitit.domain.quizrepo.QuizGenerationFinished
+import com.nexters.gitit.domain.quizrepo.QuizGenerationStarter
 import com.nexters.gitit.domain.quizrepo.QuizRepo
 import com.nexters.gitit.domain.quizrepo.QuizRepoRepository
-import com.nexters.gitit.domain.quizrepo.QuizRepoStatus
 import com.nexters.gitit.domain.quizrepo.RepoCheckout
 import com.nexters.gitit.infrastructure.github.GithubRepositoryFetcher
 import com.nexters.gitit.infrastructure.quiz.AnchorLocator
@@ -16,7 +16,9 @@ import com.nexters.gitit.infrastructure.quiz.QuestionGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
+import java.time.Clock
 import java.time.Duration
+import java.time.Instant
 
 private val logger = KotlinLogging.logger {}
 
@@ -33,24 +35,31 @@ private val logger = KotlinLogging.logger {}
 @Service
 class GenerateQuiz(
     private val quizRepoRepository: QuizRepoRepository,
+    private val quizGenerationStarter: QuizGenerationStarter,
     private val githubRepositoryFetcher: GithubRepositoryFetcher,
     private val documentAnalyzer: DocumentAnalyzer,
     private val anchorLocator: AnchorLocator,
     private val questionGenerator: QuestionGenerator,
     private val qualityInspector: QualityInspector,
-    private val lockManager: LockManager,
+    private val clock: Clock,
     private val eventPublisher: ApplicationEventPublisher,
 ) {
     /**
      * 대상을 실행 직전에 다시 읽습니다. 부르는 쪽이 대기 목록을 한 번 읽고 순회하는 동안 시간이 흐르므로,
      * 옛 스냅숏을 그대로 믿으면 그 사이 삭제되거나 이미 끝난 저장소를 다시 돌립니다.
+     *
+     * 점유하지 못했다면 남이 돌리는 중이라는 뜻이고, 그대로 돌아갑니다 — 겹쳐 들어온 쪽이 할 일은 없습니다.
      */
     operator fun invoke(command: Command) {
         val quizRepo = quizRepoRepository.findById(command.quizRepoId) ?: return
 
-        // 키가 저장소 id라 락은 저장소마다 따로 걸린다 — 다른 저장소의 생성은 서로 막지 않는다.
-        lockManager.hold("$LOCK_PREFIX${quizRepo.githubRepoId}", LEASE) { generate(quizRepo) }
-            ?: logger.info { "Quiz generation already running, skipped: quizRepoId=${quizRepo.id}" }
+        val startedAt = Instant.now(clock)
+        if (!quizRepo.start(quizGenerationStarter, startedAt, TIMEOUT)) {
+            logger.info { "Quiz generation already running, skipped: quizRepoId=${quizRepo.id}" }
+            return
+        }
+
+        generate(quizRepo, startedAt)
     }
 
     /**
@@ -60,12 +69,18 @@ class GenerateQuiz(
      * 판정이 아닌 예외는 상태만 남기고 **그대로 다시 던집니다.** 삼키면 부르는 쪽이 성공과 구분할 수
      * 없어지고, 그 예외를 어떻게 다룰지는 부르는 쪽의 정책입니다.
      *
-     * 그 한 줄을 위해 catch 범위를 넓게 잡습니다. 좁히면 놓친 종류만큼 상태가 READY에 멈춥니다.
+     * 그 한 줄을 위해 catch 범위를 넓게 잡습니다. 좁히면 놓친 종류만큼 상태가 점유에 멈춥니다.
      *
      * 어느 경로로 끝나든 [QuizGenerationFinished]가 나갑니다. 사고로 끝난 것도 기다리던 사용자에게는 결과입니다.
+     *
+     * 시효가 지나 결과가 버려진 회차에서도 이벤트는 나갑니다. 그 경로는 좀비뿐이라, 좀비 회수를
+     * 넣을 때 함께 봅니다.
      */
     @Suppress("TooGenericExceptionCaught")
-    private fun generate(quizRepo: QuizRepo) {
+    private fun generate(
+        quizRepo: QuizRepo,
+        startedAt: Instant,
+    ) {
         var checkout: RepoCheckout? = null
 
         try {
@@ -75,17 +90,14 @@ class GenerateQuiz(
             val written = questionGenerator.generate(checkout.root, anchored)
             val inspected = qualityInspector.inspect(checkout.root, written)
 
-            quizRepo.complete(checkout.repo.sha, inspected)
-            quizRepoRepository.save(quizRepo)
+            finish(quizRepo, startedAt) { complete(it, checkout.repo.sha, inspected) }
 
             logger.info { "Generated ${inspected.size} learning sets for ${quizRepo.githubRepoUrl}" }
         } catch (e: BaseException) {
             logger.warn { "Quiz generation stopped for ${quizRepo.githubRepoUrl}: ${e.errorCode.code} ${e.message}" }
-            quizRepo.reject(e.errorCode)
-            quizRepoRepository.save(quizRepo)
+            finish(quizRepo, startedAt) { reject(it, e.errorCode) }
         } catch (e: Exception) {
-            quizRepo.fail()
-            quizRepoRepository.save(quizRepo)
+            finish(quizRepo, startedAt) { fail(it) }
             throw e
         } finally {
             checkout?.root?.toFile()?.deleteRecursively()
@@ -94,25 +106,47 @@ class GenerateQuiz(
     }
 
     /**
+     * 시효가 지났다는 거절은 여기서 삼킵니다. 결말을 적으려다 실패한 것이라 위로 올려 봐야 할 일이 없고,
+     * 사고 경로에서 다시 던지면 원래 예외를 이것이 덮어씁니다.
+     *
+     * 대신 걸린 시간을 남깁니다. [TIMEOUT]을 얼마나 넘겼는지가 그 값을 다시 잡을 유일한 근거입니다.
+     */
+    private fun finish(
+        quizRepo: QuizRepo,
+        startedAt: Instant,
+        outcome: QuizRepo.(Instant) -> Unit,
+    ) {
+        val now = Instant.now(clock)
+
+        try {
+            quizRepo.outcome(now)
+            quizRepoRepository.save(quizRepo)
+        } catch (e: BaseException) {
+            val elapsed = Duration.between(startedAt, now)
+            logger.warn {
+                "Quiz generation result discarded after ${elapsed.toSeconds()}s " +
+                    "(timeout ${TIMEOUT.toSeconds()}s): quizRepoId=${quizRepo.id} ${e.errorCode.code}"
+            }
+        }
+    }
+
+    /**
      * 문서 분석·앵커를 돌리거나, 이미 돌려 둔 것을 그대로 씁니다.
      *
-     * 체크포인트를 재사용하는 이유는 여기까지가 전체 콜의 절반이어서입니다. 대신 커밋이 같을 때로 한정합니다 —
-     * 앵커는 라인 번호라, 레포가 갱신된 뒤 옛 앵커를 쓰면 이미 게이트를 통과한 값이라서 뒷단계 검증에도
-     * 안 걸린 채 엉뚱한 코드를 인용하게 됩니다.
+     * 체크포인트를 재사용하는 이유는 여기까지가 전체 콜의 절반이어서입니다. 사고로 끝난 저장소를 다시
+     * 돌릴 때 그 절반이 통째로 아껴집니다. 쓸 수 있는지는 [QuizRepo.cachedAnchors]가 판정합니다.
+     *
+     * 이 중간 저장은 시효를 보지 않습니다. 좀비가 여기서 새 점유자의 산출물을 덮으면 한 회차를
+     * 버리지만, 남는 시효가 이미 만료값이라 다음 회차가 다시 집어 갑니다.
      */
     private fun anchored(
         quizRepo: QuizRepo,
         checkout: RepoCheckout,
     ): List<AnchoredConcept> {
-        // 앵커를 가졌는지는 상태가 아니라 산출물이 안다. 상태는 콜 범위를 따라 갈라지므로, 거기 기대면 값이 늘 때마다 조용히 깨진다.
-        if (quizRepo.anchoredConcepts.isNotEmpty() && quizRepo.sha == checkout.repo.sha) {
-            return quizRepo.anchoredConcepts
-        }
+        val cached = quizRepo.cachedAnchors(checkout.repo.sha)
+        if (cached.isNotEmpty()) return cached
 
         val concepts = documentAnalyzer.analyze(checkout.root)
-        // 앵커까지 가지 못하고 죽어도 이 1콜은 이미 나갔다. 여기서 적지 않으면 그 지출이 어디에도 안 남는다.
-        quizRepoRepository.save(quizRepo.apply { analyzed() })
-
         val anchored = anchorLocator.locate(checkout.root, concepts)
         quizRepoRepository.save(quizRepo.apply { checkpoint(checkout.repo.sha, anchored) })
 
@@ -125,9 +159,7 @@ class GenerateQuiz(
     )
 
     companion object {
-        private const val LOCK_PREFIX = "quiz-generation:"
-
         // 실측 10분(Redis·Gson 기준)의 세 배. 큰 레포에 여유를 주되, 정말 멎었을 때 영영 붙잡고 있지 않는 값이다.
-        private val LEASE = Duration.ofMinutes(30)
+        private val TIMEOUT = Duration.ofMinutes(30)
     }
 }

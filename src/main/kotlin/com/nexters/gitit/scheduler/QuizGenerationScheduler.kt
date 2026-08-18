@@ -36,9 +36,9 @@ class QuizGenerationScheduler(
      * 한 건이 예외로 끝나면 남은 건은 이번 회차에서 밀리지만, 그 저장소는 이미 FAILED가 되어 대기줄에서
      * 빠졌으므로 다음 회차가 나머지를 이어 받습니다. 그래서 여기서 따로 잡지 않습니다.
      *
-     * ponytail: 콜을 쓰기 시작한 저장소는 상태가 바뀌어 대기줄에서 빠지므로, SIGKILL·OOM으로 죽으면
-     * 아무도 다시 집어 가지 않습니다 (예외로 끝나는 경로는 FAILED가 되어 재시도로 풀립니다).
-     * 대기도 종료도 아닌 상태(ANALYZED·ANCHORED)로 `registeredAt`이 오래된 것을 회수하는 스케줄러를 따로 둡니다.
+     * 점유한 저장소는 STARTED가 되어 대기줄에서 빠지므로, SIGKILL·OOM으로 죽으면 아무도 다시
+     * 집어 가지 않습니다 (예외로 끝나는 경로는 FAILED가 되어 재시도로 풀립니다).
+     * 시효(`timeoutAt`)가 지난 STARTED를 되돌리는 회수는 다음 태스크에서 넣습니다.
      */
     @Scheduled(fixedDelay = 10, timeUnit = TimeUnit.SECONDS, scheduler = TASK_SCHEDULER)
     fun run() {

@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.index.CompoundIndex
 import org.springframework.data.mongodb.core.mapping.Document
 import java.net.URI
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 
 /**
@@ -67,18 +68,18 @@ class QuizRepo(
         private set
 
     /**
-     * 사고 직전에 어디까지 끝나 있었는지. 사고가 난 적 없으면 null입니다.
+     * 점유가 언제까지 유효한지. 쥐고 있는 실행이 없으면 null입니다.
      *
-     * [retry]가 상태를 READY로 되돌린 뒤에도 남습니다. 마지막으로 끝난 단계가 적히므로 **그다음 콜 구간이
-     * 돌던 중이었다**는 뜻이 됩니다 — [QuizRepoStatus.ANCHORED]면 문제 생성 중이었던 것입니다.
+     * [QuizRepoStatus.STARTED]와 같은 말이라 [start]가 채우고 [finish]·[retry]가 함께 비웁니다 —
+     * 끝난 저장소에 값이 남으면 죽은 점유가 아직 유효해 보입니다.
      */
-    var failedFrom: QuizRepoStatus? = null
+    var timeoutAt: Instant? = null
         private set
 
     var sha: String? = null
         private set
 
-    // ANCHORED부터 채워진다.
+    // 앵커 단계를 지나면 채워진다. 재시도 때 아껴 쓸 재료라 결말이 나도 지우지 않는다.
     var anchoredConcepts: List<AnchoredConcept> = emptyList()
         private set
 
@@ -87,16 +88,27 @@ class QuizRepo(
         private set
 
     /**
-     * 개념 추출 1콜을 썼다고만 적습니다. [checkpoint]·[complete]와 달리 함께 저장할 산출물이 없습니다 —
-     * 개념은 앵커까지 가야 [anchoredConcepts]로 남고, 여기서 멈추면 남는 것은 지출 기록뿐입니다.
+     * 생성을 점유합니다. 대기 중이 아니거나 이미 남이 쥐고 있으면 false이고, 이때 이 객체는 그대로입니다.
+     *
+     * true를 받았다면 [starter]가 저장까지 마친 뒤이므로 따로 저장하지 않아도 됩니다.
      */
-    fun analyzed() {
-        status = QuizRepoStatus.ANALYZED
+    fun start(
+        starter: QuizGenerationStarter,
+        now: Instant,
+        timeout: Duration,
+    ): Boolean {
+        val deadline = now.plus(timeout)
+        if (!starter.start(id, deadline)) return false
+
+        status = QuizRepoStatus.STARTED
+        timeoutAt = deadline
+        return true
     }
 
     /**
-     * 문제까지는 못 갔지만 개념·앵커는 확정된 상태로 만듭니다. 완성본이 아니라 **다시 만들 때 아껴 쓸 재료**라,
-     * 여기서 멈춘 저장소는 학습자에게 내보낼 수 없습니다.
+     * 문제까지는 못 갔지만 확정된 개념·앵커를 붙잡아 둡니다. 완성본이 아니라 **다시 만들 때 아껴 쓸 재료**입니다.
+     *
+     * 결말이 아니라 진행 중 저장이라 상태도 [timeoutAt]도 건드리지 않습니다 — 점유는 그대로입니다.
      *
      * [sha]를 함께 받는 이유는 [AnchoredConcept]의 앵커가 라인 번호이기 때문입니다. 재료가 어느 커밋에서
      * 나왔는지 같이 적혀 있지 않으면, 갱신된 레포에서 그대로 쓸 수 있는지를 판정할 방법이 없습니다.
@@ -107,39 +119,57 @@ class QuizRepo(
     ) {
         this.sha = sha
         anchoredConcepts = anchored
-        status = QuizRepoStatus.ANCHORED
     }
 
     /** 상태와 산출물을 함께 바꿔, 완료라면서 문제가 없는 저장소가 생기지 않게 합니다. */
     fun complete(
+        now: Instant,
         sha: String,
         sets: List<LearningSet>,
-    ) {
+    ) = finish(now) {
         this.sha = sha
         learningSets = sets
         status = QuizRepoStatus.COMPLETED
-        // 여기까지 왔으면 이어 쓸 재료가 아니라 결과다. 남겨 두면 완료된 저장소에 사고 흔적이 붙어 있게 된다.
-        failedFrom = null
     }
 
-    /**
-     * 상태와 사유를 함께 바꿔 사유 없는 [QuizRepoStatus.REJECTED]가 생기지 않게 합니다.
-     */
-    fun reject(reason: ErrorCode) {
+    /** 상태와 사유를 함께 바꿔 사유 없는 [QuizRepoStatus.REJECTED]가 생기지 않게 합니다. */
+    fun reject(
+        now: Instant,
+        reason: ErrorCode,
+    ) = finish(now) {
         status = QuizRepoStatus.REJECTED
         rejectedReason = reason
-        failedFrom = null
     }
 
+    /** [reject]와 달리 판정이 아니라 사고라 사유를 받지 않습니다. 왜 죽었는지는 로그에서 봅니다. */
+    fun fail(now: Instant) =
+        finish(now) {
+            status = QuizRepoStatus.FAILED
+        }
+
     /**
-     * [reject]와 달리 여기 오는 것은 판정이 아니라 사고라 사유를 받지 않습니다.
-     * 왜 죽었는지는 도큐먼트가 아니라 로그에서 봅니다 — 세거나 걸러야 할 값이 아닙니다.
+     * 지난 회차가 만들어 둔 앵커. 없거나 [sha]가 다르면 빈 리스트입니다.
      *
-     * 어디까지 갔었는지만 [failedFrom]에 남깁니다.
+     * 같은 커밋일 때로 한정하는 것은 앵커가 라인 번호이기 때문입니다. 갱신된 레포에 옛 앵커를 쓰면 이미
+     * 게이트를 통과한 값이라 뒷단계 검증에도 걸리지 않은 채 엉뚱한 코드를 인용합니다.
      */
-    fun fail() {
-        failedFrom = status
-        status = QuizRepoStatus.FAILED
+    fun cachedAnchors(sha: String): List<AnchoredConcept> = if (this.sha == sha) anchoredConcepts else emptyList()
+
+    /**
+     * 점유가 아직 유효할 때만 [outcome]을 적고 점유를 놓습니다. 시효가 지났으면
+     * [ErrorCode.QUIZ_GENERATION_TIMED_OUT]을 던져 결과를 버립니다 — 멎었다 깨어난 실행이 그 사이 새로
+     * 시작된 회차의 결과를 덮지 않게 하는 자리입니다. 결말을 늘릴 때도 이 자리를 지나가게 합니다.
+     */
+    private fun finish(
+        now: Instant,
+        outcome: () -> Unit,
+    ) {
+        if (timeoutAt?.isAfter(now) != true) {
+            throw BaseException(ErrorCode.QUIZ_GENERATION_TIMED_OUT)
+        }
+
+        outcome()
+        timeoutAt = null
     }
 
     /**
@@ -156,6 +186,7 @@ class QuizRepo(
 
         status = QuizRepoStatus.READY
         registeredAt = Instant.now(clock)
+        timeoutAt = null
     }
 
     /**
@@ -189,7 +220,7 @@ class QuizRepo(
         // 구분자 /는 그대로 두고 나머지만 인코딩해야 해서 URLEncoder가 아니라 URI에 맡긴다.
         val path = URI(null, null, anchor.file, null).rawPath
 
-        // complete()가 sha와 세트를 함께 세팅하므로 문제가 있는데 sha가 없을 수는 없지만, 타입이 nullable이라 막아 둔다.
+        // finish()가 sha와 세트를 함께 세팅하므로 문제가 있는데 sha가 없을 수는 없지만, 타입이 nullable이라 막아 둔다.
         return "$base/blob/${sha ?: error("문제는 있는데 sha가 없습니다: quizRepoId=$id")}/$path#$lines"
     }
 }
