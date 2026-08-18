@@ -7,6 +7,7 @@ import com.nexters.gitit.ui.project.dto.BookmarkedQuestionListResponse
 import com.nexters.gitit.ui.project.dto.LearningSetResponse
 import com.nexters.gitit.ui.project.dto.ProjectDetailResponse
 import com.nexters.gitit.ui.project.dto.ProjectListResponse
+import com.nexters.gitit.ui.project.dto.QuizGenerationStatusResponse
 import com.nexters.gitit.ui.project.dto.RegisterProjectRequest
 import com.nexters.gitit.ui.project.dto.RegisterProjectResponse
 import com.nexters.gitit.ui.project.dto.SubmitChoiceAnswerRequest
@@ -103,6 +104,30 @@ interface ProjectControllerDocs {
         memberId: String,
         @Parameter(description = "조회할 프로젝트 ID") projectId: String,
     ): ApiResponse<ProjectDetailResponse>
+
+    @Operation(
+        summary = "문제 생성 상태 조회",
+        description =
+            "프로젝트의 문제 생성이 어디까지 갔는지만 돌려줍니다. 상세 조회와 달리 세트와 진행률을 계산하지 않으니, " +
+                "등록 직후 완료를 기다리며 되물을 때 이 쪽을 씁니다. COMPLETED면 문제를 풀 수 있고, FAILED면 재시도를 걸 수 있으며, " +
+                "REJECTED는 문제를 낼 수 없다고 판정된 저장소라 재시도해도 달라지지 않습니다.",
+    )
+    @ApiResponses(
+        SwaggerApiResponse(
+            responseCode = "200",
+            description = "조회 성공",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = QUIZ_GENERATION_STATUS_EXAMPLE)])],
+        ),
+        SwaggerApiResponse(
+            responseCode = "404",
+            description = "존재하지 않거나 본인 소유가 아니거나 삭제된 프로젝트",
+            content = [Content(mediaType = APPLICATION_JSON_VALUE, examples = [ExampleObject(value = PROJECT_NOT_FOUND_EXAMPLE)])],
+        ),
+    )
+    fun getQuizGenerationStatus(
+        memberId: String,
+        @Parameter(description = "조회할 프로젝트 ID") projectId: String,
+    ): ApiResponse<QuizGenerationStatusResponse>
 
     @Operation(
         summary = "프로젝트 삭제",
@@ -333,6 +358,10 @@ interface ProjectControllerDocs {
                 """"sets":[{"setId":"set1","label":"Set 1","title":"Set 1 title","problemCount":3,"completedCount":2},""" +
                 """{"setId":"set2","label":"Set 2","title":"Set 2 title","problemCount":4,"completedCount":0}]},""" +
                 """"code":null,"message":null,"errors":null}"""
+
+        // 만드는 중(STARTED)도 이 응답에서는 READY로 나갑니다. 기다리는 쪽에서 둘을 구분할 일이 없습니다.
+        private const val QUIZ_GENERATION_STATUS_EXAMPLE =
+            """{"success":true,"data":{"status":"READY"},"code":null,"message":null,"errors":null}"""
 
         // 남의 프로젝트에도 이 응답을 씁니다. 403으로 답하면 그 id의 프로젝트가 있다는 사실을 알려주는 셈입니다.
         private const val PROJECT_NOT_FOUND_EXAMPLE =
