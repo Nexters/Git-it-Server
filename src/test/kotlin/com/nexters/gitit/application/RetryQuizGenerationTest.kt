@@ -7,6 +7,8 @@ import com.nexters.gitit.domain.project.Project
 import com.nexters.gitit.domain.project.QuizLevel
 import com.nexters.gitit.domain.quizrepo.QuizRepo
 import com.nexters.gitit.domain.quizrepo.QuizRepoStatus
+import com.nexters.gitit.domain.quizrepo.failed
+import com.nexters.gitit.domain.quizrepo.rejected
 import com.nexters.gitit.infrastructure.mongo.SpringDataProjectRepository
 import com.nexters.gitit.infrastructure.mongo.SpringDataQuizRepoRepository
 import io.kotest.assertions.throwables.shouldThrow
@@ -38,7 +40,7 @@ class RetryQuizGenerationTest(
         val quizRepo =
             savedQuizRepo {
                 checkpoint(SHA, emptyList())
-                fail()
+                failed()
             }
         val project = projectRepository.save(Project("member-1", quizRepo.id, QuizLevel.L2))
 
@@ -48,15 +50,17 @@ class RetryQuizGenerationTest(
         // 대기줄이 READY 하나라 여기로 돌아와야 스케줄러가 집어 간다.
         retried.status shouldBe QuizRepoStatus.READY
         // 앵커를 재계산하지 않는 근거는 상태가 아니라 이 값이다.
-        retried.failedFrom shouldBe QuizRepoStatus.ANCHORED
         retried.sha shouldBe SHA
+        // 점유는 결말과 함께 풀렸다. 남아 있으면 다시 집힌 회차가 시효 검사에서 남의 점유를 본다.
+        retried.timeoutAt shouldBe null
         // 줄 맨 뒤로 다시 섰다.
         retried.registeredAt shouldBeGreaterThan Instant.EPOCH
     }
 
     @Test
     fun `문제를 낼 수 없다고 판정된 저장소는 재시도를 거절한다`() {
-        val quizRepo = savedQuizRepo { reject(ErrorCode.NO_CONCEPTS) }
+        val quizRepo =
+            savedQuizRepo { rejected(ErrorCode.NO_CONCEPTS) }
         val project = projectRepository.save(Project("member-1", quizRepo.id, QuizLevel.L2))
 
         val exception = shouldThrow<BaseException> { retryQuizGeneration(RetryQuizGeneration.Command("member-1", project.id)) }

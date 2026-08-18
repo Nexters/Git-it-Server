@@ -14,7 +14,8 @@ data class RegisterProjectResponse(
         fun from(result: RegisterProject.Result) =
             RegisterProjectResponse(
                 projectId = result.projectId,
-                status = result.status,
+                // STARTED는 서버가 그 저장소를 쥐고 있다는 표식일 뿐이라, 기다리는 쪽에서는 READY와 다를 것이 없다.
+                status = if (result.status == QuizRepoStatus.STARTED) QuizRepoStatus.READY else result.status,
             )
     }
 }

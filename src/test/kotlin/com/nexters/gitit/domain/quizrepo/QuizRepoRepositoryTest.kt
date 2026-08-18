@@ -53,8 +53,7 @@ class QuizRepoRepositoryTest(
 
     @Test
     fun `문제를 채워 저장하면 개념·앵커·문제가 통째로 보존된다`() {
-        val quizRepo = quizRepoOf(githubRepoUrl = "https://github.com/Nexters/Git-it-Server")
-        quizRepo.complete(SHA, listOf(learningSet()))
+        val quizRepo = quizRepoOf(githubRepoUrl = "https://github.com/Nexters/Git-it-Server").completed(SHA, listOf(learningSet()))
 
         val saved = quizRepoRepository.save(quizRepo)
         val found = quizRepoRepository.findById(saved.id).orElse(null).shouldNotBeNull()
@@ -81,14 +80,14 @@ class QuizRepoRepositoryTest(
 
     @Test
     fun `체크포인트를 남기면 앵커까지의 산출물과 커밋이 함께 보존된다`() {
-        val quizRepo = quizRepoOf(githubRepoUrl = "https://github.com/Nexters/Git-it-Server")
+        val quizRepo = quizRepoOf(githubRepoUrl = "https://github.com/Nexters/Git-it-Server").started()
         quizRepo.checkpoint(SHA, listOf(AnchoredConcept(concept(), listOf(anchor))))
 
         val saved = quizRepoRepository.save(quizRepo)
         val found = quizRepoRepository.findById(saved.id).orElse(null).shouldNotBeNull()
 
         // 재실행이 이어붙일지 판정하는 근거가 (앵커, sha) 짝이라 둘을 함께 못 박는다.
-        found.status shouldBe QuizRepoStatus.ANCHORED
+        found.status shouldBe QuizRepoStatus.STARTED
         found.sha shouldBe SHA
         found.anchoredConcepts
             .single()
@@ -102,15 +101,15 @@ class QuizRepoRepositoryTest(
      */
     @Test
     fun `대기줄은 READY만, 오래 기다린 순서로 나온다`() {
-        val later = quizRepoRepository.save(pendingOf("2", Instant.parse("2026-08-17T00:01:00Z")))
-        val earlier = quizRepoRepository.save(pendingOf("1", Instant.parse("2026-08-17T00:00:00Z")))
-        quizRepoRepository.save(pendingOf("3", Instant.EPOCH).apply { fail() })
-        quizRepoRepository.save(pendingOf("4", Instant.EPOCH).apply { checkpoint(SHA, emptyList()) })
-        quizRepoRepository.save(pendingOf("5", Instant.EPOCH).apply { delete(Clock.systemUTC()) })
+        val later = quizRepoRepository.save(readyOf("2", Instant.parse("2026-08-17T00:01:00Z")))
+        val earlier = quizRepoRepository.save(readyOf("1", Instant.parse("2026-08-17T00:00:00Z")))
+        quizRepoRepository.save(readyOf("3", Instant.EPOCH).failed())
+        quizRepoRepository.save(readyOf("4", Instant.EPOCH).started())
+        quizRepoRepository.save(readyOf("5", Instant.EPOCH).apply { delete(Clock.systemUTC()) })
 
-        val pending = quizRepoRepository.findAllByStatusAndDeletedAtIsNullOrderByRegisteredAtAsc(QuizRepoStatus.READY)
+        val ready = quizRepoRepository.findAllByStatusAndDeletedAtIsNullOrderByRegisteredAtAsc(QuizRepoStatus.READY)
 
-        pending.map { it.id } shouldBe listOf(earlier.id, later.id)
+        ready.map { it.id } shouldBe listOf(earlier.id, later.id)
     }
 
     // 표시용 필드는 저장·조회 규약과 무관해 아무 값이나 채운다.
@@ -125,7 +124,7 @@ class QuizRepoRepositoryTest(
             registeredAt = Instant.EPOCH,
         )
 
-    private fun pendingOf(
+    private fun readyOf(
         githubRepoId: String,
         registeredAt: Instant,
     ) = QuizRepo(

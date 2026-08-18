@@ -20,7 +20,7 @@ interface QuizRepoRepository {
      * 대기 중은 [QuizRepoStatus.READY] 하나입니다. 앵커까지 만들고 실패했던 저장소도 [QuizRepo.retry]가
      * READY로 되돌리므로 같은 줄에 섭니다.
      */
-    fun findAllPending(): List<QuizRepo>
+    fun findAllReady(): List<QuizRepo>
 
     fun save(quizRepo: QuizRepo): QuizRepo
 }

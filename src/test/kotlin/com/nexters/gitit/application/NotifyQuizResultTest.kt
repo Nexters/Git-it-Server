@@ -10,6 +10,7 @@ import com.nexters.gitit.domain.notification.NotificationSender
 import com.nexters.gitit.domain.project.Project
 import com.nexters.gitit.domain.project.QuizLevel
 import com.nexters.gitit.domain.quizrepo.QuizRepo
+import com.nexters.gitit.domain.quizrepo.completed
 import com.nexters.gitit.infrastructure.mongo.SpringDataMemberRepository
 import com.nexters.gitit.infrastructure.mongo.SpringDataProjectRepository
 import com.nexters.gitit.infrastructure.mongo.SpringDataQuizRepoRepository
@@ -56,7 +57,7 @@ class NotifyQuizResultTest(
      */
     @Test
     fun `토큰이 있는 회원에게만 그 회원의 프로젝트 id를 실어 보낸다`() {
-        val quizRepo = quizRepoRepository.save(quizRepoOf().apply { complete("sha", emptyList()) })
+        val quizRepo = quizRepoRepository.save(quizRepoOf().completed("sha", emptyList()))
         val pushEnabled = memberRepository.save(memberOf("push-enabled", DEVICE_TOKEN))
         val pushDenied = memberRepository.save(memberOf("push-denied", null))
         val project = projectRepository.save(Project(pushEnabled.id, quizRepo.id, QuizLevel.L1))

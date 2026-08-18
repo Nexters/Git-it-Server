@@ -14,6 +14,7 @@ import com.nexters.gitit.domain.quizrepo.QuestionFormat
 import com.nexters.gitit.domain.quizrepo.QuestionType
 import com.nexters.gitit.domain.quizrepo.QuizRepo
 import com.nexters.gitit.domain.quizrepo.QuizRepoStatus
+import com.nexters.gitit.domain.quizrepo.completed
 import com.nexters.gitit.infrastructure.mongo.SpringDataProjectRepository
 import com.nexters.gitit.infrastructure.mongo.SpringDataQuizRepoRepository
 import io.kotest.matchers.shouldBe
@@ -67,7 +68,7 @@ class GetProjectsTest(
         result.items.map { it.projectId } shouldBe listOf(project.id)
     }
 
-    private fun completedQuizRepoOf(githubRepoId: String) = quizRepoOf(githubRepoId).apply { complete("abc1234", listOf(learningSetOf())) }
+    private fun completedQuizRepoOf(githubRepoId: String) = quizRepoOf(githubRepoId).completed("abc1234", listOf(learningSetOf()))
 
     private fun quizRepoOf(githubRepoId: String) =
         QuizRepo(

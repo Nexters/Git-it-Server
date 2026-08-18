@@ -1,7 +1,7 @@
 package com.nexters.gitit.scheduler
 
 import com.nexters.gitit.application.GenerateQuiz
-import com.nexters.gitit.domain.quizrepo.QuizRepoRepository
+import com.nexters.gitit.application.GetReadyQuizRepos
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 // 테스트에서는 뜨지 않습니다. 켜 두면 테스트가 만든 READY 저장소를 폴링이 집어 GitHub·Gemini를 실제로 부릅니다.
 @Profile("!test")
 class QuizGenerationScheduler(
-    private val quizRepoRepository: QuizRepoRepository,
+    private val getReadyQuizRepos: GetReadyQuizRepos,
     private val generateQuiz: GenerateQuiz,
 ) {
     /**
@@ -35,20 +35,16 @@ class QuizGenerationScheduler(
      *
      * 한 건이 예외로 끝나면 남은 건은 이번 회차에서 밀리지만, 그 저장소는 이미 FAILED가 되어 대기줄에서
      * 빠졌으므로 다음 회차가 나머지를 이어 받습니다. 그래서 여기서 따로 잡지 않습니다.
-     *
-     * ponytail: 콜을 쓰기 시작한 저장소는 상태가 바뀌어 대기줄에서 빠지므로, SIGKILL·OOM으로 죽으면
-     * 아무도 다시 집어 가지 않습니다 (예외로 끝나는 경로는 FAILED가 되어 재시도로 풀립니다).
-     * 대기도 종료도 아닌 상태(ANALYZED·ANCHORED)로 `registeredAt`이 오래된 것을 회수하는 스케줄러를 따로 둡니다.
      */
     @Scheduled(fixedDelay = 10, timeUnit = TimeUnit.SECONDS, scheduler = TASK_SCHEDULER)
     fun run() {
-        quizRepoRepository.findAllPending().forEach {
-            generateQuiz(GenerateQuiz.Command(it.id))
+        getReadyQuizRepos().items.forEach {
+            generateQuiz(GenerateQuiz.Command(it.quizRepoId))
         }
     }
 
     /**
-     * 전용 스케줄러를 두는 것은 이 작업이 몇십 분씩 스레드를 붙잡기 때문입니다. 부트 기본 `taskScheduler`는
+     * 전용 스케줄러를 두는 것은 [run]이 몇십 분씩 스레드를 붙잡기 때문입니다. 부트 기본 `taskScheduler`는
      * 풀 크기가 1이라, 여기에 얹으면 나중에 추가되는 `@Scheduled`가 그동안 조용히 밀립니다.
      */
     @Bean(TASK_SCHEDULER)
