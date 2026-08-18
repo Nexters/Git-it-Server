@@ -6,6 +6,7 @@ import com.nexters.gitit.application.GetBookmarkedQuestions
 import com.nexters.gitit.application.GetLearningSet
 import com.nexters.gitit.application.GetProjectDetail
 import com.nexters.gitit.application.GetProjects
+import com.nexters.gitit.application.GetQuizGenerationStatus
 import com.nexters.gitit.application.RegisterProject
 import com.nexters.gitit.application.RetryQuizGeneration
 import com.nexters.gitit.application.SubmitAnswer
@@ -17,6 +18,7 @@ import com.nexters.gitit.ui.project.dto.BookmarkedQuestionListResponse
 import com.nexters.gitit.ui.project.dto.LearningSetResponse
 import com.nexters.gitit.ui.project.dto.ProjectDetailResponse
 import com.nexters.gitit.ui.project.dto.ProjectListResponse
+import com.nexters.gitit.ui.project.dto.QuizGenerationStatusResponse
 import com.nexters.gitit.ui.project.dto.RegisterProjectRequest
 import com.nexters.gitit.ui.project.dto.RegisterProjectResponse
 import com.nexters.gitit.ui.project.dto.SubmitChoiceAnswerRequest
@@ -42,6 +44,7 @@ class ProjectController(
     private val getProjectDetail: GetProjectDetail,
     private val deleteProject: DeleteProject,
     private val retryQuizGeneration: RetryQuizGeneration,
+    private val getQuizGenerationStatus: GetQuizGenerationStatus,
     private val submitAnswer: SubmitAnswer,
     private val getLearningSet: GetLearningSet,
     private val bookmarkQuestion: BookmarkQuestion,
@@ -81,6 +84,15 @@ class ProjectController(
     ): ApiResponse<ProjectDetailResponse> {
         val result = getProjectDetail(GetProjectDetail.Command(memberId, projectId))
         return ApiResponse.success(ProjectDetailResponse.from(result))
+    }
+
+    @GetMapping("/{projectId}/status")
+    override fun getQuizGenerationStatus(
+        @LoginMember memberId: String,
+        @PathVariable projectId: String,
+    ): ApiResponse<QuizGenerationStatusResponse> {
+        val result = getQuizGenerationStatus(GetQuizGenerationStatus.Command(memberId, projectId))
+        return ApiResponse.success(QuizGenerationStatusResponse.from(result))
     }
 
     @DeleteMapping("/{projectId}")
