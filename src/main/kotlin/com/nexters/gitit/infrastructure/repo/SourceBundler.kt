@@ -65,7 +65,7 @@ class SourceBundler {
         number: Int,
         anchor: Anchor,
     ): String {
-        val header = "[앵커 $number] ${anchor.file}:${anchor.startLine}-${anchor.endLine} (${anchor.kind})"
+        val header = "[코드 $number] ${anchor.file}:${anchor.startLine}-${anchor.endLine} (${anchor.kind})"
         val lines = lines(repoRoot, anchor.file) ?: return header
 
         // 앵커 범위는 이미 검증된 값이지만, 파일이 그사이 바뀌었을 수 있어 다시 자른다.
