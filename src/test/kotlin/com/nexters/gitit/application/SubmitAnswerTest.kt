@@ -101,6 +101,26 @@ class SubmitAnswerTest(
         answer.text shouldBe "Router가 경로를 한 곳에서 관리해 흐름을 따라가기 쉬워집니다"
     }
 
+    @Test
+    fun `서술형은 공백만 낸 답도 받아 빈 문자열로 저장한다`() {
+        val result =
+            submitAnswer(
+                SubmitAnswer.Command.Essay(
+                    memberId = MEMBER_ID,
+                    projectId = projectId,
+                    questionId = ESSAY_QUESTION_ID,
+                    text = "   ",
+                ),
+            )
+
+        result.rubric.criteria
+            .single()
+            .points shouldBe 10
+
+        val answer = savedAnswers().single().shouldBeInstanceOf<Answer.Essay>()
+        answer.text shouldBe ""
+    }
+
     private fun savedAnswers(): List<Answer> =
         projectRepository
             .findById(projectId)
