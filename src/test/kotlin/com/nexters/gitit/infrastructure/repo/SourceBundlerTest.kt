@@ -42,13 +42,13 @@ class SourceBundlerTest {
     }
 
     @Test
-    fun `앵커는 번호를 붙이고 그 범위만 실제 줄 번호로 발췌한다`() {
+    fun `코드 조각은 번호를 붙이고 그 범위만 실제 줄 번호로 발췌한다`() {
         repoRoot.file("src/Router.kt", (1..20).joinToString("\n") { "line $it" })
 
         val excerpt =
             bundler.excerpt(repoRoot, listOf(Anchor("src/Router.kt", 5, 7, AnchorKind.DEFINITION, "line 5")))
 
-        excerpt shouldContain "[앵커 1] src/Router.kt:5-7 (DEFINITION)"
+        excerpt shouldContain "[코드 1] src/Router.kt:5-7 (DEFINITION)"
         excerpt shouldContain "    5| line 5"
         excerpt shouldContain "    7| line 7"
         excerpt shouldNotContain "line 8"

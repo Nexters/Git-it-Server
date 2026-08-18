@@ -50,7 +50,7 @@ class QuestionGeneratorTest {
                 .generate(repoRoot, listOf(anchored("라우팅", "src/Router.kt"), anchored("상태 관리", "src/Store.kt")))
 
         val routingBundle = seenBundles.getValue("라우팅")
-        routingBundle shouldContain "[앵커 1] src/Router.kt:2-2 (DEFINITION)"
+        routingBundle shouldContain "[코드 1] src/Router.kt:2-2 (DEFINITION)"
         routingBundle shouldContain "    2|     fun route() = Unit"
         sets.map { it.concept.name } shouldContainExactly listOf("라우팅", "상태 관리")
         val routing = sets.first()
