@@ -4,7 +4,6 @@ import com.nexters.gitit.domain.exception.BaseException
 import com.nexters.gitit.domain.exception.ErrorCode
 import com.nexters.gitit.domain.project.ProjectProgressCalculator
 import com.nexters.gitit.domain.project.ProjectRepository
-import com.nexters.gitit.domain.quizrepo.Depth
 import com.nexters.gitit.domain.quizrepo.QuizRepoRepository
 import org.springframework.stereotype.Service
 
@@ -24,15 +23,14 @@ class GetProjectDetail(
                 ?: error("프로젝트가 가리키는 저장소가 없습니다: quizRepoId=${project.quizRepoId}")
 
         val progress = projectProgressCalculator.calculate(project, quizRepo)
-        val depth = Depth.valueOf(project.quizLevel.name)
 
         val sets =
             quizRepo.learningSets.mapIndexed { index, set ->
-                SetItem(
+                Result.SetItem(
                     setId = set.id,
                     label = "Set ${index + 1}",
                     title = set.title,
-                    problemCount = set.questionsOf(depth).size,
+                    problemCount = set.questionsOf(project.quizLevel).size,
                     completedCount = progress.completedCountsBySet.getOrElse(index) { 0 },
                 )
             }
@@ -65,13 +63,13 @@ class GetProjectDetail(
         val overallProgressPercent: Int,
         val nextQuestionId: String?,
         val sets: List<SetItem>,
-    )
-
-    data class SetItem(
-        val setId: String,
-        val label: String,
-        val title: String,
-        val problemCount: Int,
-        val completedCount: Int,
-    )
+    ) {
+        data class SetItem(
+            val setId: String,
+            val label: String,
+            val title: String,
+            val problemCount: Int,
+            val completedCount: Int,
+        )
+    }
 }

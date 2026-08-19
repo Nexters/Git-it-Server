@@ -2,7 +2,6 @@ package com.nexters.gitit.application.project
 
 import com.nexters.gitit.TestcontainersConfiguration
 import com.nexters.gitit.domain.project.Project
-import com.nexters.gitit.domain.project.QuizLevel
 import com.nexters.gitit.domain.quizrepo.Anchor
 import com.nexters.gitit.domain.quizrepo.AnchorKind
 import com.nexters.gitit.domain.quizrepo.AnchorNote
@@ -42,7 +41,7 @@ class GetProjectsTest(
     @Test
     fun `문제 생성이 끝난 저장소의 프로젝트를 진행 상태와 함께 돌려준다`() {
         val quizRepo = quizRepoRepository.save(completedQuizRepoOf("repo-1"))
-        val project = projectRepository.save(Project(MEMBER_ID, quizRepo.id, QuizLevel.L2))
+        val project = projectRepository.save(Project(MEMBER_ID, quizRepo.id, Depth.L2))
 
         val result = getProjects(GetProjects.Command(MEMBER_ID))
 
@@ -60,8 +59,8 @@ class GetProjectsTest(
         val ready = quizRepoRepository.save(quizRepoOf("repo-2"))
         ready.status shouldBe QuizRepoStatus.READY
 
-        val project = projectRepository.save(Project(MEMBER_ID, completed.id, QuizLevel.L2))
-        projectRepository.save(Project(MEMBER_ID, ready.id, QuizLevel.L2))
+        val project = projectRepository.save(Project(MEMBER_ID, completed.id, Depth.L2))
+        projectRepository.save(Project(MEMBER_ID, ready.id, Depth.L2))
 
         val result = getProjects(GetProjects.Command(MEMBER_ID))
 

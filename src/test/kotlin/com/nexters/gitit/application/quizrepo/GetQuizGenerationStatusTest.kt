@@ -4,7 +4,7 @@ import com.nexters.gitit.TestcontainersConfiguration
 import com.nexters.gitit.domain.exception.BaseException
 import com.nexters.gitit.domain.exception.ErrorCode
 import com.nexters.gitit.domain.project.Project
-import com.nexters.gitit.domain.project.QuizLevel
+import com.nexters.gitit.domain.quizrepo.Depth
 import com.nexters.gitit.domain.quizrepo.QuizRepo
 import com.nexters.gitit.domain.quizrepo.QuizRepoStatus
 import com.nexters.gitit.domain.quizrepo.started
@@ -36,7 +36,7 @@ class GetQuizGenerationStatusTest(
     @Test
     fun `프로젝트가 보고 있는 저장소의 상태를 저장된 그대로 돌려준다`() {
         val quizRepo = quizRepoRepository.save(quizRepoOf().started())
-        val project = projectRepository.save(Project(MEMBER_ID, quizRepo.id, QuizLevel.L2))
+        val project = projectRepository.save(Project(MEMBER_ID, quizRepo.id, Depth.L2))
 
         val result = getQuizGenerationStatus(GetQuizGenerationStatus.Command(MEMBER_ID, project.id))
 
@@ -46,7 +46,7 @@ class GetQuizGenerationStatusTest(
     @Test
     fun `남의 프로젝트는 찾을 수 없다고 답한다`() {
         val quizRepo = quizRepoRepository.save(quizRepoOf())
-        val project = projectRepository.save(Project(MEMBER_ID, quizRepo.id, QuizLevel.L2))
+        val project = projectRepository.save(Project(MEMBER_ID, quizRepo.id, Depth.L2))
 
         val exception = shouldThrow<BaseException> { getQuizGenerationStatus(GetQuizGenerationStatus.Command("member-2", project.id)) }
 

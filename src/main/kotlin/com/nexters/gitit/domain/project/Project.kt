@@ -3,6 +3,7 @@ package com.nexters.gitit.domain.project
 import com.nexters.gitit.domain.common.BaseEntity
 import com.nexters.gitit.domain.exception.BaseException
 import com.nexters.gitit.domain.exception.ErrorCode
+import com.nexters.gitit.domain.quizrepo.Depth
 import org.springframework.data.mongodb.core.index.CompoundIndex
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
@@ -25,15 +26,15 @@ class Project(
     val memberId: String,
     @Indexed(name = "idx_quiz_repo_id")
     val quizRepoId: String,
-    val quizLevel: QuizLevel,
+    // 저장소가 세 레벨을 모두 갖고 있고 그중 회원이 고른 하나. 서빙 단위가 레벨이라 이 값이 곧 문제 필터다.
+    val quizLevel: Depth,
 ) : BaseEntity() {
     // 진도는 따로 세지 않고 이 목록에서 파생합니다. 두 벌로 두면 답변과 진도가 서로 어긋납니다.
     var answers: List<Answer> = emptyList()
         private set
 
     // 북마크는 회원마다 다른 값이라 여러 회원이 공유하는 QuizRepo가 아니라 여기 둡니다.
-    var bookmarkedQuestionIds: Set<String> = emptySet()
-        private set
+    private var bookmarkedQuestionIds: Set<String> = emptySet()
 
     /**
      * 답을 남기되 같은 문제에 대한 이전 답은 지웁니다. 복습이 기록을 쌓는 일이 아니라 최신 상태를 갱신하는
@@ -50,6 +51,10 @@ class Project(
     ) {
         bookmarkedQuestionIds = if (bookmarked) bookmarkedQuestionIds + questionId else bookmarkedQuestionIds - questionId
     }
+
+    fun isBookmarked(questionId: String): Boolean = questionId in bookmarkedQuestionIds
+
+    fun hasBookmark(): Boolean = bookmarkedQuestionIds.isNotEmpty()
 
     /**
      * 주인이 아니면 [BaseException]을 던집니다. 권한 없음이 아니라 없는 것으로 답하는 이유는,

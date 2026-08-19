@@ -4,7 +4,7 @@ import com.nexters.gitit.domain.exception.BaseException
 import com.nexters.gitit.domain.exception.ErrorCode
 import com.nexters.gitit.domain.project.Project
 import com.nexters.gitit.domain.project.ProjectRepository
-import com.nexters.gitit.domain.project.QuizLevel
+import com.nexters.gitit.domain.quizrepo.Depth
 import com.nexters.gitit.domain.quizrepo.GithubRepository
 import com.nexters.gitit.domain.quizrepo.GithubRepositoryResolver
 import com.nexters.gitit.domain.quizrepo.QuizRepo
@@ -73,7 +73,7 @@ class RegisterProject(
     data class Command(
         val memberId: String,
         val githubRepoUrl: String,
-        val quizLevel: QuizLevel,
+        val quizLevel: Depth,
     )
 
     data class Result(

@@ -40,11 +40,11 @@ class GetProjects(
     private fun toItem(
         project: Project,
         quizRepo: QuizRepo,
-    ): ProjectItem {
+    ): Result.ProjectItem {
         val progress = projectProgressCalculator.calculate(project, quizRepo)
         val currentSet = progress.nextSetIndex?.let { quizRepo.learningSets.getOrNull(it) }
 
-        return ProjectItem(
+        return Result.ProjectItem(
             projectId = project.id,
             repositoryName = quizRepo.name,
             repositoryImageUrl = quizRepo.ownerImageUrl,
@@ -63,17 +63,17 @@ class GetProjects(
 
     data class Result(
         val items: List<ProjectItem>,
-    )
-
-    data class ProjectItem(
-        val projectId: String,
-        val repositoryName: String,
-        val repositoryImageUrl: String,
-        val techStack: List<String>,
-        val currentSetLabel: String,
-        val currentSetTitle: String,
-        val nextSetId: String?,
-        val nextQuestionId: String?,
-        val overallProgressPercent: Int,
-    )
+    ) {
+        data class ProjectItem(
+            val projectId: String,
+            val repositoryName: String,
+            val repositoryImageUrl: String,
+            val techStack: List<String>,
+            val currentSetLabel: String,
+            val currentSetTitle: String,
+            val nextSetId: String?,
+            val nextQuestionId: String?,
+            val overallProgressPercent: Int,
+        )
+    }
 }

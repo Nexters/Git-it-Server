@@ -17,7 +17,7 @@ class ProjectProgressCalculator {
         project: Project,
         quizRepo: QuizRepo,
     ): ProjectProgress {
-        val depth = project.quizLevel.toDepth()
+        val depth = project.quizLevel
         val questionsPerSet = quizRepo.learningSets.map { it.questionsOf(depth) }
         val totalCount = questionsPerSet.sumOf { it.size }
 
@@ -59,12 +59,4 @@ class ProjectProgressCalculator {
         }
         return null to null
     }
-
-    // 이름이 같아도 enum이 둘이라 valueOf로 잇지 않는다. 한쪽에 레벨이 늘면 컴파일이 깨져야 옮겨 적는 것을 잊지 않는다.
-    private fun QuizLevel.toDepth() =
-        when (this) {
-            QuizLevel.L1 -> Depth.L1
-            QuizLevel.L2 -> Depth.L2
-            QuizLevel.L3 -> Depth.L3
-        }
 }

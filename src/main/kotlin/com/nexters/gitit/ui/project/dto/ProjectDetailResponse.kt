@@ -49,7 +49,7 @@ data class SetResponse(
     val completedCount: Int,
 ) {
     companion object {
-        fun from(item: GetProjectDetail.SetItem) =
+        fun from(item: GetProjectDetail.Result.SetItem) =
             SetResponse(
                 setId = item.setId,
                 label = item.label,

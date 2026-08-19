@@ -8,7 +8,7 @@ import com.nexters.gitit.domain.member.SocialType
 import com.nexters.gitit.domain.notification.NotificationMessage
 import com.nexters.gitit.domain.notification.NotificationSender
 import com.nexters.gitit.domain.project.Project
-import com.nexters.gitit.domain.project.QuizLevel
+import com.nexters.gitit.domain.quizrepo.Depth
 import com.nexters.gitit.domain.quizrepo.QuizRepo
 import com.nexters.gitit.domain.quizrepo.completed
 import com.nexters.gitit.infrastructure.mongo.SpringDataMemberRepository
@@ -60,8 +60,8 @@ class NotifyQuizResultTest(
         val quizRepo = quizRepoRepository.save(quizRepoOf().completed("sha", emptyList()))
         val pushEnabled = memberRepository.save(memberOf("push-enabled", DEVICE_TOKEN))
         val pushDenied = memberRepository.save(memberOf("push-denied", null))
-        val project = projectRepository.save(Project(pushEnabled.id, quizRepo.id, QuizLevel.L1))
-        projectRepository.save(Project(pushDenied.id, quizRepo.id, QuizLevel.L1))
+        val project = projectRepository.save(Project(pushEnabled.id, quizRepo.id, Depth.L1))
+        projectRepository.save(Project(pushDenied.id, quizRepo.id, Depth.L1))
 
         notifyQuizResult(NotifyQuizResult.Command(quizRepo.id))
 

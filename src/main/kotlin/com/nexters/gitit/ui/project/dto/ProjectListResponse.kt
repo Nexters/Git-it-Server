@@ -38,7 +38,7 @@ data class ProjectItemResponse(
     val overallProgressPercent: Int,
 ) {
     companion object {
-        fun from(item: GetProjects.ProjectItem) =
+        fun from(item: GetProjects.Result.ProjectItem) =
             ProjectItemResponse(
                 projectId = item.projectId,
                 repositoryName = item.repositoryName,

@@ -4,7 +4,7 @@ import com.nexters.gitit.TestcontainersConfiguration
 import com.nexters.gitit.domain.exception.BaseException
 import com.nexters.gitit.domain.exception.ErrorCode
 import com.nexters.gitit.domain.project.Project
-import com.nexters.gitit.domain.project.QuizLevel
+import com.nexters.gitit.domain.quizrepo.Depth
 import com.nexters.gitit.domain.quizrepo.QuizRepo
 import com.nexters.gitit.domain.quizrepo.QuizRepoStatus
 import com.nexters.gitit.domain.quizrepo.failed
@@ -42,7 +42,7 @@ class RetryQuizGenerationTest(
                 checkpoint(SHA, emptyList())
                 failed()
             }
-        val project = projectRepository.save(Project("member-1", quizRepo.id, QuizLevel.L2))
+        val project = projectRepository.save(Project("member-1", quizRepo.id, Depth.L2))
 
         retryQuizGeneration(RetryQuizGeneration.Command("member-1", project.id))
 
@@ -61,7 +61,7 @@ class RetryQuizGenerationTest(
     fun `문제를 낼 수 없다고 판정된 저장소는 재시도를 거절한다`() {
         val quizRepo =
             savedQuizRepo { rejected(ErrorCode.NO_CONCEPTS) }
-        val project = projectRepository.save(Project("member-1", quizRepo.id, QuizLevel.L2))
+        val project = projectRepository.save(Project("member-1", quizRepo.id, Depth.L2))
 
         val exception = shouldThrow<BaseException> { retryQuizGeneration(RetryQuizGeneration.Command("member-1", project.id)) }
 

@@ -38,7 +38,7 @@ data class BookmarkedQuestionResponse(
     val question: String,
 ) {
     companion object {
-        fun from(item: GetBookmarkedQuestions.BookmarkedQuestion) =
+        fun from(item: GetBookmarkedQuestions.Result.BookmarkedQuestion) =
             BookmarkedQuestionResponse(
                 projectId = item.projectId,
                 projectName = item.projectName,

@@ -4,7 +4,6 @@ import com.nexters.gitit.domain.exception.BaseException
 import com.nexters.gitit.domain.exception.ErrorCode
 import com.nexters.gitit.domain.project.Answer
 import com.nexters.gitit.domain.project.ProjectRepository
-import com.nexters.gitit.domain.project.QuizLevel
 import com.nexters.gitit.domain.quizrepo.Anchor
 import com.nexters.gitit.domain.quizrepo.Depth
 import com.nexters.gitit.domain.quizrepo.LearningSet
@@ -47,7 +46,7 @@ class GetLearningSet(
             orientation = learningSet.orientation,
             level = project.quizLevel,
             questions =
-                learningSet.questionsOf(project.quizLevel.toDepth()).map { question ->
+                learningSet.questionsOf(project.quizLevel).map { question ->
                     Result.SolvableQuestion(
                         question = question,
                         sources = question.anchors.map { sourceOf(quizRepo, learningSet, it) },
@@ -68,14 +67,6 @@ class GetLearningSet(
         url = quizRepo.sourceUrlOf(anchor),
     )
 
-    // 이름이 같아도 enum이 둘이라 valueOf로 잇지 않는다. 한쪽에 레벨이 늘면 컴파일이 깨져야 옮겨 적는 것을 잊지 않는다.
-    private fun QuizLevel.toDepth() =
-        when (this) {
-            QuizLevel.L1 -> Depth.L1
-            QuizLevel.L2 -> Depth.L2
-            QuizLevel.L3 -> Depth.L3
-        }
-
     data class Command(
         val memberId: String,
         val projectId: String,
@@ -91,7 +82,7 @@ class GetLearningSet(
         val title: String,
         val description: String,
         val orientation: String,
-        val level: QuizLevel,
+        val level: Depth,
         val questions: List<SolvableQuestion>,
     ) {
         /** 문제 하나와 그것을 푸는 자리에 함께 필요한 것들. [answer]가 있으면 이미 푼 문제입니다. */

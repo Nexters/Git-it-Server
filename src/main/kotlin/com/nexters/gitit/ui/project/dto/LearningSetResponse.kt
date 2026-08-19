@@ -2,7 +2,7 @@ package com.nexters.gitit.ui.project.dto
 
 import com.nexters.gitit.application.project.GetLearningSet
 import com.nexters.gitit.domain.project.Answer
-import com.nexters.gitit.domain.project.QuizLevel
+import com.nexters.gitit.domain.quizrepo.Depth
 import com.nexters.gitit.domain.quizrepo.QuestionFormat
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
@@ -17,7 +17,7 @@ data class LearningSetResponse(
     @field:Schema(description = "문제를 풀기 전에 읽는 안내. 문제로 낼 가치가 없는 사실(폴더 구조·진입점)이 여기 담깁니다")
     val orientation: String,
     @field:Schema(description = "이 프로젝트에 걸린 난이도. 아래 문제는 전부 이 레벨입니다")
-    val level: QuizLevel,
+    val level: Depth,
     @field:Schema(description = "이 레벨의 문제 전부. 이미 푼 문제도 걸러내지 않고 만들어진 순서 그대로 나갑니다")
     val questions: List<QuestionResponse>,
 ) {

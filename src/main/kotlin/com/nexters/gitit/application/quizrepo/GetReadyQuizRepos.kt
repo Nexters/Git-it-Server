@@ -12,13 +12,13 @@ class GetReadyQuizRepos(
      *
      * 항목은 id뿐이고, 읽는 순간 이미 낡은 목록입니다 — 여기 있다고 아직 대기 중이라는 보장은 없습니다.
      */
-    operator fun invoke(): Result = Result(items = quizRepoRepository.findAllReady().map { QuizRepoItem(quizRepoId = it.id) })
+    operator fun invoke(): Result = Result(items = quizRepoRepository.findAllReady().map { Result.QuizRepoItem(quizRepoId = it.id) })
 
     data class Result(
         val items: List<QuizRepoItem>,
-    )
-
-    data class QuizRepoItem(
-        val quizRepoId: String,
-    )
+    ) {
+        data class QuizRepoItem(
+            val quizRepoId: String,
+        )
+    }
 }

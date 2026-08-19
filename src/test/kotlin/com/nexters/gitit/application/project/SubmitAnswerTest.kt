@@ -3,7 +3,6 @@ package com.nexters.gitit.application.project
 import com.nexters.gitit.TestcontainersConfiguration
 import com.nexters.gitit.domain.project.Answer
 import com.nexters.gitit.domain.project.Project
-import com.nexters.gitit.domain.project.QuizLevel
 import com.nexters.gitit.domain.quizrepo.Anchor
 import com.nexters.gitit.domain.quizrepo.AnchorKind
 import com.nexters.gitit.domain.quizrepo.AnchorNote
@@ -50,7 +49,7 @@ class SubmitAnswerTest(
         quizRepoRepository.deleteAll()
 
         val quizRepo = quizRepoRepository.save(quizRepoOf())
-        projectId = projectRepository.save(Project(MEMBER_ID, quizRepo.id, QuizLevel.L2)).id
+        projectId = projectRepository.save(Project(MEMBER_ID, quizRepo.id, Depth.L2)).id
     }
 
     @Test
