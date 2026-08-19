@@ -29,9 +29,7 @@ class RetryQuizGeneration(
         project.requireOwnedBy(command.memberId)
 
         // 프로젝트가 가리키는 저장소가 없는 것은 잘못된 요청이 아니라 데이터가 깨진 것이라, 404로 덮으면 원인이 묻힌다.
-        val quizRepo =
-            quizRepoRepository.findById(project.quizRepoId)
-                ?: error("프로젝트가 가리키는 저장소가 없습니다: quizRepoId=${project.quizRepoId}")
+        val quizRepo = quizRepoRepository.findById(project.quizRepoId) ?: error("프로젝트가 가리키는 저장소가 없습니다: quizRepoId=${project.quizRepoId}")
 
         // 재시도해도 되는 상태인지는 도큐먼트가 판정한다. 여기서 다시 검사하면 규칙이 두 벌이 된다.
         quizRepo.retry(clock)

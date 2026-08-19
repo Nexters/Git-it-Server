@@ -33,7 +33,7 @@ class ProjectProgressCalculator {
         val answeredIds = project.answers.mapTo(HashSet()) { it.questionId }
         val flat = questionsPerSet.flatten()
         val solvedCount = flat.count { it.id in answeredIds }
-        val overallProgressPercent = solvedCount * 100 / totalCount
+        val overallProgressPercent = solvedCount * PERCENT_SCALE / totalCount
 
         // 다 풀었으면(혹은 애초에 하나도 안 풀었으면) 다음 문제는 1세트 1번으로 돌아간다.
         // 진행률 바에 쓰는 실제 완료 개수(solvedCount)와는 별개로 다룬다.
@@ -58,5 +58,10 @@ class ProjectProgressCalculator {
             remaining -= questions.size
         }
         return null to null
+    }
+
+    companion object {
+        // 정수 나눗셈이라 소수점은 버린다. 99.9%도 99%로 나간다.
+        private const val PERCENT_SCALE = 100
     }
 }

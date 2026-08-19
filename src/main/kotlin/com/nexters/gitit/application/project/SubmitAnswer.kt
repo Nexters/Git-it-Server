@@ -31,8 +31,7 @@ class SubmitAnswer(
             questionId = question.id,
             explanation = question.explanation,
             correct = correct,
-            // 4지선다인데 정답이 비어 있으면 게이트를 지나면 안 됐을 문제가 저장된 것이라, 오답으로 흘려보내지 않고 터뜨린다.
-            answerIndex = question.answerIndex ?: error("4지선다인데 정답이 없습니다: questionId=${question.id}"),
+            answerIndex = question.requiredAnswerIndex,
         )
     }
 
@@ -47,7 +46,7 @@ class SubmitAnswer(
         return Result.Essay(
             questionId = question.id,
             explanation = question.explanation,
-            rubric = question.rubric ?: error("서술형인데 채점 기준이 없습니다: questionId=${question.id}"),
+            rubric = question.requiredRubric,
         )
     }
 
@@ -57,8 +56,7 @@ class SubmitAnswer(
 
         // 프로젝트가 가리키는 저장소가 없는 것은 잘못된 요청이 아니라 데이터가 깨진 것이라, 404로 덮으면 원인이 묻힌다.
         val quizRepo: QuizRepo =
-            quizRepoRepository.findById(project.quizRepoId)
-                ?: error("프로젝트가 가리키는 저장소가 없습니다: quizRepoId=${project.quizRepoId}")
+            quizRepoRepository.findById(project.quizRepoId) ?: error("프로젝트가 가리키는 저장소가 없습니다: quizRepoId=${project.quizRepoId}")
         val question = quizRepo.findQuestion(command.questionId) ?: throw BaseException(ErrorCode.QUESTION_NOT_FOUND)
 
         return project to question

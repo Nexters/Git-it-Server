@@ -32,6 +32,14 @@ data class Question(
     val anchors: List<Anchor>,
     val tags: Set<QualityTag> = emptySet(),
 ) {
+    /** 게이트를 지난 4지선다라면 반드시 있습니다. 없으면 저장되면 안 됐을 문제라, 오답으로 흘려보내지 않고 터집니다. */
+    val requiredAnswerIndex: Int
+        get() = answerIndex ?: error("4지선다인데 정답이 없습니다: questionId=$id")
+
+    /** 게이트를 지난 서술형이라면 반드시 있습니다. */
+    val requiredRubric: Rubric
+        get() = rubric ?: error("서술형인데 채점 기준이 없습니다: questionId=$id")
+
     /**
      * 고른 선택지가 정답인지 판정합니다. 4지선다가 아니거나 [selectedIndex]가 선택지 범위 밖이면
      * [BaseException]을 던집니다 — 범위 밖 번호를 그냥 받으면 오답으로 굳어 재제출 전까지 남습니다.
