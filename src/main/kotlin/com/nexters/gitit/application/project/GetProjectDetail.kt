@@ -2,6 +2,7 @@ package com.nexters.gitit.application.project
 
 import com.nexters.gitit.domain.exception.BaseException
 import com.nexters.gitit.domain.exception.ErrorCode
+import com.nexters.gitit.domain.project.ProjectProgressCalculator
 import com.nexters.gitit.domain.project.ProjectRepository
 import com.nexters.gitit.domain.quizrepo.Depth
 import com.nexters.gitit.domain.quizrepo.QuizRepoRepository
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service
 class GetProjectDetail(
     private val projectRepository: ProjectRepository,
     private val quizRepoRepository: QuizRepoRepository,
+    private val projectProgressCalculator: ProjectProgressCalculator,
 ) {
     operator fun invoke(command: Command): Result {
         val project = projectRepository.findById(command.projectId) ?: throw BaseException(ErrorCode.PROJECT_NOT_FOUND)
@@ -21,7 +23,7 @@ class GetProjectDetail(
             quizRepoRepository.findById(project.quizRepoId)
                 ?: error("프로젝트가 가리키는 저장소가 없습니다: quizRepoId=${project.quizRepoId}")
 
-        val progress = ProjectProgress.calculate(project, quizRepo)
+        val progress = projectProgressCalculator.calculate(project, quizRepo)
         val depth = Depth.valueOf(project.quizLevel.name)
 
         val sets =

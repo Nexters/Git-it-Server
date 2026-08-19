@@ -1,6 +1,7 @@
 package com.nexters.gitit.application.project
 
 import com.nexters.gitit.domain.project.Project
+import com.nexters.gitit.domain.project.ProjectProgressCalculator
 import com.nexters.gitit.domain.project.ProjectRepository
 import com.nexters.gitit.domain.quizrepo.QuizRepo
 import com.nexters.gitit.domain.quizrepo.QuizRepoRepository
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service
 class GetProjects(
     private val projectRepository: ProjectRepository,
     private val quizRepoRepository: QuizRepoRepository,
+    private val projectProgressCalculator: ProjectProgressCalculator,
 ) {
     // 페이지를 나누지 않고 전부 내려주는 것은 목록 규모가 유저 개인 프로젝트 수준이라는
     // 전제에 기대고 있다. 한 회원이 수백 개를 학습하게 되면 조회도 응답도 같이 커진다.
@@ -39,7 +41,7 @@ class GetProjects(
         project: Project,
         quizRepo: QuizRepo,
     ): ProjectItem {
-        val progress = ProjectProgress.calculate(project, quizRepo)
+        val progress = projectProgressCalculator.calculate(project, quizRepo)
         val currentSet = progress.nextSetIndex?.let { quizRepo.learningSets.getOrNull(it) }
 
         return ProjectItem(

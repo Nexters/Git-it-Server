@@ -1,10 +1,9 @@
-package com.nexters.gitit.application.project
+package com.nexters.gitit.domain.project
 
-import com.nexters.gitit.domain.project.Project
-import com.nexters.gitit.domain.project.QuizLevel
 import com.nexters.gitit.domain.quizrepo.Depth
 import com.nexters.gitit.domain.quizrepo.Question
 import com.nexters.gitit.domain.quizrepo.QuizRepo
+import org.springframework.stereotype.Component
 
 /**
  * 진행률/다음 문제/세트별 완료 개수를 [Project.answers]로 계산합니다.
@@ -12,17 +11,18 @@ import com.nexters.gitit.domain.quizrepo.QuizRepo
  * "다음 문제"는 세트 순서 → 세트 내 문제 순서로 이어 붙였을 때 답이 없는 첫 문제입니다.
  * 이미 낸 답이 있는지만 보므로, 문제를 어떤 순서로 풀었는지는 결과에 영향을 주지 않습니다.
  */
-object ProjectProgress {
+@Component
+class ProjectProgressCalculator {
     fun calculate(
         project: Project,
         quizRepo: QuizRepo,
-    ): Result {
+    ): ProjectProgress {
         val depth = project.quizLevel.toDepth()
         val questionsPerSet = quizRepo.learningSets.map { it.questionsOf(depth) }
         val totalCount = questionsPerSet.sumOf { it.size }
 
         if (totalCount == 0) {
-            return Result(
+            return ProjectProgress(
                 overallProgressPercent = 0,
                 nextQuestionId = null,
                 nextSetIndex = null,
@@ -40,7 +40,7 @@ object ProjectProgress {
         val nextPosition = flat.indexOfFirst { it.id !in answeredIds }.let { if (it == -1) 0 else it }
         val (nextSetIndex, nextQuestionId) = locate(questionsPerSet, nextPosition)
 
-        return Result(
+        return ProjectProgress(
             overallProgressPercent = overallProgressPercent,
             nextQuestionId = nextQuestionId,
             nextSetIndex = nextSetIndex,
@@ -67,11 +67,4 @@ object ProjectProgress {
             QuizLevel.L2 -> Depth.L2
             QuizLevel.L3 -> Depth.L3
         }
-
-    data class Result(
-        val overallProgressPercent: Int,
-        val nextQuestionId: String?,
-        val nextSetIndex: Int?,
-        val completedCountsBySet: List<Int>,
-    )
 }
