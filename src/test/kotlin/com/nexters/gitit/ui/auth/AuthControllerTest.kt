@@ -1,7 +1,7 @@
 package com.nexters.gitit.ui.auth
 
-import com.nexters.gitit.application.Login
-import com.nexters.gitit.application.VerifyMember
+import com.nexters.gitit.application.auth.Login
+import com.nexters.gitit.application.auth.VerifyMember
 import com.nexters.gitit.domain.exception.BaseException
 import com.nexters.gitit.domain.exception.ErrorCode
 import org.junit.jupiter.api.Test

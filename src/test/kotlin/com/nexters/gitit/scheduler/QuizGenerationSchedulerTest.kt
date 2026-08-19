@@ -1,8 +1,8 @@
 package com.nexters.gitit.scheduler
 
 import com.nexters.gitit.TestcontainersConfiguration
-import com.nexters.gitit.application.GenerateQuiz
-import com.nexters.gitit.application.ReclaimQuizGeneration
+import com.nexters.gitit.application.quizrepo.GenerateQuiz
+import com.nexters.gitit.application.quizrepo.ReclaimQuizGeneration
 import com.nexters.gitit.domain.quizrepo.QuizRepo
 import com.nexters.gitit.infrastructure.mongo.SpringDataQuizRepoRepository
 import org.junit.jupiter.api.Test

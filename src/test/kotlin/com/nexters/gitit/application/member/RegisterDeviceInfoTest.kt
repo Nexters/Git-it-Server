@@ -1,4 +1,4 @@
-package com.nexters.gitit.application
+package com.nexters.gitit.application.member
 
 import com.nexters.gitit.TestcontainersConfiguration
 import com.nexters.gitit.domain.member.DeviceInfo
