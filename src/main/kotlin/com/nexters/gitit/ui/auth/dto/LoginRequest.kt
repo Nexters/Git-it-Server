@@ -1,6 +1,6 @@
 package com.nexters.gitit.ui.auth.dto
 
-import com.nexters.gitit.application.Login
+import com.nexters.gitit.application.auth.Login
 import com.nexters.gitit.domain.auth.OauthCredential
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.NotBlank

@@ -3,12 +3,12 @@ package com.nexters.gitit.domain.notification
 import com.nexters.gitit.domain.quizrepo.QuizRepoStatus
 
 /**
- * 문제 생성 결과를 알리는 문구 한 벌.
+ * 문제 생성 결과를 알리는 문구 한 벌. 가르는 기준은 **받은 사람이 할 수 있는 일**입니다.
  *
- * 셋으로 가르는 기준은 **받은 사람이 할 수 있는 일**입니다. [REJECTED]는 이 저장소로는 문제를 못 만든다는
- * 판정이라 다시 돌려도 결과가 같아 재시도를 권하면 안 되고, [FAILED]는 사고라 다시 하면 성공할 수 있습니다.
+ * [REJECTED]는 이 저장소로는 문제를 못 만든다는 판정이라 재시도를 권하지 않고, [FAILED]는 사고라
+ * 다시 하면 성공할 수 있습니다.
  *
- * 거절 사유(`QuizRepo.rejectedReason`)는 싣지 않습니다 — 내부 에러 코드이고, 화면에서 다시 읽습니다.
+ * 거절 사유(`QuizRepo.rejectedReason`)는 싣지 않습니다. 내부 에러 코드이고, 화면에서 다시 읽습니다.
  */
 enum class QuizResultNotification(
     private val type: String,
@@ -21,8 +21,8 @@ enum class QuizResultNotification(
     ;
 
     /**
-     * [type]을 enum 이름에서 뽑지 않는 이유는 그 문자열이 앱과의 약속이어서입니다 — 여기서 이름을 바꾸면
-     * 클라이언트가 조용히 못 알아듣습니다.
+     * [type]은 앱과 맞춰 둔 문자열이라 enum 이름과 따로 답니다. 값이 달라지면 클라이언트가 조용히
+     * 못 알아듣습니다.
      *
      * 문구는 모두에게 같지만 [projectId]는 회원마다 다릅니다. 눌렀을 때 열 화면이 회원별 프로젝트입니다.
      */

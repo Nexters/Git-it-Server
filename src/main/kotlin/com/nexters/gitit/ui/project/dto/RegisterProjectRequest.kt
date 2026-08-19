@@ -1,7 +1,7 @@
 package com.nexters.gitit.ui.project.dto
 
-import com.nexters.gitit.application.RegisterProject
-import com.nexters.gitit.domain.project.QuizLevel
+import com.nexters.gitit.application.project.RegisterProject
+import com.nexters.gitit.domain.quizrepo.Depth
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.NotBlank
 
@@ -14,7 +14,7 @@ data class RegisterProjectRequest(
     @field:NotBlank(message = "githubRepoUrl은 필수입니다")
     val githubRepoUrl: String,
     @field:Schema(description = "풀고 싶은 문제 난이도 - 깊이만 나누고 직급과는 무관합니다", example = "L2")
-    val quizLevel: QuizLevel,
+    val quizLevel: Depth,
 ) {
     fun toCommand(memberId: String) =
         RegisterProject.Command(

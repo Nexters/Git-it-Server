@@ -1,6 +1,6 @@
 package com.nexters.gitit.ui.project.dto
 
-import com.nexters.gitit.application.GetBookmarkedQuestions
+import com.nexters.gitit.application.project.GetBookmarkedQuestions
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class BookmarkedQuestionListResponse(
@@ -38,7 +38,7 @@ data class BookmarkedQuestionResponse(
     val question: String,
 ) {
     companion object {
-        fun from(item: GetBookmarkedQuestions.BookmarkedQuestion) =
+        fun from(item: GetBookmarkedQuestions.Result.BookmarkedQuestion) =
             BookmarkedQuestionResponse(
                 projectId = item.projectId,
                 projectName = item.projectName,

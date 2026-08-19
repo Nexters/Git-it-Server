@@ -1,6 +1,6 @@
 package com.nexters.gitit.ui.project.dto
 
-import com.nexters.gitit.application.SubmitAnswer
+import com.nexters.gitit.application.project.SubmitAnswer
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**

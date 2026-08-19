@@ -1,6 +1,6 @@
 package com.nexters.gitit.ui.project.dto
 
-import com.nexters.gitit.application.GetProjectDetail
+import com.nexters.gitit.application.project.GetProjectDetail
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ProjectDetailResponse(
@@ -49,7 +49,7 @@ data class SetResponse(
     val completedCount: Int,
 ) {
     companion object {
-        fun from(item: GetProjectDetail.SetItem) =
+        fun from(item: GetProjectDetail.Result.SetItem) =
             SetResponse(
                 setId = item.setId,
                 label = item.label,

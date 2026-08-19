@@ -1,11 +1,11 @@
 package com.nexters.gitit.ui.member
 
-import com.nexters.gitit.application.CurateMember
-import com.nexters.gitit.application.GetMemberProfile
-import com.nexters.gitit.application.RegisterDeviceInfo
-import com.nexters.gitit.application.UpdateMemberCareerLevel
-import com.nexters.gitit.application.UpdateMemberPosition
-import com.nexters.gitit.application.WithdrawMember
+import com.nexters.gitit.application.member.CurateMember
+import com.nexters.gitit.application.member.GetMemberProfile
+import com.nexters.gitit.application.member.RegisterDeviceInfo
+import com.nexters.gitit.application.member.UpdateMemberCareerLevel
+import com.nexters.gitit.application.member.UpdateMemberPosition
+import com.nexters.gitit.application.member.WithdrawMember
 import com.nexters.gitit.ui.common.ApiResponse
 import com.nexters.gitit.ui.common.LoginMember
 import com.nexters.gitit.ui.member.dto.CareerLevelRequest

@@ -1,6 +1,6 @@
 package com.nexters.gitit.ui.project.dto
 
-import com.nexters.gitit.application.GetProjects
+import com.nexters.gitit.application.project.GetProjects
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ProjectListResponse(
@@ -38,7 +38,7 @@ data class ProjectItemResponse(
     val overallProgressPercent: Int,
 ) {
     companion object {
-        fun from(item: GetProjects.ProjectItem) =
+        fun from(item: GetProjects.Result.ProjectItem) =
             ProjectItemResponse(
                 projectId = item.projectId,
                 repositoryName = item.repositoryName,

@@ -13,16 +13,12 @@ class GoogleGenAiClientConfiguration {
     /**
      * Vertex AI에 붙는 클라이언트. 서비스 계정 자격 증명을 Base64 한 줄로 받습니다.
      *
-     * 자동 설정도 서비스 계정을 받지만 `credentials-uri`, 즉 **파일 경로**로만 받습니다. 배포가 GCP 밖
-     * (도커 호스트)이라 그 길로 가면 키 파일을 호스트에 내려놓고 컨테이너에 마운트하는 배관이 CD와
-     * compose에 따라붙습니다. 한 줄짜리 Base64는 이미 있는 `.env` 전달 경로에 그대로 실립니다.
+     * 자동 설정은 서비스 계정을 파일 경로(`credentials-uri`)로만 받습니다. 배포가 GCP 밖(도커 호스트)이라
+     * 키 파일을 마운트하는 배관 대신 한 줄짜리 Base64를 환경 변수로 실어 보냅니다.
      *
-     * API 키(express mode)를 쓰지 않는 이유는 접근 제어입니다. 키는 문자열 하나가 곧 권한이라 회수도
-     * 감사도 안 되고, 쓸 수 있는 모델도 정식 Vertex보다 좁습니다.
-     *
-     * 자동 설정의 클라이언트 빈이 `@ConditionalOnMissingBean`이라 이것이 대신 쓰이고, 나머지 배선
+     * 자동 설정의 클라이언트 빈이 `@ConditionalOnMissingBean`이라 이 빈이 대신 쓰이고, 나머지 배선
      * (ChatModel·ChatClient.Builder)은 그대로 자동 설정이 합니다. 자격 증명이 없는 곳에서는 이 빈이
-     * 아예 만들어지지 않아야 컨텍스트가 뜨므로 프로퍼티가 있을 때만 답니다.
+     * 만들어지지 않아야 컨텍스트가 뜨므로 프로퍼티가 있을 때만 답니다.
      */
     @Bean
     @ConditionalOnProperty("gcp.credentials-base64")

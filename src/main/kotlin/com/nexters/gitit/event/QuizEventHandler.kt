@@ -1,6 +1,6 @@
 package com.nexters.gitit.event
 
-import com.nexters.gitit.application.NotifyQuizResult
+import com.nexters.gitit.application.notification.NotifyQuizResult
 import com.nexters.gitit.domain.quizrepo.QuizGenerationFinished
 import org.springframework.context.event.EventListener
 import org.springframework.scheduling.annotation.Async

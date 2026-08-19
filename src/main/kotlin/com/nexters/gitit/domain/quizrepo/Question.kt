@@ -32,6 +32,14 @@ data class Question(
     val anchors: List<Anchor>,
     val tags: Set<QualityTag> = emptySet(),
 ) {
+    /** 게이트를 지난 4지선다라면 반드시 있습니다. 없으면 저장되면 안 됐을 문제라, 오답으로 흘려보내지 않고 터집니다. */
+    val requiredAnswerIndex: Int
+        get() = answerIndex ?: error("4지선다인데 정답이 없습니다: questionId=$id")
+
+    /** 게이트를 지난 서술형이라면 반드시 있습니다. */
+    val requiredRubric: Rubric
+        get() = rubric ?: error("서술형인데 채점 기준이 없습니다: questionId=$id")
+
     /**
      * 고른 선택지가 정답인지 판정합니다. 4지선다가 아니거나 [selectedIndex]가 선택지 범위 밖이면
      * [BaseException]을 던집니다 — 범위 밖 번호를 그냥 받으면 오답으로 굳어 재제출 전까지 남습니다.
@@ -50,22 +58,6 @@ data class Question(
             throw BaseException(ErrorCode.INVALID_INPUT, "문제 형식과 맞지 않는 답변입니다")
         }
     }
-}
-
-/**
- * 문제가 요구하는 이해의 깊이. 직급(주니어·시니어)에 매핑하지 않습니다 —
- * 레포를 공부한다는 것 자체가 수준을 내포하고, "미들인데 주니어 문제를 틀렸다"는 경험은 학습을 방해합니다.
- *
- * [L1]은 앵커에 적힌 사실을 확인하면 닫히고, [L2]는 앵커 하나를 따라가며 그 코드가 무엇을 하는 자리인지 읽어야 하고,
- * [L3]은 앵커를 연결하거나 명시되지 않은 판단을 추론해야 합니다.
- *
- * 세 레벨을 모두 출제하는 이유는 세트가 레벨 단위로 서빙되기 때문입니다 —
- * L1이 비면 레포를 처음 여는 학습자에게 내줄 것이 없습니다.
- */
-enum class Depth {
-    L1,
-    L2,
-    L3,
 }
 
 /**
