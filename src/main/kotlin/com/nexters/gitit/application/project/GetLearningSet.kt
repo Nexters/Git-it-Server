@@ -21,9 +21,8 @@ class GetLearningSet(
      * 세트 하나를 회원이 고른 난이도에 맞춰 엽니다. 그 레벨의 문제가 저장된 순서 그대로 전부 나오고,
      * 이미 푼 문제에는 그때 낸 답이 붙습니다.
      *
-     * 푼 문제를 걸러내지 않는 이유는 복습 때문입니다 — 걸러내면 다 푼 세트에 들어갔을 때 볼 것이 없습니다.
-     * 순서를 손대지 않는 것도 같은 이유입니다. 풀이 여부로 다시 정렬하면 화면에 붙는 문제 번호가
-     * 재방문마다 달라집니다.
+     * 푼 문제도 걸러내지 않고 순서도 손대지 않습니다. 복습하러 다시 들어온 학습자에게 내줄 것이 있어야 하고,
+     * 풀이 여부로 정렬하면 화면에 붙는 문제 번호가 재방문마다 달라집니다.
      */
     operator fun invoke(command: Command): Result {
         val project = projectRepository.findById(command.projectId) ?: throw BaseException(ErrorCode.PROJECT_NOT_FOUND)

@@ -22,8 +22,7 @@ class NotifyQuizResult(
 ) {
     /**
      * 푸시 콜이 프로젝트 수만큼 나갑니다. [NotificationSender.send]는 토큰 여러 개에 메시지 하나라,
-     * `projectId`가 회원마다 다른 이상 한 번으로 묶을 수 없습니다. 한 저장소의 학습자가 수백 명이 되면
-     * 그때 포트에 "토큰별 data"를 넣습니다 — 지금은 루프가 더 쌉니다.
+     * 알림에 실을 `projectId`가 회원마다 다른 이상 한 번으로 묶을 수 없습니다.
      */
     operator fun invoke(command: Command) {
         // 생성이 끝난 뒤 삭제된 저장소라면 알릴 것이 없다.

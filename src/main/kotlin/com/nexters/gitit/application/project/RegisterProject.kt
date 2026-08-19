@@ -27,9 +27,8 @@ class RegisterProject(
      *
      * 문제 생성을 기다리지 않고 대기줄에 세워 두고 끝내므로, 갓 등록한 저장소의 결과 상태는 아직 완료가 아닙니다.
      *
-     * 등록할 수 없는 저장소는 결과가 아니라 예외로 알립니다. GitHub에 없으면 도큐먼트를 남기지 않는데, 식별자를
-     * 얻지 못해 유니크 키를 만들 수 없고 오타 URL마다 레코드가 쌓이기 때문입니다. 문제를 낼 수 없다고 이미
-     * 판정된 저장소는 그때 기록해 둔 사유를 그대로 던집니다.
+     * 등록할 수 없는 저장소는 [BaseException]으로 알립니다. GitHub에 없는 주소면 도큐먼트를 남기지 않고,
+     * 문제를 낼 수 없다고 이미 판정된 저장소는 그때 기록해 둔 사유를 그대로 던집니다.
      */
     operator fun invoke(command: Command): Result {
         val repository =
@@ -48,11 +47,10 @@ class RegisterProject(
     }
 
     /**
-     * 저장이 곧 생성 요청입니다. READY로 저장된 저장소를 스케줄러가 대기줄에서 집어 가므로,
-     * 여기서 생성을 따로 걸지 않습니다.
+     * 저장이 곧 생성 요청입니다. READY로 저장된 저장소를 스케줄러가 대기줄에서 집어 갑니다.
      *
-     * 이미 있던 저장소는 [QuizRepoRepository.saveIfAbsent]가 그대로 돌려주고 그 값은 이미 READY가
-     * 아니므로, 같은 저장소가 두 번 줄에 서는 일도 저절로 없습니다.
+     * 이미 있던 저장소는 [QuizRepoRepository.saveIfAbsent]가 저장 없이 그대로 돌려주므로,
+     * 같은 저장소가 두 번 줄에 서지 않습니다.
      */
     private fun registerQuizRepo(
         repository: GithubRepository,
