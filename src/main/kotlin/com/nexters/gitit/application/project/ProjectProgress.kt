@@ -1,4 +1,4 @@
-package com.nexters.gitit.application
+package com.nexters.gitit.application.project
 
 import com.nexters.gitit.domain.project.Project
 import com.nexters.gitit.domain.project.QuizLevel

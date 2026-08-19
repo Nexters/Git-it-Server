@@ -1,6 +1,6 @@
 package com.nexters.gitit.scheduler
 
-import com.nexters.gitit.application.ReclaimQuizGeneration
+import com.nexters.gitit.application.quizrepo.ReclaimQuizGeneration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile

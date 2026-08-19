@@ -1,6 +1,6 @@
 package com.nexters.gitit.ui.auth
 
-import com.nexters.gitit.application.Login
+import com.nexters.gitit.application.auth.Login
 import com.nexters.gitit.ui.auth.dto.AppleLoginRequest
 import com.nexters.gitit.ui.auth.dto.GoogleLoginRequest
 import com.nexters.gitit.ui.auth.dto.LoginResponse

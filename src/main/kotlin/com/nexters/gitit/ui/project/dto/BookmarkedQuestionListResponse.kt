@@ -1,6 +1,6 @@
 package com.nexters.gitit.ui.project.dto
 
-import com.nexters.gitit.application.GetBookmarkedQuestions
+import com.nexters.gitit.application.project.GetBookmarkedQuestions
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class BookmarkedQuestionListResponse(

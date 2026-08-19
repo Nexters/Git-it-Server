@@ -1,4 +1,4 @@
-package com.nexters.gitit.application
+package com.nexters.gitit.application.auth
 
 import com.nexters.gitit.domain.auth.JwtProvider
 import org.springframework.stereotype.Service

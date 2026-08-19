@@ -1,13 +1,14 @@
-package com.nexters.gitit.application
+package com.nexters.gitit.application.member
 
 import com.nexters.gitit.domain.exception.BaseException
 import com.nexters.gitit.domain.exception.ErrorCode
-import com.nexters.gitit.domain.member.DeviceInfo
+import com.nexters.gitit.domain.member.CareerLevel
 import com.nexters.gitit.domain.member.MemberRepository
+import com.nexters.gitit.domain.member.Position
 import org.springframework.stereotype.Service
 
 @Service
-class RegisterDeviceInfo(
+class CurateMember(
     private val memberRepository: MemberRepository,
 ) {
     /**
@@ -16,12 +17,13 @@ class RegisterDeviceInfo(
     operator fun invoke(command: Command) {
         val member = memberRepository.findById(command.memberId) ?: throw BaseException(ErrorCode.MEMBER_NOT_FOUND)
 
-        member.updateDeviceInfo(command.deviceInfo)
+        member.curate(command.position, command.careerLevel)
         memberRepository.save(member)
     }
 
     data class Command(
         val memberId: String,
-        val deviceInfo: DeviceInfo,
+        val position: Position,
+        val careerLevel: CareerLevel,
     )
 }

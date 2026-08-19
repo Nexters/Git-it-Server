@@ -1,14 +1,13 @@
-package com.nexters.gitit.application
+package com.nexters.gitit.application.member
 
 import com.nexters.gitit.domain.exception.BaseException
 import com.nexters.gitit.domain.exception.ErrorCode
-import com.nexters.gitit.domain.member.CareerLevel
 import com.nexters.gitit.domain.member.MemberRepository
 import com.nexters.gitit.domain.member.Position
 import org.springframework.stereotype.Service
 
 @Service
-class CurateMember(
+class UpdateMemberPosition(
     private val memberRepository: MemberRepository,
 ) {
     /**
@@ -17,13 +16,12 @@ class CurateMember(
     operator fun invoke(command: Command) {
         val member = memberRepository.findById(command.memberId) ?: throw BaseException(ErrorCode.MEMBER_NOT_FOUND)
 
-        member.curate(command.position, command.careerLevel)
+        member.updatePosition(command.position)
         memberRepository.save(member)
     }
 
     data class Command(
         val memberId: String,
         val position: Position,
-        val careerLevel: CareerLevel,
     )
 }

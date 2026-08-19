@@ -1,6 +1,6 @@
 package com.nexters.gitit.ui.member.dto
 
-import com.nexters.gitit.application.UpdateMemberPosition
+import com.nexters.gitit.application.member.UpdateMemberPosition
 import com.nexters.gitit.domain.member.Position
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.NotNull

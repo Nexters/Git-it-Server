@@ -16,7 +16,7 @@ import java.nio.file.Path
  * 해제된 레포를 읽어 "무엇을 물을 것인가"를 정합니다. 코드 본문은 한 줄도 읽지 않습니다.
  *
  * 유스케이스가 아니라 문제 생성 파이프라인의 첫 단계입니다 —
- * [com.nexters.gitit.application.GenerateQuiz]가 레포 수집 직후에 호출합니다.
+ * [com.nexters.gitit.application.quizrepo.GenerateQuiz]가 레포 수집 직후에 호출합니다.
  *
  * 콜에 실리는 것은 문서 본문과 **소스 파일 목록**입니다. 목록을 같이 주는 이유는 문서가 파일 경로를
  * 짚어 준다는 전제가 흔히 틀리기 때문입니다. 소스 본문은 여기서 한 줄도 읽지 않습니다.

@@ -1,6 +1,6 @@
 package com.nexters.gitit.ui.member.dto
 
-import com.nexters.gitit.application.RegisterDeviceInfo
+import com.nexters.gitit.application.member.RegisterDeviceInfo
 import com.nexters.gitit.domain.member.DeviceInfo
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.NotBlank

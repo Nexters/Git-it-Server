@@ -1,6 +1,6 @@
 package com.nexters.gitit.ui.member.dto
 
-import com.nexters.gitit.application.CurateMember
+import com.nexters.gitit.application.member.CurateMember
 import com.nexters.gitit.domain.member.CareerLevel
 import com.nexters.gitit.domain.member.Position
 import io.swagger.v3.oas.annotations.media.Schema

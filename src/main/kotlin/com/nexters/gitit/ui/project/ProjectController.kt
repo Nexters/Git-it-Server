@@ -1,15 +1,15 @@
 package com.nexters.gitit.ui.project
 
-import com.nexters.gitit.application.BookmarkQuestion
-import com.nexters.gitit.application.DeleteProject
-import com.nexters.gitit.application.GetBookmarkedQuestions
-import com.nexters.gitit.application.GetLearningSet
-import com.nexters.gitit.application.GetProjectDetail
-import com.nexters.gitit.application.GetProjects
-import com.nexters.gitit.application.GetQuizGenerationStatus
-import com.nexters.gitit.application.RegisterProject
-import com.nexters.gitit.application.RetryQuizGeneration
-import com.nexters.gitit.application.SubmitAnswer
+import com.nexters.gitit.application.project.BookmarkQuestion
+import com.nexters.gitit.application.project.DeleteProject
+import com.nexters.gitit.application.project.GetBookmarkedQuestions
+import com.nexters.gitit.application.project.GetLearningSet
+import com.nexters.gitit.application.project.GetProjectDetail
+import com.nexters.gitit.application.project.GetProjects
+import com.nexters.gitit.application.project.RegisterProject
+import com.nexters.gitit.application.project.SubmitAnswer
+import com.nexters.gitit.application.quizrepo.GetQuizGenerationStatus
+import com.nexters.gitit.application.quizrepo.RetryQuizGeneration
 import com.nexters.gitit.ui.common.ApiResponse
 import com.nexters.gitit.ui.common.LoginMember
 import com.nexters.gitit.ui.project.dto.BookmarkQuestionRequest

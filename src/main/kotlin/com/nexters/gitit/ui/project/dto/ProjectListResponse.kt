@@ -1,6 +1,6 @@
 package com.nexters.gitit.ui.project.dto
 
-import com.nexters.gitit.application.GetProjects
+import com.nexters.gitit.application.project.GetProjects
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ProjectListResponse(

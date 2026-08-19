@@ -1,4 +1,4 @@
-package com.nexters.gitit.application
+package com.nexters.gitit.application.notification
 
 import com.nexters.gitit.domain.member.MemberRepository
 import com.nexters.gitit.domain.notification.NotificationSender

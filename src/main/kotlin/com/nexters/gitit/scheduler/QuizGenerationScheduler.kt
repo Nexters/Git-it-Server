@@ -1,7 +1,7 @@
 package com.nexters.gitit.scheduler
 
-import com.nexters.gitit.application.GenerateQuiz
-import com.nexters.gitit.application.GetReadyQuizRepos
+import com.nexters.gitit.application.quizrepo.GenerateQuiz
+import com.nexters.gitit.application.quizrepo.GetReadyQuizRepos
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
