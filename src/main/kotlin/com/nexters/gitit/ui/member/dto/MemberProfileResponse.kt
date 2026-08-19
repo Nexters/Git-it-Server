@@ -6,23 +6,18 @@ import com.nexters.gitit.domain.member.Position
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class MemberProfileResponse(
-    @field:Schema(description = "닉네임. 가입 시 서버가 생성한다", example = "겁없는 SegFault")
-    val name: String,
+    @field:Schema(description = "닉네임. 가입 시 서버가 생성한다", example = "겁없는 SegFault") val name: String,
     val email: String?,
-    @field:Schema(description = "개발 분야")
-    val position: Position?,
-    @field:Schema(description = "개발 수준")
-    val careerLevel: CareerLevel?,
-    @field:Schema(description = "이번 주(월요일부터 오늘까지) 푼 문제 수")
-    val thisWeekSolvedCount: Int,
-    @field:Schema(description = "이번 달(1일부터 오늘까지) 푼 문제 수")
-    val thisMonthSolvedCount: Int,
-    @field:Schema(description = "연속 학습 일수")
-    val streakDays: Int,
-    @field:Schema(description = "이번 주 요일별 문제 풀이량 (월요일부터 일요일까지 7개)")
-    val weeklyChart: List<DayCountResponse>,
+    @field:Schema(description = "개발 분야") val position: Position?,
+    @field:Schema(description = "개발 수준") val careerLevel: CareerLevel?,
+    @field:Schema(description = "이번 주(월요일부터 오늘까지) 푼 문제 수") val thisWeekSolvedCount: Int,
+    @field:Schema(description = "이번 달(1일부터 오늘까지) 푼 문제 수") val thisMonthSolvedCount: Int,
+    @field:Schema(description = "연속 학습 일수") val streakDays: Int,
+    @field:Schema(description = "이번 주 요일별 문제 풀이량 (월요일부터 일요일까지 7개)") val weeklyChart: List<DayCountResponse>,
 ) {
     companion object {
+        private val DAY_LABELS = listOf("월", "화", "수", "목", "금", "토", "일")
+
         fun from(result: GetMemberProfile.Result) =
             MemberProfileResponse(
                 name = result.name,
@@ -32,7 +27,7 @@ data class MemberProfileResponse(
                 thisWeekSolvedCount = result.thisWeekSolvedCount,
                 thisMonthSolvedCount = result.thisMonthSolvedCount,
                 streakDays = result.streakDays,
-                weeklyChart = result.weeklyChart.map { DayCountResponse(it.dayLabel, it.count) },
+                weeklyChart = result.weeklyCounts.mapIndexed { index, count -> DayCountResponse(DAY_LABELS[index], count) },
             )
     }
 }

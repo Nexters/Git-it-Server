@@ -5,6 +5,7 @@ import com.nexters.gitit.domain.exception.ErrorCode
 import com.nexters.gitit.domain.member.CareerLevel
 import com.nexters.gitit.domain.member.MemberRepository
 import com.nexters.gitit.domain.member.Position
+import com.nexters.gitit.domain.member.SolvedHistory
 import com.nexters.gitit.domain.project.ProjectRepository
 import org.springframework.stereotype.Service
 import java.time.Clock
@@ -19,11 +20,13 @@ class GetMemberProfile(
 ) {
     operator fun invoke(command: Command): Result {
         val member = memberRepository.findById(command.memberId) ?: throw BaseException(ErrorCode.MEMBER_NOT_FOUND)
-        val solvedDates =
-            projectRepository
-                .findAllByMemberId(command.memberId)
-                .flatMap { it.answers }
-                .map { it.answeredAt.atZone(clock.zone).toLocalDate() }
+        val history =
+            SolvedHistory(
+                projectRepository
+                    .findAllByMemberId(command.memberId)
+                    .flatMap { it.answers }
+                    .map { it.answeredAt.atZone(clock.zone).toLocalDate() },
+            )
 
         val today = LocalDate.now(clock)
         val weekStart = today.with(DayOfWeek.MONDAY)
@@ -34,35 +37,11 @@ class GetMemberProfile(
             email = member.email,
             position = member.position,
             careerLevel = member.careerLevel,
-            thisWeekSolvedCount = solvedDates.count { it >= weekStart },
-            thisMonthSolvedCount = solvedDates.count { it >= monthStart },
-            streakDays = streakDays(solvedDates.toSet(), today),
-            weeklyChart = weeklyChart(solvedDates, weekStart),
+            thisWeekSolvedCount = history.countSince(weekStart),
+            thisMonthSolvedCount = history.countSince(monthStart),
+            streakDays = history.streakDays(today),
+            weeklyCounts = history.weeklyCounts(weekStart),
         )
-    }
-
-    /** 오늘 아직 안 풀었어도 어제까지 이어져 있으면 스트릭이 유지된 것으로 봅니다. */
-    private fun streakDays(
-        activeDates: Set<LocalDate>,
-        today: LocalDate,
-    ): Int {
-        var day = if (today in activeDates) today else today.minusDays(1)
-        var streak = 0
-        while (day in activeDates) {
-            streak++
-            day = day.minusDays(1)
-        }
-        return streak
-    }
-
-    private fun weeklyChart(
-        solvedDates: List<LocalDate>,
-        weekStart: LocalDate,
-    ): List<DayCount> {
-        val countByDate = solvedDates.groupingBy { it }.eachCount()
-        return DAY_LABELS.mapIndexed { offset, label ->
-            DayCount(dayLabel = label, count = countByDate[weekStart.plusDays(offset.toLong())] ?: 0)
-        }
     }
 
     data class Command(
@@ -77,15 +56,7 @@ class GetMemberProfile(
         val thisWeekSolvedCount: Int,
         val thisMonthSolvedCount: Int,
         val streakDays: Int,
-        val weeklyChart: List<DayCount>,
+        /** 이번 주 월요일부터 일요일까지 요일별 푼 개수 7개. */
+        val weeklyCounts: List<Int>,
     )
-
-    data class DayCount(
-        val dayLabel: String,
-        val count: Int,
-    )
-
-    companion object {
-        private val DAY_LABELS = listOf("월", "화", "수", "목", "금", "토", "일")
-    }
 }
