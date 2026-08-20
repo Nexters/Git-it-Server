@@ -162,6 +162,19 @@ class GenerateQuizTest {
     }
 
     @Test
+    fun `쿼터에 걸려 멈춘 회차는 거절이 아니라 실패로 남는다`() {
+        whenever(quizRepoRepository.findById(quizRepo.id)) doReturn quizRepo
+        whenever(githubRepositoryFetcher.fetch(REPO_URL)) doThrow BaseException(ErrorCode.REPO_FETCH_FAILED)
+
+        generateQuiz(GenerateQuiz.Command(quizRepo.id))
+
+        // REJECTED로 굳으면 retry가 거부해(FAILED만 허용) 쿼터가 회복돼도 이 저장소는 영영 못 돈다.
+        quizRepo.status shouldBe QuizRepoStatus.FAILED
+        quizRepo.rejectedReason shouldBe null
+        verify(eventPublisher).publishEvent(QuizGenerationFinished(quizRepo.id))
+    }
+
+    @Test
     fun `판정이 아닌 예외는 실패로 남기되 그대로 다시 던진다`() {
         whenever(quizRepoRepository.findById(quizRepo.id)) doReturn quizRepo
         whenever(githubRepositoryFetcher.fetch(REPO_URL)) doThrow IllegalStateException("압축 해제 실패")
