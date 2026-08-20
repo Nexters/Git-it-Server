@@ -1,6 +1,7 @@
 package com.nexters.gitit.application.quizrepo
 
 import com.nexters.gitit.domain.exception.BaseException
+import com.nexters.gitit.domain.exception.ErrorCode
 import com.nexters.gitit.domain.quizrepo.AnchoredConcept
 import com.nexters.gitit.domain.quizrepo.QuizGenerationFinished
 import com.nexters.gitit.domain.quizrepo.QuizGenerationStarter
@@ -63,8 +64,8 @@ class GenerateQuiz(
      * 성공이든 거절이든 저장소 상태로 남깁니다. 반환값이 없는 유스케이스라, 도큐먼트에 적지 않으면
      * 요청한 사용자는 영영 READY만 보게 됩니다.
      *
-     * 판정([BaseException])이 아닌 예외는 상태를 FAILED로 적고 **그대로 다시 던집니다.** 어떤 종류든
-     * 점유에 멈춘 채로 두지 않으려고 catch를 넓게 잡습니다.
+     * 판정이 아닌 것은 전부 FAILED입니다 — [RETRYABLE]에 걸리는 [BaseException], 그리고 예상 못 한 예외.
+     * 뒤쪽은 **그대로 다시 던집니다.** 어떤 종류든 점유에 멈춘 채로 두지 않으려고 catch를 넓게 잡습니다.
      *
      * [QuizGenerationFinished]는 결말을 적은 회차만 냅니다. 시효를 잃어 버려진 결과로 알리면,
      * 회수되어 곧 다시 돌 생성을 실패로 알리게 됩니다.
@@ -89,7 +90,7 @@ class GenerateQuiz(
             logger.info { "Generated ${inspected.size} learning sets for ${quizRepo.githubRepoUrl}" }
         } catch (e: BaseException) {
             logger.warn { "Quiz generation stopped for ${quizRepo.githubRepoUrl}: ${e.errorCode.code} ${e.message}" }
-            recorded = finish(quizRepo, startedAt) { reject(it, e.errorCode) }
+            recorded = finish(quizRepo, startedAt) { if (e.errorCode in RETRYABLE) fail(it) else reject(it, e.errorCode) }
         } catch (e: Exception) {
             recorded = finish(quizRepo, startedAt) { fail(it) }
             throw e
@@ -155,6 +156,9 @@ class GenerateQuiz(
     )
 
     companion object {
+        // 쿼터(429)나 네트워크로 막힌 것은 판정이 아니라 사고다. REJECTED로 굳으면 retry가 거부해(FAILED만 허용) 영영 못 돌린다.
+        private val RETRYABLE = setOf(ErrorCode.REPO_FETCH_FAILED)
+
         // 큰 레포에 넉넉히 주되, 정말 멎었을 때 영영 붙잡고 있지 않는 값. 한 회차 실측이 10분 안팎이다.
         private val TIMEOUT = Duration.ofHours(1)
     }

@@ -133,12 +133,23 @@ class GithubRepositoryFetcher(
 
         response.body().close()
         // 없는 레포와 일시적 실패를 나눈다. 재시도해서 결과가 달라질 수 있는 쪽만 REPO_FETCH_FAILED다.
-        throw if (status in INACCESSIBLE_STATUSES) {
+        throw if (status in INACCESSIBLE_STATUSES && !response.isRateLimited()) {
             BaseException(ErrorCode.REPO_NOT_ACCESSIBLE, "GitHub 응답 코드: $status")
         } else {
             BaseException(ErrorCode.REPO_FETCH_FAILED, "GitHub 응답 코드: $status")
         }
     }
+
+    /**
+     * 주 쿼터가 바닥나면 GitHub은 429가 아니라 403으로 답합니다. 상태 코드만으로는 접근 권한이 없는 레포와
+     * 구분되지 않아 남은 횟수 헤더를 봅니다 — 2차 제한은 `Retry-After`로 옵니다.
+     *
+     * 403으로 한정한 것은 404 응답에도 남은 횟수 헤더가 실리기 때문입니다. 마지막 한 번을 쓰며 받은 404를
+     * 쿼터 초과로 읽으면, 없는 레포가 거절 대신 재시도 대상이 됩니다.
+     */
+    private fun HttpResponse<*>.isRateLimited(): Boolean =
+        statusCode() == HTTP_FORBIDDEN &&
+            (headers().firstValue("retry-after").isPresent || headers().firstValue("x-ratelimit-remaining").orElse(null) == "0")
 
     private fun send(request: HttpRequest): HttpResponse<InputStream> =
         try {
@@ -198,7 +209,8 @@ class GithubRepositoryFetcher(
         private const val API_BASE_URL = "https://api.github.com"
         private const val GITHUB_API_VERSION = "2022-11-28"
         private const val HTTP_OK = 200
-        private val INACCESSIBLE_STATUSES = setOf(401, 403, 404)
+        private const val HTTP_FORBIDDEN = 403
+        private val INACCESSIBLE_STATUSES = setOf(401, HTTP_FORBIDDEN, 404)
         private val REQUEST_TIMEOUT = Duration.ofMinutes(5)
     }
 }

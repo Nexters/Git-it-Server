@@ -25,6 +25,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.net.http.HttpClient
+import java.net.http.HttpHeaders
 import java.net.http.HttpResponse
 import java.nio.file.Path
 import java.nio.file.attribute.PosixFilePermissions
@@ -108,6 +109,29 @@ class GithubRepositoryFetcherTest {
     }
 
     @Test
+    fun `429는 REPO_FETCH_FAILED다`() {
+        respondWith(TOO_MANY_REQUESTS, ByteArray(0))
+
+        // 이 코드가 GenerateQuiz에서 재시도 가능한 실패(FAILED)로 갈리는 근거다. 접근 불가로 새면 REJECTED로 굳는다.
+        shouldThrowErrorCode(ErrorCode.REPO_FETCH_FAILED) { fetcher().fetch(REPO_URL) }
+    }
+
+    @Test
+    fun `쿼터가 바닥난 403은 REPO_FETCH_FAILED다`() {
+        respondWith(FORBIDDEN, ByteArray(0), mapOf("x-ratelimit-remaining" to listOf("0")))
+
+        shouldThrowErrorCode(ErrorCode.REPO_FETCH_FAILED) { fetcher().fetch(REPO_URL) }
+    }
+
+    @Test
+    fun `쿼터가 남은 403은 REPO_NOT_ACCESSIBLE이다`() {
+        respondWith(FORBIDDEN, ByteArray(0), mapOf("x-ratelimit-remaining" to listOf("42")))
+
+        // 헤더를 안 보고 403을 통째로 일시적 실패로 읽으면, 막힌 레포가 영영 대기줄을 돈다.
+        shouldThrowErrorCode(ErrorCode.REPO_NOT_ACCESSIBLE) { fetcher().fetch(REPO_URL) }
+    }
+
+    @Test
     fun `목적지를 벗어나는 엔트리는 거절한다`() {
         respondWith(OK, zipOf("$ARCHIVE_ROOT/" to null, "$ARCHIVE_ROOT/../../evil.txt" to "evil"))
 
@@ -157,11 +181,13 @@ class GithubRepositoryFetcherTest {
     private fun respondWith(
         status: Int,
         body: ByteArray,
+        headers: Map<String, List<String>> = emptyMap(),
     ) {
         val response =
             mock<HttpResponse<InputStream>> {
                 on { statusCode() } doReturn status
                 on { body() } doReturn ByteArrayInputStream(body)
+                on { headers() } doReturn HttpHeaders.of(headers) { _, _ -> true }
             }
 
         whenever(githubClient.send(any(), any<HttpResponse.BodyHandler<InputStream>>())) doReturn response
@@ -200,5 +226,7 @@ class GithubRepositoryFetcherTest {
         private const val MAIN = "fun main() {}"
         private const val OK = 200
         private const val NOT_FOUND = 404
+        private const val FORBIDDEN = 403
+        private const val TOO_MANY_REQUESTS = 429
     }
 }
