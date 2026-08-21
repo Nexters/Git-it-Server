@@ -40,6 +40,7 @@ private val logger = KotlinLogging.logger {}
 class GithubRepositoryFetcher(
     @Value("\${github.work-dir}") workDir: String,
     private val githubClient: HttpClient,
+    @Value("\${github.token:}") private val token: String,
     private val apiBaseUrl: String = API_BASE_URL,
 ) {
     private val workDir: Path = Path.of(workDir).toAbsolutePath().normalize()
@@ -123,6 +124,8 @@ class GithubRepositoryFetcher(
                 .newBuilder(URI.create("$apiBaseUrl/repos/$owner/$name/zipball"))
                 .header("Accept", "application/vnd.github+json")
                 .header("X-GitHub-Api-Version", GITHUB_API_VERSION)
+                // 빈 Bearer는 무인증이 아니라 잘못된 자격증명으로 읽혀 401이 된다.
+                .apply { if (token.isNotBlank()) header("Authorization", "Bearer $token") }
                 .timeout(REQUEST_TIMEOUT)
                 .GET()
                 .build()
