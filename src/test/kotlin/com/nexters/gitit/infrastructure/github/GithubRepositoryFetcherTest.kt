@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
@@ -26,6 +27,7 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.net.http.HttpClient
 import java.net.http.HttpHeaders
+import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.file.Path
 import java.nio.file.attribute.PosixFilePermissions
@@ -148,13 +150,13 @@ class GithubRepositoryFetcherTest {
         assumeTrue(!readOnly.isWritable(), "root로 도는 환경에서는 확인할 수 없다")
 
         // 잘못된 경로를 받고도 살아 있으면, 생성 요청이 들어올 때까지 문제가 숨는다.
-        shouldThrow<IllegalArgumentException> { GithubRepositoryFetcher(readOnly.toString(), githubClient) }
+        shouldThrow<IllegalArgumentException> { GithubRepositoryFetcher(readOnly.toString(), githubClient, "") }
     }
 
     @Test
     @Tag("network")
     fun `실제 공개 레포를 받아 푼다`() {
-        val fetcher = GithubRepositoryFetcher(workDir.toString(), GithubHttpClientConfiguration().githubClient())
+        val fetcher = GithubRepositoryFetcher(workDir.toString(), GithubHttpClientConfiguration().githubClient(), githubToken())
 
         val checkout = fetcher.fetch(REPO_URL)
         val root = checkout.root
@@ -165,6 +167,19 @@ class GithubRepositoryFetcherTest {
         root.resolve("README.md").exists().shouldBeTrue()
     }
 
+    @Test
+    fun `토큰이 있으면 인증 헤더를 실어 보낸다`() {
+        respondWith(OK, zipOf("$ARCHIVE_ROOT/" to null, "$ARCHIVE_ROOT/README.md" to README))
+
+        fetcher(token = "gh-token").fetch(REPO_URL)
+
+        val request = argumentCaptor<HttpRequest>()
+        verify(githubClient).send(request.capture(), any<HttpResponse.BodyHandler<InputStream>>())
+        val headers = request.firstValue.headers()
+
+        headers.firstValue("Authorization").orElse(null) shouldBe "Bearer gh-token"
+    }
+
     // 이 테스트들은 해제 위치만 보므로 좌표까지 매번 풀어 쓰지 않는다.
     private fun fetch(gitUrl: String): Path {
         val checkout = fetcher().fetch(gitUrl)
@@ -172,10 +187,11 @@ class GithubRepositoryFetcherTest {
         return checkout.root
     }
 
-    private fun fetcher() =
+    private fun fetcher(token: String = "") =
         GithubRepositoryFetcher(
             workDir = workDir.toString(),
             githubClient = githubClient,
+            token = token,
         )
 
     private fun respondWith(

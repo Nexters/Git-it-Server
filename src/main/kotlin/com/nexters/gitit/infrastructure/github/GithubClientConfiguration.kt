@@ -1,5 +1,6 @@
 package com.nexters.gitit.infrastructure.github
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.retry.RetryPolicy
@@ -16,7 +17,9 @@ import java.time.Duration
  * 흩어지고, 테스트에서 가짜 클라이언트로 바꿔 끼울 수도 없습니다.
  */
 @Configuration
-class GithubClientConfiguration {
+class GithubClientConfiguration(
+    @Value("\${github.token:}") private val token: String,
+) {
     @Bean
     fun githubRestClient(): RestClient =
         RestClient
@@ -24,6 +27,8 @@ class GithubClientConfiguration {
             .baseUrl(GITHUB_API_BASE_URL)
             .requestFactory(timeoutBoundRequestFactory())
             .requestInterceptor { request, body, execution -> RETRY.execute { execution.execute(request, body) } }
+            // 빈 Bearer는 무인증이 아니라 잘못된 자격증명으로 읽혀 401이 된다.
+            .defaultHeaders { if (token.isNotBlank()) it.setBearerAuth(token) }
             .build()
 
     /**

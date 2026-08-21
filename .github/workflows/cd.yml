@@ -72,7 +72,7 @@ jobs:
           key: ${{ secrets.API_SERVER_KEY }}
           port: ${{ secrets.API_SERVER_PORT }}
           script_stop: true
-          envs: GHCR_USER,GHCR_TOKEN,MONGODB_HOST,MONGODB_PORT,MONGODB_DATABASE,MONGODB_USERNAME,MONGODB_PASSWORD,JWT_SECRET,OAUTH_GOOGLE_CLIENT_ID,OAUTH_APPLE_CLIENT_ID,WORK_DIR,GCP_CREDENTIALS_BASE64
+          envs: GHCR_USER,GHCR_TOKEN,MONGODB_HOST,MONGODB_PORT,MONGODB_DATABASE,MONGODB_USERNAME,MONGODB_PASSWORD,JWT_SECRET,OAUTH_GOOGLE_CLIENT_ID,OAUTH_APPLE_CLIENT_ID,WORK_DIR,GCP_CREDENTIALS_BASE64,GH_TOKEN
           script: |
             cd ~/git-it
             umask 077
@@ -89,6 +89,7 @@ jobs:
               "OAUTH_APPLE_CLIENT_ID=$OAUTH_APPLE_CLIENT_ID" \
               "WORK_DIR=$WORK_DIR" \
               "GCP_CREDENTIALS_BASE64=$GCP_CREDENTIALS_BASE64" \
+              "GH_TOKEN=$GH_TOKEN" \
               > .env
             chmod 600 .env
             echo "$GHCR_TOKEN" | sudo docker login ghcr.io -u "$GHCR_USER" --password-stdin
@@ -121,3 +122,4 @@ jobs:
           OAUTH_APPLE_CLIENT_ID: ${{ secrets.OAUTH_APPLE_CLIENT_ID }}
           WORK_DIR: ${{ secrets.WORK_DIR }}
           GCP_CREDENTIALS_BASE64: ${{ secrets.GCP_CREDENTIALS_BASE64 }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
