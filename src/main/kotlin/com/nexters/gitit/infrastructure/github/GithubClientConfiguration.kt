@@ -20,8 +20,6 @@ import java.time.Duration
 class GithubClientConfiguration(
     @Value("\${github.token:}") private val token: String,
 ) {
-    // 토큰이 비면 헤더를 아예 빼야 합니다. 빈 Bearer를 실어 보내면 GitHub이 무인증이 아니라 잘못된 자격증명으로
-    // 읽어 401로 끊습니다.
     @Bean
     fun githubRestClient(): RestClient =
         RestClient
@@ -29,6 +27,7 @@ class GithubClientConfiguration(
             .baseUrl(GITHUB_API_BASE_URL)
             .requestFactory(timeoutBoundRequestFactory())
             .requestInterceptor { request, body, execution -> RETRY.execute { execution.execute(request, body) } }
+            // 빈 Bearer는 무인증이 아니라 잘못된 자격증명으로 읽혀 401이 된다.
             .defaultHeaders { if (token.isNotBlank()) it.setBearerAuth(token) }
             .build()
 
