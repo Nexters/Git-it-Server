@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test
  */
 @Tag("network")
 class GithubApiRepositoryResolverTest {
-    private val resolver = GithubApiRepositoryResolver(GithubClientConfiguration().githubRestClient())
+    private val resolver = GithubApiRepositoryResolver(GithubClientConfiguration(githubToken()).githubRestClient())
 
     @Test
     fun `공개된 저장소면 식별자와 함께 보여줄 정보를 채워 반환한다`() {
